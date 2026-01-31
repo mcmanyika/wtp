@@ -1,9 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { user, userProfile, logout } = useAuth();
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-black backdrop-blur-sm">
@@ -24,22 +45,90 @@ export default function Header() {
           <a href="#about" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">About</a>
           <a href="#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">What We Do</a>
           <a href="#focus" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Focus Areas</a>
+          <a href="#shop" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Shop</a>
           <a href="#contact" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Contact</a>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <a
-            href="#join"
-            className="hidden rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors sm:px-4 sm:py-2 sm:text-sm md:inline-flex"
-          >
-            Join
-          </a>
-          <a
-            href="#donate"
-            className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
-          >
-            Donate
-          </a>
+          {user ? (
+            <>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="hidden items-center gap-2 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors sm:px-4 sm:py-2 sm:text-sm md:flex"
+                >
+                  <span>{userProfile?.name || user.email?.split('@')[0] || 'Account'}</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-lg border border-slate-800 bg-black shadow-lg">
+                    <div className="py-1">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/dashboard/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href="/dashboard/membership"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        Membership
+                      </Link>
+                      <hr className="my-1 border-slate-800" />
+                      <button
+                        onClick={() => {
+                          logout();
+                          setUserMenuOpen(false);
+                        }}
+                        className="block w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <a
+                href="#donate"
+                className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
+              >
+                Donate
+              </a>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/signup"
+                className="hidden rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors sm:px-4 sm:py-2 sm:text-sm md:inline-flex"
+              >
+                Join
+              </Link>
+              <Link
+                href="/login"
+                className="hidden rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors sm:px-4 sm:py-2 sm:text-sm md:inline-flex"
+              >
+                Sign In
+              </Link>
+              <a
+                href="#donate"
+                className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
+              >
+                Donate
+              </a>
+            </>
+          )}
           
           {/* Mobile Menu Button */}
           <button
@@ -93,19 +182,56 @@ export default function Header() {
               Focus Areas
             </a>
             <a
+              href="#shop"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            >
+              Shop
+            </a>
+            <a
               href="#contact"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             >
               Contact
             </a>
-            <a
-              href="#join"
-              onClick={() => setMobileMenuOpen(false)}
-              className="mt-2 rounded-lg border border-slate-700 px-4 py-3 text-center text-sm font-medium text-white hover:bg-slate-800 transition-colors"
-            >
-              Join
-            </a>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 rounded-lg border border-slate-700 px-4 py-3 text-center text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="mt-2 w-full rounded-lg border border-slate-700 px-4 py-3 text-center text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 rounded-lg border border-slate-700 px-4 py-3 text-center text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                >
+                  Join
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 rounded-lg border border-slate-700 px-4 py-3 text-center text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       )}

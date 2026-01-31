@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
+import ContactForm from './components/ContactForm';
 import { EducationIcon, AdvocacyIcon, CommunityIcon } from './components/Icons';
 
 export default function Home() {
@@ -191,35 +192,7 @@ export default function Home() {
               <p className="mb-4 text-center text-base text-slate-600 sm:text-lg">
                 Have questions or want to get involved? Reach out to us through your local chapter or use the contact form below.
               </p>
-              <form className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Your Name"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 sm:text-base"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="email"
-                    placeholder="Your Email"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 sm:text-base"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    rows={4}
-                    placeholder="Your Message"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 sm:text-base"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors sm:text-base"
-                >
-                  Send Message
-                </button>
-              </form>
+              <ContactForm />
             </div>
           </div>
         </div>
@@ -228,10 +201,12 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-slate-900 text-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-4">
             <div>
               <div className="mb-4 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sm font-bold text-black">
+                  DCP
+                </div>
                 <div>
                   <p className="font-bold">Defend the Constitution</p>
                   <p className="text-xs text-slate-400">Platform</p>
@@ -248,7 +223,14 @@ export default function Home() {
                 <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
                 <li><a href="#features" className="hover:text-white transition-colors">What We Do</a></li>
                 <li><a href="#focus" className="hover:text-white transition-colors">Focus Areas</a></li>
-                <li><a href="#updates" className="hover:text-white transition-colors">Updates</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="mb-4 h-6"></div>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li><a href="#shop" className="hover:text-white transition-colors">Shop</a></li>
+                <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
 
