@@ -1,13 +1,39 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import ContactForm from './components/ContactForm';
+import DonationModal from './components/DonationModal';
 import { EducationIcon, AdvocacyIcon, CommunityIcon } from './components/Icons';
 
 export default function Home() {
+  const [donationModalOpen, setDonationModalOpen] = useState(false)
+
+  useEffect(() => {
+    // Handle hash navigation to open modal
+    const handleHashChange = () => {
+      if (window.location.hash === '#donate') {
+        setDonationModalOpen(true)
+        // Remove hash from URL without scrolling
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    }
+
+    // Check on mount
+    if (window.location.hash === '#donate') {
+      setDonationModalOpen(true)
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <Header />
+      <Header onDonateClick={() => setDonationModalOpen(true)} />
 
       <HeroSection />
 
@@ -169,12 +195,12 @@ export default function Home() {
             >
               Join the Platform
             </a>
-            <a
-              href="#donate"
+            <button
+              onClick={() => setDonationModalOpen(true)}
               className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white px-6 py-3 text-sm font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base"
             >
               Support Our Work
-            </a>
+            </button>
           </div>
         </div>
       </section>
@@ -260,6 +286,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Donation Modal */}
+      <DonationModal
+        isOpen={donationModalOpen}
+        onClose={() => setDonationModalOpen(false)}
+      />
     </main>
   );
 }

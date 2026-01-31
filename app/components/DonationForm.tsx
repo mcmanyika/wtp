@@ -1,19 +1,76 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { stripePromise } from '@/lib/stripe/config'
+import { createDonation, createStripeCustomerId } from '@/lib/firebase/firestore'
 
-export default function DonationForm() {
+interface DonationFormContentProps {
+  onSuccess?: () => void
+}
+
+function DonationFormContent({ onSuccess }: DonationFormContentProps) {
   const [amount, setAmount] = useState('')
   const [customAmount, setCustomAmount] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { user } = useAuth()
+  const [clientSecret, setClientSecret] = useState('')
+  const { user, userProfile } = useAuth()
   const router = useRouter()
+  const stripe = useStripe()
+  const elements = useElements()
 
   const presetAmounts = [25, 50, 100, 250, 500]
+
+  useEffect(() => {
+    // Create payment intent when amount is selected
+    const donationAmount = customAmount || amount
+    if (donationAmount && parseFloat(donationAmount) > 0) {
+      const createPaymentIntent = async () => {
+        try {
+          setError('')
+          const response = await fetch('/api/stripe/create-payment-intent', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              amount: parseFloat(donationAmount),
+              userId: user?.uid || null,
+              userEmail: user?.email || null,
+              userName: user?.displayName || null,
+              type: 'donation',
+              description: description || undefined,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to create payment intent')
+          }
+
+          setClientSecret(data.clientSecret)
+        } catch (err: any) {
+          console.error('Error creating payment intent:', err)
+          setError(err.message || 'Failed to initialize payment')
+          setClientSecret('')
+        }
+      }
+      
+      // Debounce to avoid too many API calls
+      const timeoutId = setTimeout(() => {
+        createPaymentIntent()
+      }, 500)
+
+      return () => clearTimeout(timeoutId)
+    } else {
+      setClientSecret('')
+    }
+  }, [amount, customAmount, user?.uid, user?.email, user?.displayName, description])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,30 +84,67 @@ export default function DonationForm() {
       return
     }
 
+    if (!stripe || !elements || !clientSecret) {
+      setError('Payment system not ready. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) {
+      setError('Card element not found')
+      setLoading(false)
+      return
+    }
+
     try {
-      const response = await fetch('/api/stripe/create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(donationAmount),
-          userId: user?.uid || null,
-          type: 'donation',
-          description: description || undefined,
-        }),
-      })
+      // Confirm payment with auto-captured user info
+      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+        clientSecret,
+        {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: user?.displayName || undefined,
+              email: user?.email || undefined,
+            },
+          },
+        }
+      )
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session')
+      if (confirmError) {
+        throw new Error(confirmError.message)
       }
 
-      // Redirect to Stripe Checkout
-      const stripe = await import('@stripe/stripe-js').then((mod) => mod.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!))
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId: data.sessionId })
+      if (paymentIntent?.status === 'succeeded') {
+        // Create donation record in Firestore
+        try {
+          const donation = {
+            userId: user?.uid || '',
+            amount: parseFloat(donationAmount),
+            currency: 'usd',
+            status: 'succeeded' as const,
+            stripePaymentIntentId: paymentIntent.id,
+            description: description || undefined,
+          }
+          const donationId = await createDonation(donation)
+          console.log('Donation record created in Firestore:', donationId)
+        } catch (donationError: any) {
+          console.error('Error creating donation record:', donationError)
+          console.error('Error details:', {
+            code: donationError?.code,
+            message: donationError?.message,
+            userId: user?.uid,
+            paymentIntentId: paymentIntent.id,
+          })
+          // Show error to user but continue - webhook will handle it as backup
+          alert('Payment succeeded, but there was an error saving the transaction. It will be saved automatically via webhook.')
+        }
+
+        if (onSuccess) {
+          onSuccess()
+        }
+        router.push(`/success?payment_intent=${paymentIntent.id}`)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to process donation')
@@ -125,14 +219,49 @@ export default function DonationForm() {
         />
       </div>
 
+      {clientSecret && (
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-900">
+            Card Details
+          </label>
+          <div className="rounded-lg border border-slate-300 p-4">
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#1e293b',
+                    '::placeholder': {
+                      color: '#94a3b8',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       <button
         type="submit"
-        disabled={loading || (!amount && !customAmount)}
+        disabled={loading || !clientSecret || (!amount && !customAmount)}
         className="w-full rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:text-base"
       >
         {loading ? 'Processing...' : 'Donate Now'}
       </button>
     </form>
+  )
+}
+
+interface DonationFormProps {
+  onSuccess?: () => void
+}
+
+export default function DonationForm({ onSuccess }: DonationFormProps) {
+  return (
+    <Elements stripe={stripePromise}>
+      <DonationFormContent onSuccess={onSuccess} />
+    </Elements>
   )
 }
 

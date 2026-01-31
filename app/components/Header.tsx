@@ -4,11 +4,25 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
-export default function Header() {
+interface HeaderProps {
+  onDonateClick?: () => void;
+}
+
+export default function Header({ onDonateClick }: HeaderProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user, userProfile, logout } = useAuth();
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleDonateClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onDonateClick) {
+      onDonateClick();
+    } else {
+      // Fallback to hash navigation if no handler provided
+      window.location.href = '#donate';
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -100,12 +114,12 @@ export default function Header() {
                   </div>
                 )}
               </div>
-              <a
-                href="#donate"
+              <button
+                onClick={handleDonateClick}
                 className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
               >
                 Donate
-              </a>
+              </button>
             </>
           ) : (
             <>
@@ -121,12 +135,12 @@ export default function Header() {
               >
                 Sign In
               </Link>
-              <a
-                href="#donate"
+              <button
+                onClick={handleDonateClick}
                 className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
               >
                 Donate
-              </a>
+              </button>
             </>
           )}
           

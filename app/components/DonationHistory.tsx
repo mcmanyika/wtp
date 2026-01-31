@@ -21,29 +21,43 @@ export default function DonationHistory() {
   const { user } = useAuth()
   const [donations, setDonations] = useState<Donation[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
 
-  useEffect(() => {
-    if (user) {
-      // Add timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
-        setLoading(false)
-      }, 5000) // 5 second timeout
+  const fetchDonations = async () => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
-      getDonationsByUser(user.uid)
-        .then((data) => {
-          clearTimeout(timeoutId)
-          setDonations(data)
-          setLoading(false)
-        })
-        .catch((error) => {
-          clearTimeout(timeoutId)
-          console.error('Error fetching donations:', error)
-          setDonations([])
-          setLoading(false)
-        })
-    } else {
+    setLoading(true)
+    setError('')
+    
+    try {
+      const data = await getDonationsByUser(user.uid)
+      console.log('Fetched donations:', data.length, data)
+      setDonations(data)
+    } catch (err: any) {
+      console.error('Error fetching donations:', err)
+      setError(err.message || 'Failed to load donations')
+      setDonations([])
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    fetchDonations()
+  }, [user])
+
+  // Refresh donations when component becomes visible (e.g., after making a donation)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        fetchDonations()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [user])
 
   if (loading) {
@@ -53,6 +67,20 @@ export default function DonationHistory() {
           <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent"></div>
           <p className="text-slate-600">Loading donations...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+        <p className="text-red-600 mb-4">Error loading donations: {error}</p>
+        <button
+          onClick={fetchDonations}
+          className="inline-block rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     )
   }

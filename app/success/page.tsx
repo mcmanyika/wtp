@@ -12,21 +12,35 @@ function SuccessContent() {
 
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
-    if (!sessionId) {
+    const paymentIntentId = searchParams.get('payment_intent')
+
+    if (!sessionId && !paymentIntentId) {
       router.push('/')
       return
     }
 
-    // Fetch session details
-    fetch(`/api/stripe/session?session_id=${sessionId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSessionData(data)
-        setLoading(false)
-      })
-      .catch(() => {
-        setLoading(false)
-      })
+    // Fetch payment details
+    if (paymentIntentId) {
+      fetch(`/api/stripe/payment-intent?payment_intent=${paymentIntentId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setSessionData(data)
+          setLoading(false)
+        })
+        .catch(() => {
+          setLoading(false)
+        })
+    } else if (sessionId) {
+      fetch(`/api/stripe/session?session_id=${sessionId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setSessionData(data)
+          setLoading(false)
+        })
+        .catch(() => {
+          setLoading(false)
+        })
+    }
   }, [searchParams, router])
 
   if (loading) {
@@ -71,7 +85,7 @@ function SuccessContent() {
               <div className="flex justify-between">
                 <span className="text-slate-600">Amount:</span>
                 <span className="font-semibold">
-                  ${(sessionData.amount_total / 100).toFixed(2)}
+                  ${((sessionData.amount_total || sessionData.amount) / 100).toFixed(2)}
                 </span>
               </div>
               {sessionData.metadata?.type === 'membership' && (

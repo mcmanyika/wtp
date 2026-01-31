@@ -46,7 +46,7 @@ export default function ShopPage() {
     setLoading(product.id)
 
     try {
-      const response = await fetch('/api/stripe/create-checkout', {
+      const response = await fetch('/api/stripe/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,16 +62,11 @@ export default function ShopPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session')
+        throw new Error(data.error || 'Failed to create payment intent')
       }
 
-      // Redirect to Stripe Checkout
-      const stripe = await import('@stripe/stripe-js').then((mod) =>
-        mod.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-      )
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId: data.sessionId })
-      }
+      // Redirect to payment page with client secret
+      router.push(`/payment?client_secret=${data.clientSecret}&product=${product.name}`)
     } catch (err: any) {
       setError(err.message || 'Failed to process purchase')
       setLoading(null)

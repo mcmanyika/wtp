@@ -20,29 +20,32 @@ export default function MembershipCard() {
   const { user, userProfile } = useAuth()
   const [membership, setMembership] = useState<Membership | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>('')
 
-  useEffect(() => {
-    if (user) {
-      // Add timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
-        setLoading(false)
-      }, 5000) // 5 second timeout
+  const fetchMembership = async () => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
-      getMembershipByUser(user.uid)
-        .then((data) => {
-          clearTimeout(timeoutId)
-          setMembership(data)
-          setLoading(false)
-        })
-        .catch((error) => {
-          clearTimeout(timeoutId)
-          console.error('Error fetching membership:', error)
-          setMembership(null)
-          setLoading(false)
-        })
-    } else {
+    setLoading(true)
+    setError('')
+    
+    try {
+      const data = await getMembershipByUser(user.uid)
+      console.log('Fetched membership:', data)
+      setMembership(data)
+    } catch (err: any) {
+      console.error('Error fetching membership:', err)
+      setError(err.message || 'Failed to load membership')
+      setMembership(null)
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    fetchMembership()
   }, [user])
 
   if (loading) {
@@ -51,6 +54,22 @@ export default function MembershipCard() {
         <div className="text-center">
           <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent"></div>
           <p className="text-slate-600">Loading membership...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-8">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading membership: {error}</p>
+          <button
+            onClick={fetchMembership}
+            className="inline-block rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     )

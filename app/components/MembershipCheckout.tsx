@@ -67,6 +67,7 @@ export default function MembershipCheckout() {
         body: JSON.stringify({
           amount: membershipTiers.find((t) => t.id === selectedTier)?.price || 0,
           userId: user?.uid || null,
+          userEmail: user?.email || null,
           type: 'membership',
           tier: selectedTier,
         }),

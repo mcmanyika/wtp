@@ -1,0 +1,79 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import DonationForm from './DonationForm'
+
+interface DonationModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  const handleSuccess = () => {
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div>
+            <h2 className="text-2xl font-bold">Make a Donation</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Your contribution helps us continue our mission to oppose the ED 2030 agenda
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            aria-label="Close modal"
+          >
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-6">
+          <DonationForm onSuccess={handleSuccess} />
+        </div>
+      </div>
+    </div>
+  )
+}
+

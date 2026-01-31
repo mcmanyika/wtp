@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/server'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, setDoc, collection } from 'firebase/firestore'
 import { db } from '@/lib/firebase/config'
 import {
   createDonation,
@@ -39,10 +39,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    console.log(`Webhook received: ${event.type}`)
+    
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as any
         const userId = session.metadata?.userId
+        
+        console.log(`Checkout session completed: mode=${session.mode}, userId=${userId}`)
 
         if (session.mode === 'payment') {
           // One-time donation
@@ -64,27 +68,89 @@ export async function POST(request: NextRequest) {
           }
         } else if (session.mode === 'subscription') {
           // Subscription membership
-          const subscription = await stripe.subscriptions.retrieve(
-            session.subscription as string
-          )
+          console.log(`Processing subscription membership for user ${userId}`)
+          
+          try {
+            const subscription = await stripe.subscriptions.retrieve(
+              session.subscription as string
+            )
+            
+            console.log(`Retrieved subscription: ${subscription.id}, status: ${subscription.status}`)
 
-          const membership = {
-            userId: userId || '',
-            tier: (session.metadata?.tier || 'basic') as any,
-            stripeSubscriptionId: subscription.id,
-            status: subscription.status as any,
-            startDate: new Date(subscription.current_period_start * 1000),
-            endDate: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          }
+            const membership = {
+              userId: userId || '',
+              tier: (session.metadata?.tier || 'basic') as any,
+              stripeSubscriptionId: subscription.id,
+              status: subscription.status as any,
+              startDate: new Date(subscription.current_period_start * 1000),
+              endDate: new Date(subscription.current_period_end * 1000),
+              cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            }
 
-          await createMembership(membership)
+            console.log(`Attempting to create membership with data:`, membership)
+            
+            // Try direct write first (works with unauthenticated rules)
+            if (db) {
+              try {
+                const membershipRef = doc(collection(db, 'memberships'))
+                await setDoc(membershipRef, {
+                  userId: userId || '',
+                  tier: session.metadata?.tier || 'basic',
+                  stripeSubscriptionId: subscription.id,
+                  status: subscription.status,
+                  startDate: Timestamp.fromDate(new Date(subscription.current_period_start * 1000)),
+                  endDate: Timestamp.fromDate(new Date(subscription.current_period_end * 1000)),
+                  cancelAtPeriodEnd: subscription.cancel_at_period_end,
+                  id: membershipRef.id,
+                })
+                console.log(`✅ Membership created directly in Firestore: ${membershipRef.id}`)
+              } catch (directError: any) {
+                console.error('❌ Error creating membership directly:', {
+                  code: directError?.code,
+                  message: directError?.message,
+                  error: directError,
+                })
+                // Fallback to createMembership function
+                try {
+                  await createMembership(membership)
+                  console.log(`✅ Membership created via createMembership: ${subscription.id}`)
+                } catch (createError: any) {
+                  console.error('❌ Error creating membership via createMembership:', {
+                    code: createError?.code,
+                    message: createError?.message,
+                    error: createError,
+                  })
+                  throw createError
+                }
+              }
+            } else {
+              console.warn('⚠️ Firestore db is not initialized, trying createMembership')
+              await createMembership(membership)
+              console.log(`✅ Membership created via createMembership: ${subscription.id}`)
+            }
 
-          // Update user's membership tier
-          if (userId && db) {
-            await setDoc(doc(db, 'users', userId), {
-              membershipTier: session.metadata?.tier || 'basic',
-            }, { merge: true })
+            // Update user's membership tier
+            if (userId && db) {
+              try {
+                await setDoc(doc(db, 'users', userId), {
+                  membershipTier: session.metadata?.tier || 'basic',
+                }, { merge: true })
+                console.log(`✅ Updated user membership tier: ${userId}`)
+              } catch (userUpdateError: any) {
+                console.error('⚠️ Error updating user membership tier (non-critical):', userUpdateError)
+                // Continue even if user update fails
+              }
+            }
+          } catch (membershipError: any) {
+            console.error('❌ Fatal error creating membership:', {
+              code: membershipError?.code,
+              message: membershipError?.message,
+              error: membershipError,
+              userId,
+              subscriptionId: session.subscription,
+            })
+            // Re-throw to ensure webhook returns error status
+            throw membershipError
           }
         }
         break
@@ -92,16 +158,67 @@ export async function POST(request: NextRequest) {
 
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as any
-        // Payment succeeded - donation status already updated in checkout.session.completed
-        console.log(`Payment succeeded: ${paymentIntent.id}`)
+        const userId = paymentIntent.metadata?.userId
+        const type = paymentIntent.metadata?.type
+
+        if (type === 'donation') {
+          try {
+            const donation = {
+              userId: userId || '',
+              amount: paymentIntent.amount / 100,
+              currency: paymentIntent.currency,
+              status: 'succeeded' as const,
+              stripePaymentIntentId: paymentIntent.id,
+              description: paymentIntent.metadata?.description,
+            }
+
+            await createDonation(donation)
+            console.log(`Donation recorded: ${paymentIntent.id}`)
+          } catch (error: any) {
+            console.error('Error creating donation in webhook:', error)
+            // Try to create directly if createDonation fails
+            if (db) {
+              try {
+                const donationRef = doc(collection(db, 'donations'))
+                await setDoc(donationRef, {
+                  userId: userId || '',
+                  amount: paymentIntent.amount / 100,
+                  currency: paymentIntent.currency,
+                  status: 'succeeded',
+                  stripePaymentIntentId: paymentIntent.id,
+                  description: paymentIntent.metadata?.description || '',
+                  id: donationRef.id,
+                  createdAt: Timestamp.now(),
+                })
+                console.log(`Donation created directly: ${donationRef.id}`)
+              } catch (directError: any) {
+                console.error('Error creating donation directly:', directError)
+              }
+            }
+          }
+        }
         break
       }
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as any
-        // Find and update donation status
-        // This would require querying donations by payment_intent_id
-        console.log(`Payment failed: ${paymentIntent.id}`)
+        const userId = paymentIntent.metadata?.userId
+        const type = paymentIntent.metadata?.type
+
+        if (type === 'donation') {
+          // Create donation record with failed status
+          const donation = {
+            userId: userId || '',
+            amount: paymentIntent.amount / 100,
+            currency: paymentIntent.currency,
+            status: 'failed' as const,
+            stripePaymentIntentId: paymentIntent.id,
+            description: paymentIntent.metadata?.description,
+          }
+
+          await createDonation(donation)
+          console.log(`Donation failed: ${paymentIntent.id}`)
+        }
         break
       }
 

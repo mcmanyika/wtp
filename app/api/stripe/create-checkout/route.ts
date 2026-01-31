@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/server'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
-import { createDonation, createMembership } from '@/lib/firebase/firestore'
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, userId, type, tier, description } = await request.json()
+    const { amount, userId, type, tier, description, userEmail } = await request.json()
 
     if (!amount || !type) {
       return NextResponse.json(
@@ -15,24 +12,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create Stripe customer if we have user info
+    // Stripe will handle duplicates by email automatically
     let customerId: string | undefined
-    if (userId && db) {
-      const userDoc = await getDoc(doc(db, 'users', userId))
-      if (userDoc.exists()) {
-        const userData = userDoc.data()
-        if (userData.stripeCustomerId) {
-          customerId = userData.stripeCustomerId
+    if (userId && userEmail) {
+      try {
+        // Try to find existing customer by email
+        const customers = await stripe.customers.list({
+          email: userEmail,
+          limit: 1,
+        })
+        
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id
         } else {
-          // Create Stripe customer
+          // Create new customer
           const customer = await stripe.customers.create({
-            email: userData.email,
+            email: userEmail,
             metadata: { userId },
           })
           customerId = customer.id
-          await setDoc(doc(db, 'users', userId), {
-            stripeCustomerId: customer.id,
-          }, { merge: true })
         }
+      } catch (customerError: any) {
+        console.warn('Could not create/retrieve Stripe customer:', customerError)
+        // Continue without customer ID - Stripe will create one during checkout
       }
     }
 
@@ -40,8 +43,8 @@ export async function POST(request: NextRequest) {
 
     if (type === 'donation') {
       // One-time donation
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
+      // Stripe doesn't allow both customer and customer_email - use one or the other
+      const sessionParams: any = {
         payment_method_types: ['card'],
         line_items: [
           {
@@ -63,7 +66,16 @@ export async function POST(request: NextRequest) {
           userId: userId || '',
           type: 'donation',
         },
-      })
+      }
+
+      // Use customer ID if we have it, otherwise use email
+      if (customerId) {
+        sessionParams.customer = customerId
+      } else if (userEmail) {
+        sessionParams.customer_email = userEmail
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams)
 
       return NextResponse.json({ sessionId: session.id })
     } else if (type === 'membership') {
@@ -109,8 +121,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
+      // Stripe doesn't allow both customer and customer_email - use one or the other
+      const sessionParams: any = {
         payment_method_types: ['card'],
         line_items: [lineItem],
         mode: 'subscription',
@@ -121,7 +133,16 @@ export async function POST(request: NextRequest) {
           type: 'membership',
           tier,
         },
-      })
+      }
+
+      // Use customer ID if we have it, otherwise use email
+      if (customerId) {
+        sessionParams.customer = customerId
+      } else if (userEmail) {
+        sessionParams.customer_email = userEmail
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams)
 
       return NextResponse.json({ sessionId: session.id })
     } else {
