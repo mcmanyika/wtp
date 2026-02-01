@@ -192,7 +192,7 @@ export default function AboutPage() {
             <div>
               <div className="mb-4 h-6"></div>
               <ul className="space-y-2 text-sm text-slate-400">
-                <li><Link href="/#shop" className="hover:text-white transition-colors">Shop</Link></li>
+                <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
                 <li><Link href="/#contact" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>

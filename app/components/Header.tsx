@@ -55,10 +55,10 @@ export default function Header({ onDonateClick }: HeaderProps = {}) {
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 md:flex lg:gap-8">
-          <a href="#intro" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Home</a>
+          <Link href="/" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Home</Link>
           <Link href="/about" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">About</Link>
           <Link href="/our-work" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Our Work</Link>
-          <a href="#shop" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Shop</a>
+          <Link href="/shop" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Shop</Link>
           <a href="#contact" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Contact</a>
         </nav>
 
@@ -166,13 +166,13 @@ export default function Header({ onDonateClick }: HeaderProps = {}) {
       {mobileMenuOpen && (
         <div className="border-t border-slate-800 bg-black md:hidden">
           <nav className="flex flex-col space-y-1 px-4 py-4">
-            <a
-              href="#intro"
+            <Link
+              href="/"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             >
               Home
-            </a>
+            </Link>
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
@@ -187,13 +187,13 @@ export default function Header({ onDonateClick }: HeaderProps = {}) {
             >
               Our Work
             </Link>
-            <a
-              href="#shop"
+            <Link
+              href="/shop"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             >
               Shop
-            </a>
+            </Link>
             <a
               href="#contact"
               onClick={() => setMobileMenuOpen(false)}

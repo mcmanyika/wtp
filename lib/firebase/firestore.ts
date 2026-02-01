@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -38,6 +38,18 @@ export async function updateUserProfile(
   data: Partial<UserProfile>
 ): Promise<void> {
   await setDoc(doc(requireDb(), 'users', userId), data, { merge: true })
+}
+
+export async function getAllUsers(): Promise<UserProfile[]> {
+  const snapshot = await getDocs(collection(requireDb(), 'users'))
+  return snapshot.docs.map((doc) => {
+    const data = doc.data()
+    return { ...data, uid: doc.id, createdAt: toDate(data.createdAt) } as UserProfile
+  })
+}
+
+export async function updateUserRole(userId: string, role: UserRole): Promise<void> {
+  await setDoc(doc(requireDb(), 'users', userId), { role }, { merge: true })
 }
 
 export async function createStripeCustomerId(
@@ -337,5 +349,271 @@ export async function createContactSubmission(
     createdAt: Timestamp.now(),
   })
   return contactRef.id
+}
+
+// Purchase operations
+export async function createPurchase(purchase: Omit<Purchase, 'id' | 'createdAt'>): Promise<string> {
+  const db = requireDb()
+  const purchaseRef = doc(collection(db, 'purchases'))
+  try {
+    const purchaseData = {
+      userId: purchase.userId || '',
+      productId: purchase.productId,
+      productName: purchase.productName,
+      amount: purchase.amount,
+      currency: purchase.currency || 'usd',
+      status: purchase.status,
+      stripePaymentIntentId: purchase.stripePaymentIntentId,
+      description: purchase.description || null,
+      id: purchaseRef.id,
+      createdAt: Timestamp.now(),
+    }
+
+    await setDoc(purchaseRef, purchaseData)
+    console.log('Purchase created successfully:', purchaseRef.id, purchaseData)
+    return purchaseRef.id
+  } catch (error: any) {
+    console.error('Error in createPurchase:', {
+      error,
+      code: error?.code,
+      message: error?.message,
+      purchase,
+      firestoreError: error?.code === 'permission-denied' ? 'Check Firestore rules' : undefined,
+    })
+    throw error
+  }
+}
+
+export async function getPurchasesByUser(userId: string): Promise<Purchase[]> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return []
+  }
+
+  try {
+    // Try composite index query first
+    const q = query(
+      collection(db, 'purchases'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        ...data,
+        createdAt: toDate(data.createdAt),
+      } as Purchase
+    })
+  } catch (error: any) {
+    // Fallback if composite index is not ready
+    if (error?.code === 'failed-precondition') {
+      console.warn('Composite index not ready, using fallback query')
+      try {
+        const q = query(
+          collection(db, 'purchases'),
+          where('userId', '==', userId)
+        )
+        const snapshot = await getDocs(q)
+        const purchases = snapshot.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            ...data,
+            createdAt: toDate(data.createdAt),
+          } as Purchase
+        })
+        // Sort in memory
+        return purchases.sort((a, b) => {
+          const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+          const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+          return bDate - aDate
+        })
+      } catch (fallbackError: any) {
+        console.error('Error in fallback query:', fallbackError)
+        throw fallbackError
+      }
+    }
+
+    console.error('Error in getPurchasesByUser:', {
+      error,
+      code: error?.code,
+      message: error?.message,
+      userId,
+    })
+    throw error
+  }
+}
+
+export async function getPurchaseById(purchaseId: string): Promise<Purchase | null> {
+  const purchaseDoc = await getDoc(doc(requireDb(), 'purchases', purchaseId))
+  if (!purchaseDoc.exists()) return null
+
+  const data = purchaseDoc.data()
+  return { ...data, createdAt: toDate(data.createdAt) } as Purchase
+}
+
+export async function updatePurchaseStatus(
+  purchaseId: string,
+  status: Purchase['status']
+): Promise<void> {
+  await updateDoc(doc(requireDb(), 'purchases', purchaseId), { status })
+}
+
+// Product operations
+export async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  const db = requireDb()
+  const productRef = doc(collection(db, 'products'))
+  try {
+    const productData = {
+      ...product,
+      id: productRef.id,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await setDoc(productRef, productData)
+    console.log('Product created successfully:', productRef.id)
+    return productRef.id
+  } catch (error: any) {
+    console.error('Error in createProduct:', {
+      error,
+      code: error?.code,
+      message: error?.message,
+      product,
+    })
+    throw error
+  }
+}
+
+export async function getProducts(activeOnly: boolean = false): Promise<Product[]> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return []
+  }
+
+  try {
+    let q
+    if (activeOnly) {
+      q = query(
+        collection(db, 'products'),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc')
+      )
+    } else {
+      q = query(
+        collection(db, 'products'),
+        orderBy('createdAt', 'desc')
+      )
+    }
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        ...data,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+      } as Product
+    })
+  } catch (error: any) {
+    // Fallback if composite index is not ready
+    if (error?.code === 'failed-precondition') {
+      console.warn('Composite index not ready, using fallback query')
+      try {
+        const q = query(collection(db, 'products'))
+        const snapshot = await getDocs(q)
+        const products = snapshot.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            ...data,
+            createdAt: toDate(data.createdAt),
+            updatedAt: toDate(data.updatedAt),
+          } as Product
+        })
+        // Filter and sort in memory
+        const filtered = activeOnly ? products.filter(p => p.isActive) : products
+        return filtered.sort((a, b) => {
+          const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+          const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+          return bDate - aDate
+        })
+      } catch (fallbackError: any) {
+        console.error('Error in fallback query:', fallbackError)
+        throw fallbackError
+      }
+    }
+
+    console.error('Error in getProducts:', {
+      error,
+      code: error?.code,
+      message: error?.message,
+    })
+    throw error
+  }
+}
+
+export async function getProductById(productId: string): Promise<Product | null> {
+  const productDoc = await getDoc(doc(requireDb(), 'products', productId))
+  if (!productDoc.exists()) return null
+
+  const data = productDoc.data()
+  return {
+    ...data,
+    createdAt: toDate(data.createdAt),
+    updatedAt: toDate(data.updatedAt),
+  } as Product
+}
+
+export async function updateProduct(productId: string, data: Partial<Product>): Promise<void> {
+  const updateData: any = { ...data, updatedAt: Timestamp.now() }
+  await updateDoc(doc(requireDb(), 'products', productId), updateData)
+}
+
+export async function updateProductStock(productId: string, quantity: number): Promise<void> {
+  await updateDoc(doc(requireDb(), 'products', productId), {
+    stock: quantity,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+export async function decrementProductStock(productId: string, amount: number = 1): Promise<void> {
+  const productRef = doc(requireDb(), 'products', productId)
+  const productDoc = await getDoc(productRef)
+  
+  if (!productDoc.exists()) {
+    throw new Error(`Product ${productId} not found`)
+  }
+
+  const currentStock = productDoc.data().stock || 0
+  const newStock = Math.max(0, currentStock - amount)
+
+  await updateDoc(productRef, {
+    stock: newStock,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+export async function deleteProduct(productId: string): Promise<void> {
+  await updateDoc(doc(requireDb(), 'products', productId), {
+    isActive: false,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+export async function getLowStockProducts(threshold?: number): Promise<Product[]> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return []
+  }
+
+  try {
+    const products = await getProducts(false)
+    const defaultThreshold = threshold || 10
+    return products.filter(
+      (product) => product.isActive && product.stock <= defaultThreshold && product.stock > 0
+    )
+  } catch (error: any) {
+    console.error('Error in getLowStockProducts:', error)
+    return []
+  }
 }
 

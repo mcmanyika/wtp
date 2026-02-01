@@ -19,10 +19,15 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
-      // Users can read and write their own data
-      allow read, write: if isOwner(userId);
-      // Admins can read all user data
-      allow read: if isAdmin();
+      // Users can read their own data
+      allow read: if isOwner(userId);
+      // Users can update their own data, but NOT their role (security)
+      allow update: if isOwner(userId) && 
+                     (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      // Users can create their own profile
+      allow create: if isOwner(userId);
+      // Admins can read and update all user data (including roles)
+      allow read, update: if isAdmin();
     }
 
     // Donations collection
@@ -43,6 +48,29 @@ service cloud.firestore {
                       request.resource.data.stripePaymentIntentId.size() > 0 &&
                       request.resource.data.amount > 0);
       // Admins can read all donations
+      allow read: if isAdmin();
+    }
+
+    // Purchases collection
+    match /purchases/{purchaseId} {
+      // Users can read their own purchases
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      // Allow creates from authenticated users OR anyone with valid purchase data
+      // This allows both authenticated users and guest purchases
+      // Note: createdAt and id are added automatically, so we don't require them in validation
+      allow create: if isAuthenticated() || 
+                     (request.resource.data.keys().hasAll(['userId', 'productId', 'productName', 'amount', 'currency', 'status', 'stripePaymentIntentId']) &&
+                      request.resource.data.userId is string &&
+                      request.resource.data.productId is string &&
+                      request.resource.data.productName is string &&
+                      request.resource.data.amount is number &&
+                      request.resource.data.currency is string &&
+                      request.resource.data.status is string &&
+                      request.resource.data.stripePaymentIntentId is string &&
+                      request.resource.data.stripePaymentIntentId.size() > 0 &&
+                      request.resource.data.amount > 0);
+      // Admins can read all purchases
       allow read: if isAdmin();
     }
 
@@ -77,6 +105,28 @@ service cloud.firestore {
                      request.resource.data.message.size() > 0;
       // Only admins can read contact submissions
       allow read: if isAdmin();
+    }
+
+    // Products collection
+    match /products/{productId} {
+      // All authenticated users can read active products
+      allow read: if isAuthenticated() && resource.data.isActive == true;
+      // Admins can read all products (active and inactive)
+      allow read: if isAdmin();
+      // Only admins can create, update, or delete products
+      allow create: if isAdmin() &&
+                     request.resource.data.keys().hasAll(['name', 'description', 'price', 'image', 'stock', 'lowStockThreshold', 'isActive']) &&
+                     request.resource.data.name is string &&
+                     request.resource.data.description is string &&
+                     request.resource.data.price is number &&
+                     request.resource.data.image is string &&
+                     request.resource.data.stock is number &&
+                     request.resource.data.lowStockThreshold is number &&
+                     request.resource.data.isActive is bool &&
+                     request.resource.data.price > 0 &&
+                     request.resource.data.stock >= 0;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
   }
 }

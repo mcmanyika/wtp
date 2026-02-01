@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    // Note: This requires a Firestore read, which may have performance implications
+    function isAdmin() {
+      return isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Product images - only admins can upload/delete, everyone can read
+    match /products/{productId} {
+      // Anyone can read product images
+      allow read: if true;
+      // Only admins can upload product images
+      allow write: if isAdmin() && 
+                     request.resource.size < 5 * 1024 * 1024 && // 5MB max
+                     request.resource.contentType.matches('image/.*');
+      // Only admins can delete product images
+      allow delete: if isAdmin();
+    }
+    
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

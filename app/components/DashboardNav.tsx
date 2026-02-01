@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview' },
@@ -11,8 +12,15 @@ const navItems = [
   { href: '/dashboard/resources', label: 'Resources' },
 ]
 
+const adminNavItems = [
+  { href: '/dashboard/admin/users', label: 'Users' },
+  { href: '/dashboard/admin/products', label: 'Products' },
+]
+
 export default function DashboardNav() {
   const pathname = usePathname()
+  const { userProfile } = useAuth()
+  const isAdmin = userProfile?.role === 'admin'
 
   return (
     <nav className="border-b bg-white">
@@ -32,13 +40,28 @@ export default function DashboardNav() {
                 {item.label}
               </Link>
             ))}
+            {isAdmin && (
+              <>
+                <div className="border-l border-slate-300 h-6 mx-2"></div>
+                <span className="px-1 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Admin
+                </span>
+                {adminNavItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+                      pathname === item.href
+                        ? 'border-slate-900 text-slate-900'
+                        : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </>
+            )}
           </div>
-          <Link
-            href="/"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            Home
-          </Link>
         </div>
       </div>
     </nav>

@@ -84,12 +84,12 @@ export default function Home() {
             Join thousands of citizens working together to oppose the ED 2030 agenda, defend the Constitution, and protect our democratic values.
           </p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <a
-              href="#join"
+            <Link
+              href="/signup"
               className="inline-flex w-full items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base"
             >
               Join the Platform
-            </a>
+            </Link>
             <button
               onClick={() => setDonationModalOpen(true)}
               className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white px-6 py-3 text-sm font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base"
@@ -149,7 +149,7 @@ export default function Home() {
             <div>
               <div className="mb-4 h-6"></div>
               <ul className="space-y-2 text-sm text-slate-400">
-                <li><a href="#shop" className="hover:text-white transition-colors">Shop</a></li>
+                <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
                 <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>

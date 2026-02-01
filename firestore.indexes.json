@@ -29,12 +29,30 @@
       ]
     },
     {
-      "collectionGroup": "memberships",
+      "collectionGroup": "purchases",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "stripeSubscriptionId",
+          "fieldPath": "userId",
           "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
         }
       ]
     }

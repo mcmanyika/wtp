@@ -48,3 +48,29 @@ export interface ContactSubmission {
   userId?: string
 }
 
+export interface Purchase {
+  id: string
+  userId: string
+  productId: string
+  productName: string
+  amount: number
+  currency: string
+  status: PaymentStatus
+  stripePaymentIntentId: string
+  createdAt: Timestamp | Date
+  description?: string
+}
+
+export interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  image: string
+  stock: number
+  lowStockThreshold: number
+  isActive: boolean
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
+}
+

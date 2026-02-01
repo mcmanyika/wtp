@@ -9,6 +9,9 @@ import {
   updateMembershipStatus,
   updateMembership,
   getMembershipBySubscriptionId,
+  createPurchase,
+  updatePurchaseStatus,
+  decrementProductStock,
 } from '@/lib/firebase/firestore'
 import { Timestamp } from 'firebase/firestore'
 
@@ -196,6 +199,68 @@ export async function POST(request: NextRequest) {
               }
             }
           }
+        } else if (type === 'purchase') {
+          try {
+            const purchase = {
+              userId: userId || '',
+              productId: paymentIntent.metadata?.productId || '',
+              productName: paymentIntent.metadata?.productName || paymentIntent.metadata?.description?.replace('Purchase: ', '') || '',
+              amount: paymentIntent.amount / 100,
+              currency: paymentIntent.currency,
+              status: 'succeeded' as const,
+              stripePaymentIntentId: paymentIntent.id,
+              description: paymentIntent.metadata?.description,
+            }
+
+            await createPurchase(purchase)
+            console.log(`Purchase recorded: ${paymentIntent.id}`)
+
+            // Decrement product stock
+            const productId = paymentIntent.metadata?.productId
+            if (productId) {
+              try {
+                await decrementProductStock(productId, 1)
+                console.log(`Stock decremented for product: ${productId}`)
+              } catch (stockError: any) {
+                console.error('Error decrementing product stock:', stockError)
+                // Don't fail the webhook if stock decrement fails - log it for manual review
+              }
+            }
+          } catch (error: any) {
+            console.error('Error creating purchase in webhook:', error)
+            // Try to create directly if createPurchase fails
+            if (db) {
+              try {
+                const purchaseRef = doc(collection(db, 'purchases'))
+                await setDoc(purchaseRef, {
+                  userId: userId || '',
+                  productId: paymentIntent.metadata?.productId || '',
+                  productName: paymentIntent.metadata?.productName || paymentIntent.metadata?.description?.replace('Purchase: ', '') || '',
+                  amount: paymentIntent.amount / 100,
+                  currency: paymentIntent.currency,
+                  status: 'succeeded',
+                  stripePaymentIntentId: paymentIntent.id,
+                  description: paymentIntent.metadata?.description || '',
+                  id: purchaseRef.id,
+                  createdAt: Timestamp.now(),
+                })
+                console.log(`Purchase created directly: ${purchaseRef.id}`)
+
+                // Try to decrement stock even if purchase creation had issues
+                const productId = paymentIntent.metadata?.productId
+                if (productId) {
+                  try {
+                    await decrementProductStock(productId, 1)
+                    console.log(`Stock decremented for product: ${productId}`)
+                  } catch (stockError: any) {
+                    console.error('Error decrementing product stock:', stockError)
+                  }
+                }
+              } catch (directError: any) {
+                console.error('Error creating purchase directly:', directError)
+              }
+            }
+          }
         }
         break
       }
@@ -218,6 +283,21 @@ export async function POST(request: NextRequest) {
 
           await createDonation(donation)
           console.log(`Donation failed: ${paymentIntent.id}`)
+        } else if (type === 'purchase') {
+          // Create purchase record with failed status
+          const purchase = {
+            userId: userId || '',
+            productId: paymentIntent.metadata?.productId || '',
+            productName: paymentIntent.metadata?.productName || paymentIntent.metadata?.description?.replace('Purchase: ', '') || '',
+            amount: paymentIntent.amount / 100,
+            currency: paymentIntent.currency,
+            status: 'failed' as const,
+            stripePaymentIntentId: paymentIntent.id,
+            description: paymentIntent.metadata?.description,
+          }
+
+          await createPurchase(purchase)
+          console.log(`Purchase failed: ${paymentIntent.id}`)
         }
         break
       }
