@@ -21,6 +21,9 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState<SortOption>('newest')
   const [stockFilter, setStockFilter] = useState<StockFilter>('all')
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 })
+  const [currentPage, setCurrentPage] = useState(1)
+  const productsPerPage = 8
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     loadProducts()
@@ -85,7 +88,15 @@ export default function ShopPage() {
     })
 
     setFilteredProducts(filtered)
+    // Reset to page 1 when filters change
+    setCurrentPage(1)
   }, [products, sortBy, stockFilter, priceRange])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage)
+  const startIndex = (currentPage - 1) * productsPerPage
+  const endIndex = startIndex + productsPerPage
+  const currentProducts = filteredProducts.slice(startIndex, endIndex)
 
   const handlePurchase = async (product: Product) => {
     setError('')
@@ -141,8 +152,8 @@ export default function ShopPage() {
         throw new Error(data.error || 'Failed to create payment intent')
       }
 
-      // Redirect to payment page with client secret
-      router.push(`/payment?client_secret=${data.clientSecret}&product=${product.name}`)
+      // Redirect to payment page with client secret and product ID
+      router.push(`/payment?client_secret=${data.clientSecret}&product=${encodeURIComponent(product.name)}&productId=${product.id}`)
     } catch (err: any) {
       setError(err.message || 'Failed to process purchase')
       setLoading(null)
@@ -250,7 +261,8 @@ export default function ShopPage() {
               {/* Results count */}
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
                 <p className="text-sm text-slate-600">
-                  Showing {filteredProducts.length} of {products.length} products
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
+                  {filteredProducts.length !== products.length && ` (${products.length} total)`}
                 </p>
                 {(stockFilter !== 'all' || priceRange.min > 0 || priceRange.max < 1000) && (
                   <button
@@ -301,15 +313,17 @@ export default function ShopPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {filteredProducts.map((product) => {
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {currentProducts.map((product) => {
               const isOutOfStock = product.stock === 0
               const isLowStock = product.stock > 0 && product.stock <= product.lowStockThreshold
 
               return (
                 <div
                   key={product.id}
-                  className={`group rounded-xl border border-slate-200 bg-white overflow-hidden transition-all hover:border-slate-900 hover:shadow-lg ${
+                  onClick={() => setSelectedProduct(product)}
+                  className={`group rounded-xl border border-slate-200 bg-white overflow-hidden transition-all hover:border-slate-900 hover:shadow-lg cursor-pointer ${
                     isOutOfStock ? 'opacity-75' : ''
                   }`}
                 >
@@ -340,7 +354,10 @@ export default function ShopPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xl font-bold">${product.price.toFixed(2)}</span>
                       <button
-                        onClick={() => handlePurchase(product)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePurchase(product)
+                        }}
                         disabled={loading === product.id || isOutOfStock}
                         className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -351,6 +368,163 @@ export default function ShopPage() {
                 </div>
               )
             })}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? 'bg-slate-900 text-white'
+                              : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="px-2 text-slate-500">
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Product Detail Modal */}
+        {selectedProduct && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setSelectedProduct(null)}
+          >
+            <div
+              className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-4 right-4 z-10 rounded-full bg-white/90 p-2 hover:bg-white transition-colors shadow-lg"
+                aria-label="Close"
+              >
+                <svg className="h-6 w-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Product Image */}
+                <div className="relative bg-slate-100 aspect-square md:aspect-auto md:min-h-[500px]">
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="h-full w-full object-cover"
+                  />
+                  {selectedProduct.stock === 0 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-lg">
+                        Out of Stock
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Details */}
+                <div className="p-6 sm:p-8 flex flex-col">
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-bold mb-4">{selectedProduct.name}</h2>
+                    
+                    <div className="mb-6">
+                      {selectedProduct.stock > 0 && selectedProduct.stock <= selectedProduct.lowStockThreshold && (
+                        <p className="text-sm font-medium text-yellow-600 mb-2">
+                          Only {selectedProduct.stock} left!
+                        </p>
+                      )}
+                      <p className="text-4xl font-bold text-slate-900 mb-4">
+                        ${selectedProduct.price.toFixed(2)}
+                      </p>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Description
+                      </h3>
+                      <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {selectedProduct.description}
+                      </p>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Stock Status
+                      </h3>
+                      <p className="text-base text-slate-700">
+                        {selectedProduct.stock === 0
+                          ? 'Out of Stock'
+                          : selectedProduct.stock <= selectedProduct.lowStockThreshold
+                          ? `Low Stock - ${selectedProduct.stock} available`
+                          : `In Stock - ${selectedProduct.stock} available`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-auto pt-6 border-t border-slate-200">
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(null)
+                        handlePurchase(selectedProduct)
+                      }}
+                      disabled={loading === selectedProduct.id || selectedProduct.stock === 0}
+                      className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading === selectedProduct.id
+                        ? 'Processing...'
+                        : selectedProduct.stock === 0
+                        ? 'Out of Stock'
+                        : 'Buy Now'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </section>
