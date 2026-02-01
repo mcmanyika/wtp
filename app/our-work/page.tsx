@@ -144,7 +144,7 @@ export default function OurWorkPage() {
           </div>
 
           <div className="mt-8 border-t border-slate-800 pt-6 text-center text-xs text-slate-400 sm:mt-12 sm:pt-8 sm:text-sm">
-            <p>© 2024 Defend the Constitution Platform. All rights reserved.</p>
+            <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
           </div>
         </div>
       </footer>

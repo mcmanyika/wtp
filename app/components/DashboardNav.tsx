@@ -15,6 +15,7 @@ const navItems = [
 const adminNavItems = [
   { href: '/dashboard/admin/users', label: 'Users' },
   { href: '/dashboard/admin/products', label: 'Products' },
+  { href: '/dashboard/admin/news', label: 'News' },
 ]
 
 export default function DashboardNav() {

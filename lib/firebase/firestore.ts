@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -615,5 +615,146 @@ export async function getLowStockProducts(threshold?: number): Promise<Product[]
     console.error('Error in getLowStockProducts:', error)
     return []
   }
+}
+
+// News functions
+export async function createNews(news: Omit<News, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  const newsRef = doc(collection(requireDb(), 'news'))
+  
+  // Remove undefined fields to avoid Firestore errors
+  const cleanNews: any = {}
+  if (news.title !== undefined) cleanNews.title = news.title
+  if (news.description !== undefined) cleanNews.description = news.description
+  if (news.content !== undefined && news.content !== '') cleanNews.content = news.content
+  if (news.image !== undefined && news.image !== '') cleanNews.image = news.image
+  if (news.author !== undefined && news.author !== '') cleanNews.author = news.author
+  if (news.category !== undefined) cleanNews.category = news.category
+  if (news.isPublished !== undefined) cleanNews.isPublished = news.isPublished
+  
+  const newsData = {
+    ...cleanNews,
+    id: newsRef.id,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    publishedAt: news.isPublished ? Timestamp.now() : null,
+  }
+  await setDoc(newsRef, newsData)
+  return newsRef.id
+}
+
+export async function getNews(publishedOnly: boolean = true): Promise<News[]> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return []
+  }
+
+  try {
+    let q = query(collection(requireDb(), 'news'), orderBy('createdAt', 'desc'))
+    
+    if (publishedOnly) {
+      q = query(q, where('isPublished', '==', true))
+    }
+
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        ...data,
+        id: doc.id,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+        publishedAt: data.publishedAt ? toDate(data.publishedAt) : undefined,
+      } as News
+    })
+  } catch (error: any) {
+    console.error('Error fetching news:', error)
+    // Fallback: try without published filter if composite index not ready
+    if (publishedOnly && error.code === 'failed-precondition') {
+      try {
+        const snapshot = await getDocs(query(collection(requireDb(), 'news'), orderBy('createdAt', 'desc')))
+        return snapshot.docs
+          .map((doc) => {
+            const data = doc.data()
+            return {
+              ...data,
+              id: doc.id,
+              createdAt: toDate(data.createdAt),
+              updatedAt: toDate(data.updatedAt),
+              publishedAt: data.publishedAt ? toDate(data.publishedAt) : undefined,
+            } as News
+          })
+          .filter((news) => news.isPublished)
+      } catch (fallbackError: any) {
+        console.error('Error in fallback news query:', fallbackError)
+        return []
+      }
+    }
+    return []
+  }
+}
+
+export async function getNewsById(newsId: string): Promise<News | null> {
+  const newsDoc = await getDoc(doc(requireDb(), 'news', newsId))
+  if (!newsDoc.exists()) return null
+
+  const data = newsDoc.data()
+  return {
+    ...data,
+    id: newsDoc.id,
+    createdAt: toDate(data.createdAt),
+    updatedAt: toDate(data.updatedAt),
+    publishedAt: data.publishedAt ? toDate(data.publishedAt) : undefined,
+  } as News
+}
+
+export async function updateNews(newsId: string, data: Partial<News>): Promise<void> {
+  // Remove undefined fields to avoid Firestore errors
+  const updateData: any = { updatedAt: Timestamp.now() }
+  
+  if (data.title !== undefined) updateData.title = data.title
+  if (data.description !== undefined) updateData.description = data.description
+  if (data.content !== undefined) {
+    // Only include content if it's not empty, or explicitly set to empty string to clear it
+    if (data.content !== '') {
+      updateData.content = data.content
+    } else {
+      // To remove a field, we need to use deleteField() or set to null
+      updateData.content = null
+    }
+  }
+  if (data.image !== undefined) {
+    if (data.image !== '') {
+      updateData.image = data.image
+    } else {
+      updateData.image = null
+    }
+  }
+  if (data.author !== undefined) {
+    if (data.author !== '') {
+      updateData.author = data.author
+    } else {
+      updateData.author = null
+    }
+  }
+  if (data.category !== undefined) updateData.category = data.category
+  if (data.isPublished !== undefined) {
+    updateData.isPublished = data.isPublished
+    
+    // If publishing for the first time, set publishedAt
+    if (data.isPublished === true) {
+      const existingNews = await getNewsById(newsId)
+      if (existingNews && !existingNews.isPublished) {
+        updateData.publishedAt = Timestamp.now()
+      }
+    }
+  }
+  
+  await updateDoc(doc(requireDb(), 'news', newsId), updateData)
+}
+
+export async function deleteNews(newsId: string): Promise<void> {
+  await updateDoc(doc(requireDb(), 'news', newsId), { isPublished: false })
+  // Or use deleteDoc if you want to permanently delete:
+  // await deleteDoc(doc(requireDb(), 'news', newsId))
 }
 

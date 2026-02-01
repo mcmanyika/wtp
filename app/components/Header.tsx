@@ -43,7 +43,7 @@ export default function Header({ onDonateClick }: HeaderProps = {}) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-black backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-2 sm:gap-3">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-xs font-bold text-black sm:h-10 sm:w-10 sm:text-sm">
             DCP
           </div>
@@ -51,7 +51,7 @@ export default function Header({ onDonateClick }: HeaderProps = {}) {
             <p className="text-xs font-bold text-white sm:text-sm">Defend the Constitution</p>
             <p className="text-[10px] text-slate-400 sm:text-xs">Platform</p>
           </div>
-        </div>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-6 md:flex lg:gap-8">

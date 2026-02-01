@@ -7,9 +7,13 @@ import Header from './components/Header';
 import HeroSection from './components/HeroSection';
 import ContactForm from './components/ContactForm';
 import DonationModal from './components/DonationModal';
+import { getNews } from '@/lib/firebase/firestore';
+import type { News } from '@/types';
 
 export default function Home() {
   const [donationModalOpen, setDonationModalOpen] = useState(false)
+  const [news, setNews] = useState<News[]>([])
+  const [newsLoading, setNewsLoading] = useState(true)
 
   useEffect(() => {
     // Handle hash navigation to open modal
@@ -29,6 +33,22 @@ export default function Home() {
 
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        setNewsLoading(true)
+        const publishedNews = await getNews(true) // Get only published news
+        // Limit to 3 most recent
+        setNews(publishedNews.slice(0, 3))
+      } catch (error) {
+        console.error('Error loading news:', error)
+      } finally {
+        setNewsLoading(false)
+      }
+    }
+    loadNews()
   }, [])
 
   return (
@@ -56,23 +76,49 @@ export default function Home() {
             <h2 className="text-3xl font-bold sm:text-4xl md:text-5xl">Updates & Announcements</h2>
           </div>
 
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <UpdateCard
-              title="New Chapter Launch"
-              description="We're excited to announce the opening of three new local chapters this month, expanding our reach to more communities."
-              date="January 15, 2024"
-            />
-            <UpdateCard
-              title="Civic Education Series"
-              description="Join us for our upcoming series of workshops on constitutional rights and responsibilities, starting next week."
-              date="January 10, 2024"
-            />
-            <UpdateCard
-              title="Community Forum Success"
-              description="Our recent community forum brought together over 200 citizens to discuss local governance and accountability measures."
-              date="January 5, 2024"
-            />
-          </div>
+          {newsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent"></div>
+                <p className="text-slate-600">Loading news...</p>
+              </div>
+            </div>
+          ) : news.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-slate-600">No news updates at the moment. Check back soon!</p>
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {news.map((newsItem) => (
+                <UpdateCard
+                  key={newsItem.id}
+                  title={newsItem.title}
+                  description={newsItem.description}
+                  date={
+                    newsItem.publishedAt
+                      ? new Date(
+                          newsItem.publishedAt instanceof Date
+                            ? newsItem.publishedAt.getTime()
+                            : (newsItem.publishedAt as any)?.toMillis?.() || 0
+                        ).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : new Date(
+                          newsItem.createdAt instanceof Date
+                            ? newsItem.createdAt.getTime()
+                            : (newsItem.createdAt as any)?.toMillis?.() || 0
+                        ).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -176,7 +222,7 @@ export default function Home() {
           </div>
 
           <div className="mt-8 border-t border-slate-800 pt-6 text-center text-xs text-slate-400 sm:mt-12 sm:pt-8 sm:text-sm">
-            <p>© 2024 Defend the Constitution Platform. All rights reserved.</p>
+            <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
           </div>
         </div>
       </footer>

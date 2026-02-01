@@ -74,3 +74,19 @@ export interface Product {
   updatedAt: Timestamp | Date
 }
 
+export type NewsCategory = 'announcement' | 'event' | 'update' | 'general'
+
+export interface News {
+  id: string
+  title: string
+  description: string
+  content?: string
+  image?: string
+  author?: string
+  category?: NewsCategory
+  isPublished: boolean
+  publishedAt?: Timestamp | Date
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
+}
+
