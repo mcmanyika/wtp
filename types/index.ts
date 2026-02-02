@@ -94,3 +94,30 @@ export interface CartItem {
   quantity: number
 }
 
+export type VolunteerApplicationStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn'
+
+export interface VolunteerApplication {
+  id: string
+  userId: string
+  name: string
+  email: string
+  phone?: string
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  dateOfBirth?: string
+  gender?: string
+  availability: string
+  skills: string[]
+  experience: string
+  motivation: string
+  references?: string
+  status: VolunteerApplicationStatus
+  notes?: string
+  reviewedBy?: string
+  reviewedAt?: Timestamp | Date
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
+}
+

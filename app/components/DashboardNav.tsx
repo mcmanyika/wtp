@@ -9,6 +9,7 @@ const navItems = [
   { href: '/dashboard/profile', label: 'Profile' },
   { href: '/dashboard/donations', label: 'Donations' },
   { href: '/dashboard/membership', label: 'Membership' },
+  { href: '/dashboard/volunteer', label: 'Volunteer' },
   { href: '/dashboard/resources', label: 'Resources' },
 ]
 
@@ -16,6 +17,7 @@ const adminNavItems = [
   { href: '/dashboard/admin/users', label: 'Users' },
   { href: '/dashboard/admin/products', label: 'Products' },
   { href: '/dashboard/admin/news', label: 'News' },
+  { href: '/dashboard/admin/volunteers', label: 'Volunteers' },
 ]
 
 export default function DashboardNav() {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import ProtectedRoute from '@/app/components/ProtectedRoute'
 import DashboardNav from '@/app/components/DashboardNav'
 import MembershipCheckout from '@/app/components/MembershipCheckout'
@@ -7,6 +8,28 @@ import MembershipCard from '@/app/components/MembershipCard'
 import Link from 'next/link'
 
 export default function MembershipPage() {
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  // Refresh membership card when page becomes visible (e.g., after returning from payment)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setRefreshKey((prev) => prev + 1)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    // Also refresh on mount in case user navigated here after payment
+    const timer = setTimeout(() => {
+      setRefreshKey((prev) => prev + 1)
+    }, 1000)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearTimeout(timer)
+    }
+  }, [])
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-slate-50">
@@ -27,7 +50,7 @@ export default function MembershipPage() {
         <DashboardNav />
 
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-          <div className="mb-8">
+          <div className="mb-8" key={refreshKey}>
             <MembershipCard />
           </div>
 

@@ -48,6 +48,17 @@ export default function MembershipCard() {
     fetchMembership()
   }, [user, userProfile?.membershipTier])
 
+  // Refresh membership when component becomes visible (e.g., after returning from payment)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        fetchMembership()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [user])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -131,6 +142,15 @@ export default function MembershipCard() {
       )}
 
       <div className="flex gap-3 mt-auto">
+        <button
+          onClick={fetchMembership}
+          className="rounded-lg border-2 border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors"
+          title="Refresh membership status"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
         <a
           href="/dashboard/membership"
           className="flex-1 rounded-lg border-2 border-slate-300 px-4 py-2 text-center text-sm font-semibold hover:bg-slate-50 transition-colors"

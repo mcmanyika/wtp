@@ -230,6 +230,12 @@ function DashboardContent() {
               Manage Membership
             </Link>
             <Link
+              href="/volunteer"
+              className="block rounded-lg border-2 border-slate-300 px-4 py-3 text-center text-sm font-semibold hover:bg-slate-50 transition-colors"
+            >
+              Become a Volunteer
+            </Link>
+            <Link
               href="/shop"
               className="block rounded-lg border-2 border-slate-300 px-4 py-3 text-center text-sm font-semibold hover:bg-slate-50 transition-colors"
             >

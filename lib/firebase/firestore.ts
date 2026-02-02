@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -218,16 +218,36 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
 
   try {
     // Try query with orderBy first (requires composite index)
+    // Get the most recent succeeded membership
     const q = query(
       collection(db, 'memberships'),
       where('userId', '==', userId),
+      where('status', '==', 'succeeded'),
       orderBy('createdAt', 'desc'),
       limit(1)
     )
     const snapshot = await getDocs(q)
     if (snapshot.empty) {
-      console.log(`No membership found for user ${userId}`)
-      return null
+      console.log(`No succeeded membership found for user ${userId}, trying without status filter`)
+      // Fallback: get any membership (in case status filter index isn't ready)
+      const fallbackQ = query(
+        collection(db, 'memberships'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        limit(1)
+      )
+      const fallbackSnapshot = await getDocs(fallbackQ)
+      if (fallbackSnapshot.empty) {
+        console.log(`No membership found for user ${userId}`)
+        return null
+      }
+      const data = fallbackSnapshot.docs[0].data()
+      const membership = {
+        ...data,
+        createdAt: toDate(data.createdAt),
+      } as Membership
+      console.log(`Found membership for user ${userId} (fallback):`, membership)
+      return membership
     }
 
     const data = snapshot.docs[0].data()
@@ -235,7 +255,7 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
       ...data,
       createdAt: toDate(data.createdAt),
     } as Membership
-    console.log(`Found membership for user ${userId}:`, membership)
+    console.log(`Found succeeded membership for user ${userId}:`, membership)
     return membership
   } catch (error: any) {
     // If index error, try without orderBy
@@ -245,7 +265,7 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
         const q = query(
           collection(db, 'memberships'),
           where('userId', '==', userId),
-          limit(1)
+          limit(10) // Get more to filter client-side
         )
         const snapshot = await getDocs(q)
         if (snapshot.empty) {
@@ -253,20 +273,23 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
           return null
         }
 
-        // Sort manually
+        // Sort manually and filter for succeeded status
         const docs = snapshot.docs.map((doc) => ({
           ...doc.data(),
           createdAt: toDate(doc.data().createdAt),
         })) as Membership[]
 
-        docs.sort((a, b) => {
+        // Filter for succeeded and sort by date
+        const succeeded = docs.filter((m) => m.status === 'succeeded')
+        const sorted = succeeded.length > 0 ? succeeded : docs
+        sorted.sort((a, b) => {
           const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt as any).getTime()
           const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt as any).getTime()
           return dateB - dateA // Descending order
         })
 
-        const membership = docs[0]
-        console.log(`Found membership for user ${userId} (without index):`, membership)
+        const membership = sorted[0]
+        console.log(`Found membership for user ${userId} (manual sort):`, membership)
         return membership
       } catch (fallbackError: any) {
         console.error('Error in fallback membership query:', fallbackError)
@@ -341,6 +364,168 @@ export async function createContactSubmission(
     createdAt: Timestamp.now(),
   })
   return contactRef.id
+}
+
+// Volunteer Application operations
+export async function createVolunteerApplication(
+  application: Omit<VolunteerApplication, 'id' | 'createdAt' | 'updatedAt' | 'status'>
+): Promise<string> {
+  const db = requireDb()
+  const applicationRef = doc(collection(db, 'volunteers'))
+  try {
+    // Filter out undefined values - Firestore doesn't accept undefined
+    const cleanApplication: any = {}
+    Object.keys(application).forEach((key) => {
+      const value = (application as any)[key]
+      if (value !== undefined) {
+        cleanApplication[key] = value
+      }
+    })
+
+    const applicationData = {
+      ...cleanApplication,
+      status: 'pending' as VolunteerApplicationStatus,
+      id: applicationRef.id,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await setDoc(applicationRef, applicationData)
+    console.log('Volunteer application created successfully:', applicationRef.id)
+    return applicationRef.id
+  } catch (error: any) {
+    console.error('Error in createVolunteerApplication:', {
+      error,
+      code: error?.code,
+      message: error?.message,
+      application,
+    })
+    throw error
+  }
+}
+
+export async function getVolunteerApplicationByUser(userId: string): Promise<VolunteerApplication | null> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return null
+  }
+
+  try {
+    const q = query(
+      collection(db, 'volunteers'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    )
+    const snapshot = await getDocs(q)
+    if (snapshot.empty) {
+      return null
+    }
+
+    const data = snapshot.docs[0].data()
+    return {
+      ...data,
+      createdAt: toDate(data.createdAt),
+      updatedAt: toDate(data.updatedAt),
+      reviewedAt: data.reviewedAt ? toDate(data.reviewedAt) : undefined,
+    } as VolunteerApplication
+  } catch (error: any) {
+    if (error?.code === 'failed-precondition') {
+      // Fallback without orderBy
+      try {
+        const q = query(
+          collection(db, 'volunteers'),
+          where('userId', '==', userId),
+          limit(1)
+        )
+        const snapshot = await getDocs(q)
+        if (snapshot.empty) return null
+
+        const data = snapshot.docs[0].data()
+        return {
+          ...data,
+          createdAt: toDate(data.createdAt),
+          updatedAt: toDate(data.updatedAt),
+          reviewedAt: data.reviewedAt ? toDate(data.reviewedAt) : undefined,
+        } as VolunteerApplication
+      } catch (fallbackError: any) {
+        console.error('Error in fallback query:', fallbackError)
+        throw fallbackError
+      }
+    }
+    console.error('Error in getVolunteerApplicationByUser:', error)
+    throw error
+  }
+}
+
+export async function getAllVolunteerApplications(): Promise<VolunteerApplication[]> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return []
+  }
+
+  try {
+    const q = query(
+      collection(db, 'volunteers'),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        ...data,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+        reviewedAt: data.reviewedAt ? toDate(data.reviewedAt) : undefined,
+      } as VolunteerApplication
+    })
+  } catch (error: any) {
+    if (error?.code === 'failed-precondition') {
+      // Fallback without orderBy
+      try {
+        const q = query(collection(db, 'volunteers'))
+        const snapshot = await getDocs(q)
+        const applications = snapshot.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            ...data,
+            createdAt: toDate(data.createdAt),
+            updatedAt: toDate(data.updatedAt),
+            reviewedAt: data.reviewedAt ? toDate(data.reviewedAt) : undefined,
+          } as VolunteerApplication
+        })
+        return applications.sort((a, b) => {
+          const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+          const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+          return bDate - aDate
+        })
+      } catch (fallbackError: any) {
+        console.error('Error in fallback query:', fallbackError)
+        throw fallbackError
+      }
+    }
+    console.error('Error in getAllVolunteerApplications:', error)
+    throw error
+  }
+}
+
+export async function updateVolunteerApplicationStatus(
+  applicationId: string,
+  status: VolunteerApplicationStatus,
+  reviewedBy: string,
+  notes?: string
+): Promise<void> {
+  const db = requireDb()
+  const updateData: any = {
+    status,
+    reviewedBy,
+    reviewedAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  }
+  if (notes) {
+    updateData.notes = notes
+  }
+  await updateDoc(doc(db, 'volunteers', applicationId), updateData)
 }
 
 // Purchase operations

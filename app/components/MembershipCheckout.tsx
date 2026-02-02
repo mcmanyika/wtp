@@ -170,8 +170,10 @@ function MembershipCheckoutContent({ onSuccess }: MembershipCheckoutContentProps
 
         // Refresh user profile to update membership tier
         if (window.location.pathname.includes('/dashboard')) {
-          // If we're on dashboard, refresh the page to show updated membership
-          window.location.reload()
+          // Wait a moment for webhook to process, then refresh
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
         } else {
           if (onSuccess) {
             onSuccess()
