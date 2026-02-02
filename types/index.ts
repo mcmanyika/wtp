@@ -32,11 +32,9 @@ export interface Membership {
   id: string
   userId: string
   tier: MembershipTier
-  stripeSubscriptionId?: string
-  status: SubscriptionStatus
-  startDate: Timestamp | Date
-  endDate?: Timestamp | Date
-  cancelAtPeriodEnd?: boolean
+  stripePaymentIntentId: string
+  status: PaymentStatus
+  createdAt: Timestamp | Date
 }
 
 export interface ContactSubmission {

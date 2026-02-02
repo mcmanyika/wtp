@@ -184,20 +184,15 @@ export async function createMembership(
   const membershipRef = doc(collection(db, 'memberships'))
 
   try {
-    // Convert startDate and endDate to Timestamp if they're Date objects
+    // Convert createdAt to Timestamp if it's a Date object
     const membershipData = {
       ...membership,
       id: membershipRef.id,
-      startDate: membership.startDate instanceof Date
-        ? Timestamp.fromDate(membership.startDate)
-        : membership.startDate instanceof Timestamp
-          ? membership.startDate
+      createdAt: membership.createdAt instanceof Date
+        ? Timestamp.fromDate(membership.createdAt)
+        : membership.createdAt instanceof Timestamp
+          ? membership.createdAt
           : Timestamp.now(),
-      endDate: membership.endDate instanceof Date
-        ? Timestamp.fromDate(membership.endDate)
-        : membership.endDate instanceof Timestamp
-          ? membership.endDate
-          : undefined,
     }
 
     await setDoc(membershipRef, membershipData)
@@ -226,7 +221,7 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
     const q = query(
       collection(db, 'memberships'),
       where('userId', '==', userId),
-      orderBy('startDate', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(1)
     )
     const snapshot = await getDocs(q)
@@ -238,8 +233,7 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
     const data = snapshot.docs[0].data()
     const membership = {
       ...data,
-      startDate: toDate(data.startDate),
-      endDate: data.endDate ? toDate(data.endDate) : undefined,
+      createdAt: toDate(data.createdAt),
     } as Membership
     console.log(`Found membership for user ${userId}:`, membership)
     return membership
@@ -262,13 +256,12 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
         // Sort manually
         const docs = snapshot.docs.map((doc) => ({
           ...doc.data(),
-          startDate: toDate(doc.data().startDate),
-          endDate: doc.data().endDate ? toDate(doc.data().endDate) : undefined,
+          createdAt: toDate(doc.data().createdAt),
         })) as Membership[]
 
         docs.sort((a, b) => {
-          const dateA = a.startDate instanceof Date ? a.startDate.getTime() : new Date(a.startDate as any).getTime()
-          const dateB = b.startDate instanceof Date ? b.startDate.getTime() : new Date(b.startDate as any).getTime()
+          const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt as any).getTime()
+          const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt as any).getTime()
           return dateB - dateA // Descending order
         })
 
@@ -291,14 +284,14 @@ export async function getMembershipByUser(userId: string): Promise<Membership | 
   }
 }
 
-export async function getMembershipBySubscriptionId(
-  subscriptionId: string
+export async function getMembershipByPaymentIntentId(
+  paymentIntentId: string
 ): Promise<Membership | null> {
   if (!db) return null
 
   const q = query(
     collection(db, 'memberships'),
-    where('stripeSubscriptionId', '==', subscriptionId),
+    where('stripePaymentIntentId', '==', paymentIntentId),
     limit(1)
   )
   const snapshot = await getDocs(q)
@@ -307,8 +300,7 @@ export async function getMembershipBySubscriptionId(
   const data = snapshot.docs[0].data()
   return {
     ...data,
-    startDate: toDate(data.startDate),
-    endDate: data.endDate ? toDate(data.endDate) : undefined,
+    createdAt: toDate(data.createdAt),
   } as Membership
 }
 
@@ -329,10 +321,10 @@ export async function updateMembership(
 }
 
 export async function updateMembershipStatus(
-  subscriptionId: string,
+  paymentIntentId: string,
   status: Membership['status']
 ): Promise<void> {
-  const membership = await getMembershipBySubscriptionId(subscriptionId)
+  const membership = await getMembershipByPaymentIntentId(paymentIntentId)
   if (membership) {
     await updateMembership(membership.id, { status })
   }

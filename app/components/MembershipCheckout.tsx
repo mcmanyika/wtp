@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { stripePromise } from '@/lib/stripe/config'
+import { createMembership } from '@/lib/firebase/firestore'
 
 const membershipTiers = [
   {
@@ -40,12 +43,64 @@ const membershipTiers = [
   },
 ]
 
-export default function MembershipCheckout() {
+interface MembershipCheckoutContentProps {
+  onSuccess?: () => void
+}
+
+function MembershipCheckoutContent({ onSuccess }: MembershipCheckoutContentProps) {
   const [selectedTier, setSelectedTier] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
   const { user } = useAuth()
   const router = useRouter()
+  const stripe = useStripe()
+  const elements = useElements()
+
+  useEffect(() => {
+    // Create payment intent when tier is selected
+    if (selectedTier) {
+      const tier = membershipTiers.find((t) => t.id === selectedTier)
+      if (tier) {
+        const createPaymentIntent = async () => {
+          try {
+            setError('')
+            const response = await fetch('/api/stripe/create-payment-intent', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                amount: tier.price,
+                userId: user?.uid || null,
+                userEmail: user?.email || null,
+                userName: user?.displayName || null,
+                type: 'membership',
+                description: `${tier.name} Membership`,
+                tier: selectedTier,
+              }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to create payment intent')
+            }
+
+            setClientSecret(data.clientSecret)
+          } catch (err: any) {
+            console.error('Error creating payment intent:', err)
+            setError(err.message || 'Failed to initialize payment')
+            setClientSecret('')
+          }
+        }
+        
+        createPaymentIntent()
+      }
+    } else {
+      setClientSecret('')
+    }
+  }, [selectedTier, user?.uid, user?.email, user?.displayName])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,33 +111,73 @@ export default function MembershipCheckout() {
       return
     }
 
+    if (!stripe || !elements || !clientSecret) {
+      setError('Payment system not ready. Please try again.')
+      return
+    }
+
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) {
+      setError('Card element not found')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const response = await fetch('/api/stripe/create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: membershipTiers.find((t) => t.id === selectedTier)?.price || 0,
-          userId: user?.uid || null,
-          userEmail: user?.email || null,
-          type: 'membership',
-          tier: selectedTier,
-        }),
-      })
+      const tier = membershipTiers.find((t) => t.id === selectedTier)
+      
+      // Confirm payment with auto-captured user info
+      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+        clientSecret,
+        {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: user?.displayName || undefined,
+              email: user?.email || undefined,
+            },
+          },
+        }
+      )
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session')
+      if (confirmError) {
+        throw new Error(confirmError.message)
       }
 
-      // Redirect to Stripe Checkout
-      const stripe = await import('@stripe/stripe-js').then((mod) => mod.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!))
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId: data.sessionId })
+      if (paymentIntent?.status === 'succeeded') {
+        // Create membership record in Firestore
+        try {
+          const membership = {
+            userId: user?.uid || '',
+            tier: selectedTier as any,
+            stripePaymentIntentId: paymentIntent.id,
+            status: 'succeeded' as const,
+          }
+          const membershipId = await createMembership(membership)
+          console.log('Membership record created in Firestore:', membershipId)
+        } catch (membershipError: any) {
+          console.error('Error creating membership record:', membershipError)
+          console.error('Error details:', {
+            code: membershipError?.code,
+            message: membershipError?.message,
+            userId: user?.uid,
+            paymentIntentId: paymentIntent.id,
+          })
+          // Show error to user but continue - webhook will handle it as backup
+          alert('Payment succeeded, but there was an error saving the membership. It will be saved automatically via webhook.')
+        }
+
+        // Refresh user profile to update membership tier
+        if (window.location.pathname.includes('/dashboard')) {
+          // If we're on dashboard, refresh the page to show updated membership
+          window.location.reload()
+        } else {
+          if (onSuccess) {
+            onSuccess()
+          }
+          router.push(`/success?payment_intent=${paymentIntent.id}`)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to process membership')
@@ -118,7 +213,6 @@ export default function MembershipCheckout() {
               <h3 className="mb-2 text-lg font-bold">{tier.name}</h3>
               <div className="mb-4">
                 <span className="text-3xl font-bold">${tier.price}</span>
-                <span className="text-slate-600">/month</span>
               </div>
               <ul className="mb-4 space-y-2 text-left text-sm text-slate-600">
                 {tier.features.map((feature, idx) => (
@@ -154,14 +248,49 @@ export default function MembershipCheckout() {
         ))}
       </div>
 
+      {clientSecret && (
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-900">
+            Card Details
+          </label>
+          <div className="rounded-lg border border-slate-300 p-4">
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#1e293b',
+                    '::placeholder': {
+                      color: '#94a3b8',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       <button
         type="submit"
-        disabled={loading || !selectedTier}
+        disabled={loading || !selectedTier || !clientSecret}
         className="w-full rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:text-base"
       >
-        {loading ? 'Processing...' : 'Subscribe Now'}
+        {loading ? 'Processing...' : 'Purchase Membership'}
       </button>
     </form>
+  )
+}
+
+interface MembershipCheckoutProps {
+  onSuccess?: () => void
+}
+
+export default function MembershipCheckout({ onSuccess }: MembershipCheckoutProps) {
+  return (
+    <Elements stripe={stripePromise}>
+      <MembershipCheckoutContent onSuccess={onSuccess} />
+    </Elements>
   )
 }
 

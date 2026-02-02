@@ -46,7 +46,7 @@ export default function MembershipCard() {
 
   useEffect(() => {
     fetchMembership()
-  }, [user])
+  }, [user, userProfile?.membershipTier])
 
   if (loading) {
     return (
@@ -75,12 +75,11 @@ export default function MembershipCard() {
     )
   }
 
-  const currentTier = userProfile?.membershipTier || 'free'
-
-  if (!membership || currentTier === 'free') {
+  // Show membership if it exists and status is succeeded, regardless of userProfile
+  if (!membership || membership.status !== 'succeeded') {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-8">
-        <div className="text-center">
+      <div className="rounded-lg border border-slate-200 bg-white p-8 flex flex-col h-full">
+        <div className="text-center flex-1 flex flex-col justify-center">
           <h3 className="mb-2 text-xl font-bold">No Active Membership</h3>
           <p className="mb-6 text-slate-600">
             Upgrade to a membership tier to unlock exclusive benefits
@@ -96,10 +95,10 @@ export default function MembershipCard() {
     )
   }
 
-  const endDate = toDate(membership.endDate)
+  const createdAt = toDate(membership.createdAt)
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-6">
+    <div className="rounded-lg border border-slate-200 bg-white p-6 flex flex-col h-full">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold capitalize">{membership.tier} Membership</h3>
@@ -109,9 +108,9 @@ export default function MembershipCard() {
         </div>
         <div
           className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            membership.status === 'active'
+            membership.status === 'succeeded'
               ? 'bg-green-100 text-green-700'
-              : membership.status === 'past_due'
+              : membership.status === 'pending'
               ? 'bg-yellow-100 text-yellow-700'
               : 'bg-red-100 text-red-700'
           }`}
@@ -120,20 +119,18 @@ export default function MembershipCard() {
         </div>
       </div>
 
-      {endDate && (
+      {createdAt && (
         <div className="mb-4 rounded-lg bg-slate-50 p-4">
           <p className="text-sm text-slate-600">
-            {membership.cancelAtPeriodEnd
-              ? 'Cancels on'
-              : 'Renews on'}{' '}
+            Purchased on{' '}
             <span className="font-semibold">
-              {endDate.toLocaleDateString()}
+              {createdAt.toLocaleDateString()}
             </span>
           </p>
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 mt-auto">
         <a
           href="/dashboard/membership"
           className="flex-1 rounded-lg border-2 border-slate-300 px-4 py-2 text-center text-sm font-semibold hover:bg-slate-50 transition-colors"

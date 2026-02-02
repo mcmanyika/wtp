@@ -26,6 +26,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updateProfile: (data: Partial<UserProfile>) => Promise<void>
+  refreshUserProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -192,6 +193,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserProfile((prev) => (prev ? { ...prev, ...data } : null))
   }
 
+  const refreshUserProfile = async () => {
+    if (!user || !db) return
+    
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      if (userDoc.exists()) {
+        const data = userDoc.data()
+        setUserProfile({
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+        } as UserProfile)
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -204,6 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         resetPassword,
         updateProfile,
+        refreshUserProfile,
       }}
     >
       {children}

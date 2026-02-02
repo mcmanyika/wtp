@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ sessionId: session.id })
     } else if (type === 'membership') {
-      // Recurring membership subscription
+      // One-time membership payment (converted from subscription)
       if (!tier) {
         return NextResponse.json(
           { error: 'Membership tier is required' },
@@ -87,45 +87,30 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Define membership prices (in dollars per month)
+      // Define membership prices (in dollars)
       const tierPrices: Record<string, number> = {
         basic: 10,
         premium: 25,
         champion: 50,
       }
 
-      const priceId = process.env[`STRIPE_PRICE_ID_${tier.toUpperCase()}`]
-      let lineItem: any
-
-      if (priceId) {
-        // Use existing price ID if configured
-        lineItem = {
-          price: priceId,
-          quantity: 1,
-        }
-      } else {
-        // Create price on the fly
-        lineItem = {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Membership`,
-              description: `Defend the Constitution Platform - ${tier} tier membership`,
-            },
-            recurring: {
-              interval: 'month',
-            },
-            unit_amount: Math.round(tierPrices[tier] * 100),
-          },
-          quantity: 1,
-        }
-      }
-
       // Stripe doesn't allow both customer and customer_email - use one or the other
       const sessionParams: any = {
         payment_method_types: ['card'],
-        line_items: [lineItem],
-        mode: 'subscription',
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Membership`,
+                description: `Defend the Constitution Platform - ${tier} tier membership`,
+              },
+              unit_amount: Math.round(tierPrices[tier] * 100), // Convert to cents
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
         success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/cancel`,
         metadata: {

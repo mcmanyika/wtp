@@ -6,7 +6,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { stripePromise } from '@/lib/stripe/config'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
-import { getProductById } from '@/lib/firebase/firestore'
+import { getProductById, createPurchase, decrementProductStock } from '@/lib/firebase/firestore'
 import type { Product } from '@/types'
 import Link from 'next/link'
 
@@ -117,6 +117,69 @@ function PaymentContent() {
       }
 
       if (paymentIntent?.status === 'succeeded') {
+        // Create purchase records in Firestore
+        try {
+          if (cartItems.length > 0) {
+            // Handle multiple items from cart
+            for (const item of cartItems) {
+              const purchase = {
+                userId: user?.uid || '',
+                productId: item.productId,
+                productName: item.productName,
+                amount: item.price * item.quantity,
+                currency: 'usd',
+                status: 'succeeded' as const,
+                stripePaymentIntentId: paymentIntent.id,
+                description: `${item.productName} x${item.quantity}`,
+              }
+
+              await createPurchase(purchase)
+              console.log(`Purchase recorded for ${item.productName}: ${paymentIntent.id}`)
+
+              // Decrement product stock for each item
+              try {
+                await decrementProductStock(item.productId, item.quantity)
+                console.log(`Stock decremented for product ${item.productId}: -${item.quantity}`)
+              } catch (stockError: any) {
+                console.error(`Error decrementing stock for product ${item.productId}:`, stockError)
+              }
+            }
+          } else if (product) {
+            // Handle single item purchase
+            const purchase = {
+              userId: user?.uid || '',
+              productId: product.id,
+              productName: product.name,
+              amount: product.price,
+              currency: 'usd',
+              status: 'succeeded' as const,
+              stripePaymentIntentId: paymentIntent.id,
+              description: `Purchase: ${product.name}`,
+            }
+
+            await createPurchase(purchase)
+            console.log(`Purchase recorded: ${paymentIntent.id}`)
+
+            // Decrement product stock
+            try {
+              await decrementProductStock(product.id, 1)
+              console.log(`Stock decremented for product ${product.id}: -1`)
+            } catch (stockError: any) {
+              console.error(`Error decrementing stock for product ${product.id}:`, stockError)
+            }
+          }
+        } catch (purchaseError: any) {
+          console.error('Error creating purchase record:', purchaseError)
+          console.error('Error details:', {
+            code: purchaseError?.code,
+            message: purchaseError?.message,
+            userId: user?.uid,
+            paymentIntentId: paymentIntent.id,
+          })
+          // Show error to user but continue - webhook will handle it as backup
+          alert('Payment succeeded, but there was an error saving the transaction. It will be saved automatically via webhook.')
+        }
+
         // Clear cart if this was a cart checkout
         if (cartItems.length > 0) {
           clearCart()

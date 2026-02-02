@@ -8,7 +8,7 @@ import {
   createMembership,
   updateMembershipStatus,
   updateMembership,
-  getMembershipBySubscriptionId,
+  getMembershipByPaymentIntentId,
   createPurchase,
   updatePurchaseStatus,
   decrementProductStock,
@@ -43,117 +43,113 @@ export async function POST(request: NextRequest) {
 
   try {
     console.log(`Webhook received: ${event.type}`)
-    
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as any
         const userId = session.metadata?.userId
-        
+
         console.log(`Checkout session completed: mode=${session.mode}, userId=${userId}`)
 
         if (session.mode === 'payment') {
-          // One-time donation
-          const donation = {
-            userId: userId || '',
-            amount: session.amount_total! / 100,
-            currency: session.currency,
-            status: 'succeeded' as const,
-            stripePaymentIntentId: session.payment_intent,
-            description: session.metadata?.description,
-          }
-
-          await createDonation(donation)
-
-          // Update user's total donations if userId exists
-          if (userId) {
-            // This could be tracked in a separate field if needed
-            console.log(`Donation recorded for user ${userId}`)
-          }
-        } else if (session.mode === 'subscription') {
-          // Subscription membership
-          console.log(`Processing subscription membership for user ${userId}`)
+          const type = session.metadata?.type
           
-          try {
-            const subscription = await stripe.subscriptions.retrieve(
-              session.subscription as string
-            )
-            
-            console.log(`Retrieved subscription: ${subscription.id}, status: ${subscription.status}`)
-
-            const membership = {
+          if (type === 'donation') {
+            // One-time donation
+            const donation = {
               userId: userId || '',
-              tier: (session.metadata?.tier || 'basic') as any,
-              stripeSubscriptionId: subscription.id,
-              status: subscription.status as any,
-              startDate: new Date(subscription.current_period_start * 1000),
-              endDate: new Date(subscription.current_period_end * 1000),
-              cancelAtPeriodEnd: subscription.cancel_at_period_end,
+              amount: session.amount_total! / 100,
+              currency: session.currency,
+              status: 'succeeded' as const,
+              stripePaymentIntentId: session.payment_intent,
+              description: session.metadata?.description,
             }
 
-            console.log(`Attempting to create membership with data:`, membership)
-            
-            // Try direct write first (works with unauthenticated rules)
-            if (db) {
+            await createDonation(donation)
+
+            // Update user's total donations if userId exists
+            if (userId) {
+              // This could be tracked in a separate field if needed
+              console.log(`Donation recorded for user ${userId}`)
+            }
+          } else if (type === 'membership') {
+            // One-time membership payment
+            console.log(`Processing membership payment for user ${userId}`)
+
+            if (!session.payment_intent) {
+              console.error('❌ No payment intent ID in checkout session')
+              break
+            }
+
+            try {
+              const membership = {
+                userId: userId || '',
+                tier: (session.metadata?.tier || 'basic') as any,
+                stripePaymentIntentId: session.payment_intent,
+                status: 'succeeded' as const,
+              }
+
+              console.log(`Attempting to create membership with data:`, membership)
+
+              // Use createMembership function (consistent with donations approach)
               try {
-                const membershipRef = doc(collection(db, 'memberships'))
-                await setDoc(membershipRef, {
-                  userId: userId || '',
-                  tier: session.metadata?.tier || 'basic',
-                  stripeSubscriptionId: subscription.id,
-                  status: subscription.status,
-                  startDate: Timestamp.fromDate(new Date(subscription.current_period_start * 1000)),
-                  endDate: Timestamp.fromDate(new Date(subscription.current_period_end * 1000)),
-                  cancelAtPeriodEnd: subscription.cancel_at_period_end,
-                  id: membershipRef.id,
+                const membershipId = await createMembership(membership)
+                console.log(`✅ Membership created via createMembership: ${membershipId} for payment intent ${session.payment_intent}`)
+              } catch (createError: any) {
+                console.error('❌ Error creating membership via createMembership:', {
+                  code: createError?.code,
+                  message: createError?.message,
+                  error: createError,
                 })
-                console.log(`✅ Membership created directly in Firestore: ${membershipRef.id}`)
-              } catch (directError: any) {
-                console.error('❌ Error creating membership directly:', {
-                  code: directError?.code,
-                  message: directError?.message,
-                  error: directError,
-                })
-                // Fallback to createMembership function
-                try {
-                  await createMembership(membership)
-                  console.log(`✅ Membership created via createMembership: ${subscription.id}`)
-                } catch (createError: any) {
-                  console.error('❌ Error creating membership via createMembership:', {
-                    code: createError?.code,
-                    message: createError?.message,
-                    error: createError,
-                  })
+                // Fallback to direct write if createMembership fails
+                if (db) {
+                  try {
+                    const membershipRef = doc(collection(db, 'memberships'))
+                    await setDoc(membershipRef, {
+                      userId: userId || '',
+                      tier: session.metadata?.tier || 'basic',
+                      stripePaymentIntentId: session.payment_intent,
+                      status: 'succeeded',
+                      id: membershipRef.id,
+                      createdAt: Timestamp.now(),
+                    })
+                    console.log(`✅ Membership created directly in Firestore: ${membershipRef.id}`)
+                  } catch (directError: any) {
+                    console.error('❌ Error creating membership directly:', {
+                      code: directError?.code,
+                      message: directError?.message,
+                      error: directError,
+                    })
+                    throw createError // Throw original error
+                  }
+                } else {
                   throw createError
                 }
               }
-            } else {
-              console.warn('⚠️ Firestore db is not initialized, trying createMembership')
-              await createMembership(membership)
-              console.log(`✅ Membership created via createMembership: ${subscription.id}`)
-            }
 
-            // Update user's membership tier
-            if (userId && db) {
-              try {
-                await setDoc(doc(db, 'users', userId), {
-                  membershipTier: session.metadata?.tier || 'basic',
-                }, { merge: true })
-                console.log(`✅ Updated user membership tier: ${userId}`)
-              } catch (userUpdateError: any) {
-                console.error('⚠️ Error updating user membership tier (non-critical):', userUpdateError)
-                // Continue even if user update fails
+              // Update user's membership tier
+              if (userId && db) {
+                try {
+                  await setDoc(doc(db, 'users', userId), {
+                    membershipTier: session.metadata?.tier || 'basic',
+                  }, { merge: true })
+                  console.log(`✅ Updated user membership tier: ${userId}`)
+                } catch (userUpdateError: any) {
+                  console.error('⚠️ Error updating user membership tier (non-critical):', userUpdateError)
+                  // Continue even if user update fails
+                }
               }
+            } catch (membershipError: any) {
+              console.error('❌ Fatal error creating membership:', {
+                code: membershipError?.code,
+                message: membershipError?.message,
+                error: membershipError,
+                userId,
+                paymentIntentId: session.payment_intent,
+              })
+              // Re-throw to ensure webhook returns error status
+              throw membershipError
             }
-          } catch (membershipError: any) {
-            console.error('❌ Fatal error creating membership:', {
-              code: membershipError?.code,
-              message: membershipError?.message,
-              error: membershipError,
-              userId,
-              subscriptionId: session.subscription,
-            })
-            // Re-throw to ensure webhook returns error status
-            throw membershipError
           }
         }
         break
@@ -164,7 +160,59 @@ export async function POST(request: NextRequest) {
         const userId = paymentIntent.metadata?.userId
         const type = paymentIntent.metadata?.type
 
-        if (type === 'donation') {
+        if (type === 'membership') {
+          // Membership payment (backup handler in case checkout.session.completed fails)
+          try {
+            console.log(`Processing membership payment intent: ${paymentIntent.id} for user ${userId}`)
+
+            // Check if membership already exists
+            const existingMembership = await getMembershipByPaymentIntentId(paymentIntent.id)
+            if (existingMembership) {
+              console.log(`⚠️ Membership already exists for payment intent ${paymentIntent.id}, skipping creation`)
+              // Still update user tier
+              if (userId && db) {
+                try {
+                  await setDoc(doc(db, 'users', userId), {
+                    membershipTier: paymentIntent.metadata?.tier || 'basic',
+                  }, { merge: true })
+                  console.log(`✅ Updated user membership tier: ${userId}`)
+                } catch (userUpdateError: any) {
+                  console.error('⚠️ Error updating user membership tier (non-critical):', userUpdateError)
+                }
+              }
+              break
+            }
+
+            const membership = {
+              userId: userId || '',
+              tier: (paymentIntent.metadata?.tier || 'basic') as any,
+              stripePaymentIntentId: paymentIntent.id,
+              status: 'succeeded' as const,
+            }
+
+            await createMembership(membership)
+            console.log(`✅ Membership created from payment_intent.succeeded: ${paymentIntent.id}`)
+
+            // Update user's membership tier
+            if (userId && db) {
+              try {
+                await setDoc(doc(db, 'users', userId), {
+                  membershipTier: paymentIntent.metadata?.tier || 'basic',
+                }, { merge: true })
+                console.log(`✅ Updated user membership tier: ${userId}`)
+              } catch (userUpdateError: any) {
+                console.error('⚠️ Error updating user membership tier:', userUpdateError)
+              }
+            }
+          } catch (error: any) {
+            console.error('❌ Error creating membership from payment_intent.succeeded:', {
+              code: error?.code,
+              message: error?.message,
+              error,
+            })
+            // Don't throw - this is a backup handler
+          }
+        } else if (type === 'donation') {
           try {
             const donation = {
               userId: userId || '',
@@ -206,7 +254,7 @@ export async function POST(request: NextRequest) {
             if (cartItemsStr) {
               // Handle multiple items from cart
               const cartItems = JSON.parse(cartItemsStr)
-              
+
               for (const item of cartItems) {
                 // Create purchase record for each item
                 const purchase = {
@@ -335,57 +383,6 @@ export async function POST(request: NextRequest) {
         break
       }
 
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as any
-        const membership = await getMembershipBySubscriptionId(subscription.id)
-
-        if (membership) {
-          await updateMembership(membership.id, {
-            status: subscription.status as any,
-            endDate: subscription.current_period_end
-              ? new Date(subscription.current_period_end * 1000)
-              : undefined,
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          })
-
-          // If subscription is canceled, update user's membership tier
-          if (subscription.status === 'canceled' && membership.userId && db) {
-            await setDoc(doc(db, 'users', membership.userId), {
-              membershipTier: 'free',
-            }, { merge: true })
-          }
-        }
-        break
-      }
-
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as any
-        if (invoice.subscription) {
-          // Subscription payment succeeded
-          const membership = await getMembershipBySubscriptionId(invoice.subscription)
-          if (membership) {
-            await updateMembership(membership.id, {
-              status: 'active',
-            })
-          }
-        }
-        break
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as any
-        if (invoice.subscription) {
-          // Subscription payment failed
-          const membership = await getMembershipBySubscriptionId(invoice.subscription)
-          if (membership) {
-            await updateMembership(membership.id, {
-              status: 'past_due',
-            })
-          }
-        }
-        break
-      }
 
       default:
         console.log(`Unhandled event type: ${event.type}`)

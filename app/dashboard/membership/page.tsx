@@ -4,7 +4,6 @@ import ProtectedRoute from '@/app/components/ProtectedRoute'
 import DashboardNav from '@/app/components/DashboardNav'
 import MembershipCheckout from '@/app/components/MembershipCheckout'
 import MembershipCard from '@/app/components/MembershipCard'
-import StripeProvider from '@/app/components/StripeProvider'
 import Link from 'next/link'
 
 export default function MembershipPage() {
@@ -39,9 +38,7 @@ export default function MembershipPage() {
                 Choose a membership tier that fits your commitment level
               </p>
             </div>
-            <StripeProvider>
-              <MembershipCheckout />
-            </StripeProvider>
+            <MembershipCheckout />
           </div>
         </div>
       </div>

@@ -2,11 +2,13 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 
 function SuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { refreshUserProfile } = useAuth()
   const [loading, setLoading] = useState(true)
   const [sessionData, setSessionData] = useState<any>(null)
 
@@ -26,6 +28,14 @@ function SuccessContent() {
         .then((data) => {
           setSessionData(data)
           setLoading(false)
+          
+          // If this is a membership payment, refresh user profile after a delay
+          // to allow webhook to process
+          if (data.metadata?.type === 'membership') {
+            setTimeout(() => {
+              refreshUserProfile()
+            }, 2000)
+          }
         })
         .catch(() => {
           setLoading(false)
@@ -36,12 +46,20 @@ function SuccessContent() {
         .then((data) => {
           setSessionData(data)
           setLoading(false)
+          
+          // If this is a membership payment, refresh user profile after a delay
+          // to allow webhook to process
+          if (data.metadata?.type === 'membership') {
+            setTimeout(() => {
+              refreshUserProfile()
+            }, 2000)
+          }
         })
         .catch(() => {
           setLoading(false)
         })
     }
-  }, [searchParams, router])
+  }, [searchParams, router, refreshUserProfile])
 
   if (loading) {
     return (

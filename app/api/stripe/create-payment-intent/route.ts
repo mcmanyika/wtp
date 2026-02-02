@@ -3,7 +3,7 @@ import { stripe } from '@/lib/stripe/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, userId, userEmail, userName, type, description, productId, productName, cartItems } = await request.json()
+    const { amount, userId, userEmail, userName, type, description, productId, productName, cartItems, tier } = await request.json()
 
     if (!amount || !type) {
       return NextResponse.json(
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
         productId: productId || '',
         productName: productName || '',
         cartItems: cartItems ? JSON.stringify(cartItems) : '',
+        tier: tier || '',
       },
       receipt_email: customerEmail,
       description: description || `Payment for ${type}`,
