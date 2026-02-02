@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -328,11 +328,11 @@ export async function updateMembership(
   data: Partial<Membership>
 ): Promise<void> {
   const updateData: any = {}
-  
+
   if (data.tier !== undefined) updateData.tier = data.tier
   if (data.status !== undefined) updateData.status = data.status
   if (data.stripePaymentIntentId !== undefined) updateData.stripePaymentIntentId = data.stripePaymentIntentId
-  
+
   await updateDoc(doc(requireDb(), 'memberships', membershipId), updateData)
 }
 
@@ -624,8 +624,8 @@ export async function getPurchaseById(purchaseId: string): Promise<Purchase | nu
   if (!purchaseDoc.exists()) return null
 
   const data = purchaseDoc.data()
-  return { 
-    ...data, 
+  return {
+    ...data,
     createdAt: toDate(data.createdAt),
     updatedAt: data.updatedAt ? toDate(data.updatedAt) : undefined,
   } as Purchase
@@ -635,7 +635,7 @@ export async function updatePurchaseStatus(
   purchaseId: string,
   status: Purchase['status']
 ): Promise<void> {
-  await updateDoc(doc(requireDb(), 'purchases', purchaseId), { 
+  await updateDoc(doc(requireDb(), 'purchases', purchaseId), {
     status,
     updatedAt: Timestamp.now(),
   })
@@ -648,7 +648,7 @@ export async function updatePurchase(
   const updateData: any = {
     updatedAt: Timestamp.now(),
   }
-  
+
   if (data.status !== undefined) updateData.status = data.status
   if (data.shipmentStatus !== undefined) updateData.shipmentStatus = data.shipmentStatus
   if (data.trackingNumber !== undefined) {
@@ -658,7 +658,7 @@ export async function updatePurchase(
       updateData.trackingNumber = null
     }
   }
-  
+
   await updateDoc(doc(requireDb(), 'purchases', purchaseId), updateData)
 }
 
@@ -831,7 +831,7 @@ export async function updateProductStock(productId: string, quantity: number): P
 export async function decrementProductStock(productId: string, amount: number = 1): Promise<void> {
   const productRef = doc(requireDb(), 'products', productId)
   const productDoc = await getDoc(productRef)
-  
+
   if (!productDoc.exists()) {
     throw new Error(`Product ${productId} not found`)
   }
@@ -873,7 +873,7 @@ export async function getLowStockProducts(threshold?: number): Promise<Product[]
 // News functions
 export async function createNews(news: Omit<News, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
   const newsRef = doc(collection(requireDb(), 'news'))
-  
+
   // Remove undefined fields to avoid Firestore errors
   const cleanNews: any = {}
   if (news.title !== undefined) cleanNews.title = news.title
@@ -883,7 +883,7 @@ export async function createNews(news: Omit<News, 'id' | 'createdAt' | 'updatedA
   if (news.author !== undefined && news.author !== '') cleanNews.author = news.author
   if (news.category !== undefined) cleanNews.category = news.category
   if (news.isPublished !== undefined) cleanNews.isPublished = news.isPublished
-  
+
   const newsData = {
     ...cleanNews,
     id: newsRef.id,
@@ -903,7 +903,7 @@ export async function getNews(publishedOnly: boolean = true): Promise<News[]> {
 
   try {
     let q = query(collection(requireDb(), 'news'), orderBy('createdAt', 'desc'))
-    
+
     if (publishedOnly) {
       q = query(q, where('isPublished', '==', true))
     }
@@ -963,7 +963,7 @@ export async function getNewsById(newsId: string): Promise<News | null> {
 export async function updateNews(newsId: string, data: Partial<News>): Promise<void> {
   // Remove undefined fields to avoid Firestore errors
   const updateData: any = { updatedAt: Timestamp.now() }
-  
+
   if (data.title !== undefined) updateData.title = data.title
   if (data.description !== undefined) updateData.description = data.description
   if (data.content !== undefined) {
@@ -992,7 +992,7 @@ export async function updateNews(newsId: string, data: Partial<News>): Promise<v
   if (data.category !== undefined) updateData.category = data.category
   if (data.isPublished !== undefined) {
     updateData.isPublished = data.isPublished
-    
+
     // If publishing for the first time, set publishedAt
     if (data.isPublished === true) {
       const existingNews = await getNewsById(newsId)
@@ -1001,7 +1001,7 @@ export async function updateNews(newsId: string, data: Partial<News>): Promise<v
       }
     }
   }
-  
+
   await updateDoc(doc(requireDb(), 'news', newsId), updateData)
 }
 
@@ -1016,7 +1016,7 @@ export async function createPetition(
   petition: Omit<Petition, 'id' | 'createdAt' | 'updatedAt' | 'currentSignatures' | 'signatures'>
 ): Promise<string> {
   const petitionRef = doc(collection(requireDb(), 'petitions'))
-  
+
   const cleanPetition: any = {}
   if (petition.title !== undefined) cleanPetition.title = petition.title
   if (petition.description !== undefined) cleanPetition.description = petition.description
@@ -1027,7 +1027,7 @@ export async function createPetition(
   if (petition.isPublished !== undefined) cleanPetition.isPublished = petition.isPublished
   if (petition.createdBy !== undefined) cleanPetition.createdBy = petition.createdBy
   if (petition.expiresAt !== undefined) cleanPetition.expiresAt = petition.expiresAt
-  
+
   const petitionData = {
     ...cleanPetition,
     id: petitionRef.id,
@@ -1049,7 +1049,7 @@ export async function getPetitions(publishedOnly: boolean = true, activeOnly: bo
 
   try {
     let q = query(collection(requireDb(), 'petitions'), orderBy('createdAt', 'desc'))
-    
+
     if (publishedOnly) {
       q = query(q, where('isPublished', '==', true))
     }
@@ -1130,7 +1130,7 @@ export async function getPetitionById(petitionId: string): Promise<Petition | nu
 
 export async function updatePetition(petitionId: string, data: Partial<Petition>): Promise<void> {
   const updateData: any = { updatedAt: Timestamp.now() }
-  
+
   if (data.title !== undefined) updateData.title = data.title
   if (data.description !== undefined) updateData.description = data.description
   if (data.content !== undefined) {
@@ -1178,14 +1178,14 @@ export async function signPetition(
 ): Promise<void> {
   const petitionRef = doc(requireDb(), 'petitions', petitionId)
   const petitionDoc = await getDoc(petitionRef)
-  
+
   if (!petitionDoc.exists()) {
     throw new Error('Petition not found')
   }
 
   const petitionData = petitionDoc.data() as Petition
   const signatures = petitionData.signatures || []
-  
+
   // Check if user already signed (if userId provided)
   if (signature.userId) {
     const alreadySigned = signatures.some((sig) => sig.userId === signature.userId)
@@ -1193,7 +1193,7 @@ export async function signPetition(
       throw new Error('You have already signed this petition')
     }
   }
-  
+
   // Check if email already signed
   const emailSigned = signatures.some((sig) => sig.email.toLowerCase() === signature.email.toLowerCase())
   if (emailSigned) {
@@ -1232,7 +1232,7 @@ export async function saveUserCart(userId: string, cartItems: CartItem[]): Promi
     })),
     updatedAt: Timestamp.now(),
   }
-  
+
   await setDoc(doc(requireDb(), 'carts', userId), cartData, { merge: true })
 }
 
@@ -1240,10 +1240,10 @@ export async function getUserCart(userId: string): Promise<CartItem[]> {
   try {
     const cartDoc = await getDoc(doc(requireDb(), 'carts', userId))
     if (!cartDoc.exists()) return []
-    
+
     const cartData = cartDoc.data()
     const items = cartData.items || []
-    
+
     // Fetch full product data for each cart item
     const cartItems: CartItem[] = []
     for (const item of items) {
@@ -1272,7 +1272,7 @@ export async function getUserCart(userId: string): Promise<CartItem[]> {
         console.error(`Error loading product ${item.productId}:`, error)
       }
     }
-    
+
     return cartItems
   } catch (error) {
     console.error('Error loading user cart:', error)
@@ -1282,5 +1282,55 @@ export async function getUserCart(userId: string): Promise<CartItem[]> {
 
 export async function clearUserCart(userId: string): Promise<void> {
   await setDoc(doc(requireDb(), 'carts', userId), { items: [], updatedAt: Timestamp.now() }, { merge: true })
+}
+
+// Newsletter subscription operations
+export async function createNewsletterSubscription(
+  subscription: Omit<NewsletterSubscription, 'id' | 'createdAt' | 'updatedAt' | 'subscribed'>
+): Promise<string> {
+  const db = requireDb()
+  const subscriptionRef = doc(collection(db, 'newsletterSubscriptions'))
+
+  try {
+    // Check if email already exists
+    const existingQuery = query(
+      collection(db, 'newsletterSubscriptions'),
+      where('email', '==', subscription.email.toLowerCase().trim())
+    )
+    const existingSnapshot = await getDocs(existingQuery)
+
+    if (!existingSnapshot.empty) {
+      // Update existing subscription to subscribed
+      const existingDoc = existingSnapshot.docs[0]
+      await updateDoc(existingDoc.ref, {
+        subscribed: true,
+        updatedAt: Timestamp.now(),
+        userId: subscription.userId || null,
+      })
+      return existingDoc.id
+    }
+
+    // Create new subscription
+    const subscriptionData = {
+      email: subscription.email.toLowerCase().trim(),
+      userId: subscription.userId || null,
+      subscribed: true,
+      id: subscriptionRef.id,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await setDoc(subscriptionRef, subscriptionData)
+    console.log('Newsletter subscription created successfully:', subscriptionRef.id)
+    return subscriptionRef.id
+  } catch (error: any) {
+    console.error('Error in createNewsletterSubscription:', {
+      error,
+      code: error?.code,
+      message: error?.message,
+      subscription,
+    })
+    throw error
+  }
 }
 

@@ -217,6 +217,29 @@ service cloud.firestore {
                      request.resource.data.currentSignatures > resource.data.currentSignatures &&
                      request.resource.data.signatures.size() > resource.data.signatures.size();
     }
+
+    // Newsletter subscriptions collection
+    match /newsletterSubscriptions/{subscriptionId} {
+      // Anyone can create newsletter subscriptions (authenticated or not)
+      // Validate that email exists and is a non-empty string
+      allow create: if request.resource.data.keys().hasAll(['email', 'subscribed']) &&
+                     request.resource.data.email is string &&
+                     request.resource.data.email.size() > 0 &&
+                     request.resource.data.email.matches('.*@.*') &&
+                     request.resource.data.subscribed is bool &&
+                     request.resource.data.subscribed == true;
+      // Anyone can update subscriptions (for resubscribing or updating userId)
+      // This allows the function to update existing subscriptions when email already exists
+      allow update: if request.resource.data.keys().hasAll(['email', 'subscribed']) &&
+                     request.resource.data.email is string &&
+                     request.resource.data.email.size() > 0 &&
+                     request.resource.data.subscribed is bool;
+      // Users can read their own subscriptions
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || resource.data.email == request.auth.token.email);
+      // Admins can read all subscriptions
+      allow read: if isAdmin();
+    }
   }
 }
 

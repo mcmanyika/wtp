@@ -8,13 +8,19 @@ import HeroSection from './components/HeroSection';
 import ContactForm from './components/ContactForm';
 import DonationModal from './components/DonationModal';
 import Chatbot from './components/Chatbot';
-import { getNews } from '@/lib/firebase/firestore';
+import { getNews, createNewsletterSubscription } from '@/lib/firebase/firestore';
 import type { News } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
+  const { user } = useAuth()
   const [donationModalOpen, setDonationModalOpen] = useState(false)
   const [news, setNews] = useState<News[]>([])
   const [newsLoading, setNewsLoading] = useState(true)
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterLoading, setNewsletterLoading] = useState(false)
+  const [newsletterSuccess, setNewsletterSuccess] = useState(false)
+  const [newsletterError, setNewsletterError] = useState('')
 
   useEffect(() => {
     // Handle hash navigation to open modal
@@ -206,18 +212,70 @@ export default function Home() {
               <p className="mb-3 text-xs text-slate-400">
                 Stay updated with our latest news.
               </p>
-              <form className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="flex-1 rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:border-slate-600 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="rounded-md bg-white px-4 py-1.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:whitespace-nowrap"
-                >
-                  Subscribe
-                </button>
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setNewsletterLoading(true)
+                  setNewsletterError('')
+                  setNewsletterSuccess(false)
+
+                  // Validation
+                  if (!newsletterEmail.trim()) {
+                    setNewsletterError('Please enter your email address')
+                    setNewsletterLoading(false)
+                    return
+                  }
+                  if (!newsletterEmail.includes('@')) {
+                    setNewsletterError('Please enter a valid email address')
+                    setNewsletterLoading(false)
+                    return
+                  }
+
+                  try {
+                    await createNewsletterSubscription({
+                      email: newsletterEmail.trim(),
+                      userId: user?.uid,
+                    })
+                    setNewsletterSuccess(true)
+                    setNewsletterEmail('')
+                    setTimeout(() => setNewsletterSuccess(false), 5000)
+                  } catch (err: any) {
+                    console.error('Error subscribing to newsletter:', err)
+                    setNewsletterError(err.message || 'Failed to subscribe. Please try again.')
+                  } finally {
+                    setNewsletterLoading(false)
+                  }
+                }}
+                className="space-y-2"
+              >
+                {newsletterError && (
+                  <div className="rounded-md bg-red-50 border border-red-200 px-3 py-1.5 text-[10px] text-red-800">
+                    {newsletterError}
+                  </div>
+                )}
+                {newsletterSuccess && (
+                  <div className="rounded-md bg-green-50 border border-green-200 px-3 py-1.5 text-[10px] text-green-800">
+                    Thank you! You have been subscribed.
+                  </div>
+                )}
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    disabled={newsletterLoading}
+                    className="flex-1 rounded-md border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:border-slate-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsletterLoading}
+                    className="rounded-md bg-white px-4 py-1.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {newsletterLoading ? '...' : 'Subscribe'}
+                  </button>
+                </div>
               </form>
             </div>
           </div>

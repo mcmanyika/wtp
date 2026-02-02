@@ -1,9 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import Header from '../components/Header';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext'
+import { createNewsletterSubscription } from '@/lib/firebase/firestore'
 
 export default function AboutPage() {
+  const { user } = useAuth()
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <Header />
@@ -202,18 +210,70 @@ export default function AboutPage() {
               <p className="mb-4 text-sm text-slate-400">
                 Stay updated with our latest news and announcements.
               </p>
-              <form className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder:text-slate-400 focus:border-slate-600 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="rounded-lg bg-white px-6 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:whitespace-nowrap"
-                >
-                  Subscribe
-                </button>
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setLoading(true)
+                  setError('')
+                  setSuccess(false)
+
+                  // Validation
+                  if (!email.trim()) {
+                    setError('Please enter your email address')
+                    setLoading(false)
+                    return
+                  }
+                  if (!email.includes('@')) {
+                    setError('Please enter a valid email address')
+                    setLoading(false)
+                    return
+                  }
+
+                  try {
+                    await createNewsletterSubscription({
+                      email: email.trim(),
+                      userId: user?.uid,
+                    })
+                    setSuccess(true)
+                    setEmail('')
+                    setTimeout(() => setSuccess(false), 5000)
+                  } catch (err: any) {
+                    console.error('Error subscribing to newsletter:', err)
+                    setError(err.message || 'Failed to subscribe. Please try again.')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                className="space-y-2"
+              >
+                {error && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-xs text-red-800">
+                    {error}
+                  </div>
+                )}
+                {success && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-2 text-xs text-green-800">
+                    Thank you! You have been subscribed to our newsletter.
+                  </div>
+                )}
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder:text-slate-400 focus:border-slate-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="rounded-lg bg-white px-6 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Subscribing...' : 'Subscribe'}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
