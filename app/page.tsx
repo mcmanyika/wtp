@@ -8,15 +8,25 @@ import HeroSection from './components/HeroSection';
 import ContactForm from './components/ContactForm';
 import DonationModal from './components/DonationModal';
 import Chatbot from './components/Chatbot';
-import { getNews, createNewsletterSubscription } from '@/lib/firebase/firestore';
-import type { News } from '@/types';
+import { getNews, createNewsletterSubscription, getProducts, getProductById } from '@/lib/firebase/firestore';
+import type { News, Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { user } = useAuth()
+  const { addToCart } = useCart()
+  const router = useRouter()
   const [donationModalOpen, setDonationModalOpen] = useState(false)
   const [news, setNews] = useState<News[]>([])
   const [newsLoading, setNewsLoading] = useState(true)
+  const [products, setProducts] = useState<Product[]>([])
+  const [productsLoading, setProductsLoading] = useState(true)
+  const [productStartIndex, setProductStartIndex] = useState(0)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterLoading, setNewsletterLoading] = useState(false)
   const [newsletterSuccess, setNewsletterSuccess] = useState(false)
@@ -57,6 +67,95 @@ export default function Home() {
     }
     loadNews()
   }, [])
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setProductsLoading(true)
+        const activeProducts = await getProducts(true) // Get only active products
+        setProducts(activeProducts)
+      } catch (error) {
+        console.error('Error loading products:', error)
+      } finally {
+        setProductsLoading(false)
+      }
+    }
+    loadProducts()
+  }, [])
+
+  const productsPerView = 4
+  const visibleProducts = products.slice(productStartIndex, productStartIndex + productsPerView)
+  const canGoLeft = productStartIndex > 0
+  const canGoRight = productStartIndex + productsPerView < products.length
+
+  const handlePrevious = () => {
+    setProductStartIndex((prev) => Math.max(0, prev - productsPerView))
+  }
+
+  const handleNext = () => {
+    setProductStartIndex((prev) => Math.min(products.length - productsPerView, prev + productsPerView))
+  }
+
+  const handlePurchase = async (product: Product) => {
+    setError('')
+    
+    // Check if user is authenticated
+    if (!user) {
+      // Redirect to login page with return URL to shop
+      router.push(`/login?returnUrl=${encodeURIComponent('/shop')}`)
+      return
+    }
+    
+    // Check stock availability
+    if (product.stock <= 0) {
+      setError('This product is out of stock')
+      return
+    }
+
+    // Refresh product to get latest stock
+    try {
+      const latestProduct = await getProductById(product.id)
+      if (!latestProduct || latestProduct.stock <= 0) {
+        setError('This product is out of stock')
+        return
+      }
+    } catch (err) {
+      console.error('Error checking stock:', err)
+    }
+
+    setLoading(product.id)
+
+    try {
+      const response = await fetch('/api/stripe/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: product.price,
+          userId: user?.uid || null,
+          userEmail: user?.email || null,
+          userName: user?.displayName || null,
+          type: 'purchase',
+          description: `Purchase: ${product.name}`,
+          productId: product.id,
+          productName: product.name,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create payment intent')
+      }
+
+      // Redirect to payment page with client secret and product ID
+      router.push(`/payment?client_secret=${data.clientSecret}&product=${encodeURIComponent(product.name)}&productId=${product.id}`)
+    } catch (err: any) {
+      setError(err.message || 'Failed to process purchase')
+      setLoading(null)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -151,6 +250,224 @@ export default function Home() {
             </button>
           </div>
         </div>
+      </section>
+
+      {/* Shop Products Section */}
+      <section className="bg-slate-50 py-8 sm:py-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          {productsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
+                <p className="text-sm text-slate-500">Loading products...</p>
+              </div>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-slate-500">No products available at the moment.</p>
+            </div>
+          ) : (
+            <div className="relative overflow-hidden">
+              {canGoLeft && (
+                <button
+                  onClick={handlePrevious}
+                  className="absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
+                  aria-label="Previous products"
+                >
+                  <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              {canGoRight && (
+                <button
+                  onClick={handleNext}
+                  className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
+                  aria-label="Next products"
+                >
+                  <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+              <div className="overflow-hidden">
+                <div 
+                  className="flex gap-3 transition-transform duration-700 ease-in-out"
+                  style={{
+                    transform: `translateX(calc(-${productStartIndex} * ((100% + ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})))`,
+                  }}
+                >
+                  {products.map((product) => {
+                  const isOutOfStock = product.stock === 0
+                  const isLowStock = product.stock > 0 && product.stock <= product.lowStockThreshold
+
+                  return (
+                    <div
+                      key={product.id}
+                      onClick={() => setSelectedProduct(product)}
+                      className="group rounded-lg border border-slate-200 bg-white overflow-hidden transition-all hover:border-slate-900 hover:shadow-md flex-shrink-0 cursor-pointer"
+                      style={{ width: `calc((100% - ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})` }}
+                    >
+                      <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                              Out of Stock
+                            </span>
+                          </div>
+                        )}
+                        {isLowStock && !isOutOfStock && (
+                          <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                            {product.stock} left
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <h3 className="text-sm font-bold line-clamp-1 text-center">{product.name}</h3>
+                      </div>
+                    </div>
+                  )
+                })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {products.length > 0 && (
+            <div className="mt-8 text-center">
+              <Link
+                href="/shop"
+                className="inline-flex items-center rounded-md border-2 border-slate-900 bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition-colors"
+              >
+                View All Products
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Product Detail Modal */}
+        {selectedProduct && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setSelectedProduct(null)}
+          >
+            <div
+              className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-4 right-4 z-10 rounded-full bg-white/90 p-2 hover:bg-white transition-colors shadow-lg"
+                aria-label="Close"
+              >
+                <svg className="h-6 w-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Product Image */}
+                <div className="relative bg-slate-100 aspect-square md:aspect-auto md:min-h-[500px]">
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="h-full w-full object-cover"
+                  />
+                  {selectedProduct.stock === 0 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-lg">
+                        Out of Stock
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Details */}
+                <div className="p-6 sm:p-8 flex flex-col">
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-bold mb-4">{selectedProduct.name}</h2>
+                    
+                    <div className="mb-6">
+                      {selectedProduct.stock > 0 && selectedProduct.stock <= selectedProduct.lowStockThreshold && (
+                        <p className="text-sm font-medium text-yellow-600 mb-2">
+                          Only {selectedProduct.stock} left!
+                        </p>
+                      )}
+                      <p className="text-4xl font-bold text-slate-900 mb-4">
+                        ${selectedProduct.price.toFixed(2)}
+                      </p>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Description
+                      </h3>
+                      <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {selectedProduct.description}
+                      </p>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                        Stock Status
+                      </h3>
+                      <p className="text-base text-slate-700">
+                        {selectedProduct.stock === 0
+                          ? 'Out of Stock'
+                          : selectedProduct.stock <= selectedProduct.lowStockThreshold
+                          ? `Low Stock - ${selectedProduct.stock} available`
+                          : `In Stock - ${selectedProduct.stock} available`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-auto pt-6 border-t border-slate-200 space-y-3">
+                    <button
+                      onClick={() => {
+                        addToCart(selectedProduct)
+                        setSelectedProduct(null)
+                      }}
+                      disabled={selectedProduct.stock === 0}
+                      className="w-full rounded-lg border-2 border-slate-900 bg-white px-6 py-4 text-base font-semibold text-slate-900 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {selectedProduct.stock === 0 ? (
+                        'Out of Stock'
+                      ) : (
+                        <>
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          Add to Cart
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(null)
+                        handlePurchase(selectedProduct)
+                      }}
+                      disabled={loading === selectedProduct.id || selectedProduct.stock === 0}
+                      className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading === selectedProduct.id
+                        ? 'Processing...'
+                        : selectedProduct.stock === 0
+                        ? 'Out of Stock'
+                        : 'Buy Now'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Contact Section */}

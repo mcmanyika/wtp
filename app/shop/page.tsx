@@ -187,7 +187,7 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-16">
+    <div className="min-h-screen bg-white pt-16 pb-12">
       <section className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-4 -mt-2">
           <Link
