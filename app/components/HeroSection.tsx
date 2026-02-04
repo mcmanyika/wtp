@@ -105,7 +105,7 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
         />
       ))}
       {/* Dark overlay for better text visibility */}
-      <div className="absolute inset-0 z-[1] bg-black/40" />
+      <div className="absolute inset-0 z-[1] bg-black/30" />
       {/* Content layer */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-12 text-center sm:px-6 sm:pb-20">
         <div className="relative">
