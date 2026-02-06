@@ -65,7 +65,9 @@ export default function Header({ onDonateClick }: HeaderProps) {
         isScrolled ? 'top-0 bottom-auto animate-slide-down' : 'bottom-0 top-auto'
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6">
+      <div className={`mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 transition-all duration-500 ${
+        isScrolled ? 'py-2' : 'py-4 sm:py-5'
+      }`}>
         <Link href="/" className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity">
           <img 
             src="/images/logo.png" 
