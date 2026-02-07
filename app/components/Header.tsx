@@ -88,7 +88,7 @@ export default function Header({ onDonateClick, startAtBottom = false }: HeaderP
           <Link href="/" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Home</Link>
           <Link href="/about" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">About</Link>
           <Link href="/petitions" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Petitions</Link>
-          <Link href="/news" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">News</Link>
+          <Link href="/news" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Articles</Link>
           <Link href="/shop" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Shop</Link>
           <Link href="/#contact" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Contact</Link>
         </nav>
@@ -239,7 +239,7 @@ export default function Header({ onDonateClick, startAtBottom = false }: HeaderP
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-lg px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             >
-              News
+              Articles
             </Link>
             <Link
               href="/shop"

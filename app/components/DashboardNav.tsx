@@ -17,7 +17,7 @@ const adminNavItems = [
   { href: '/dashboard/admin/users', label: 'Users' },
   { href: '/dashboard/admin/products', label: 'Products' },
   { href: '/dashboard/admin/orders', label: 'Orders' },
-  { href: '/dashboard/admin/news', label: 'News' },
+  { href: '/dashboard/admin/news', label: 'Articles' },
   { href: '/dashboard/admin/petitions', label: 'Petitions' },
   { href: '/dashboard/admin/volunteers', label: 'Volunteers' },
 ]
@@ -28,7 +28,7 @@ export default function DashboardNav() {
   const isAdmin = userProfile?.role === 'admin'
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="sticky top-0 z-40 border-b bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-center justify-between">
           <div className="flex space-x-8">

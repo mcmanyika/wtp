@@ -69,7 +69,7 @@ export default function NewsPage() {
       {/* Page Header */}
       <section className="bg-slate-900 text-white py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Latest News</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Latest Articles</p>
           <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">Updates & Announcements</h1>
           <p className="mt-3 text-sm text-slate-300 max-w-2xl mx-auto sm:text-base">
             Stay informed about the latest developments, events, and announcements from the Defend the Constitution Platform.
@@ -88,7 +88,7 @@ export default function NewsPage() {
               </svg>
               <input
                 type="text"
-                placeholder="Search news..."
+                placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
@@ -124,7 +124,7 @@ export default function NewsPage() {
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
                 <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent"></div>
-                <p className="text-slate-500">Loading news...</p>
+                <p className="text-slate-500">Loading articles...</p>
               </div>
             </div>
           ) : filteredNews.length === 0 ? (
@@ -134,7 +134,7 @@ export default function NewsPage() {
               <p className="text-sm text-slate-500">
                 {searchQuery || selectedCategory !== 'all'
                   ? 'Try adjusting your search or filter criteria.'
-                  : 'No news updates at the moment. Check back later!'}
+                  : 'No articles at the moment. Check back later!'}
               </p>
               {(searchQuery || selectedCategory !== 'all') && (
                 <button
@@ -307,7 +307,7 @@ export default function NewsPage() {
               <ul className="space-y-1.5 text-xs text-slate-400">
                 <li><Link href="/#about" className="hover:text-white transition-colors">About Us</Link></li>
                 <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
-                <li><Link href="/news" className="hover:text-white transition-colors">News</Link></li>
+                <li><Link href="/news" className="hover:text-white transition-colors">Articles</Link></li>
               </ul>
             </div>
 

@@ -5,9 +5,12 @@ import ProtectedRoute from '@/app/components/ProtectedRoute'
 import DashboardNav from '@/app/components/DashboardNav'
 import MembershipCard from '@/app/components/MembershipCard'
 import { useAuth } from '@/contexts/AuthContext'
-import { getPurchasesByUser, getProductById } from '@/lib/firebase/firestore'
-import type { Purchase, Product } from '@/types'
+import { getPurchasesByUser, getProductById, getAllUsers, getNews, getPetitions, getProducts, getAllPurchases, getAllVolunteerApplications } from '@/lib/firebase/firestore'
+import type { Purchase, Product, UserProfile as UserProfileType, News, Petition, VolunteerApplication } from '@/types'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+const AdminCharts = dynamic(() => import('@/app/components/AdminCharts'), { ssr: false })
 
 export default function DashboardPage() {
   return (
@@ -70,6 +73,69 @@ function DashboardContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const purchasesPerPage = 5
+  const [siteStats, setSiteStats] = useState<{
+    totalUsers: number
+    totalArticles: number
+    totalPetitions: number
+    totalProducts: number
+    totalOrders: number
+    totalVolunteers: number
+    totalRevenue: number
+  } | null>(null)
+  const [rawData, setRawData] = useState<{
+    users: UserProfileType[]
+    articles: News[]
+    petitions: Petition[]
+    purchases: Purchase[]
+    volunteers: VolunteerApplication[]
+  } | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+
+  // Fetch site stats for admin
+  useEffect(() => {
+    if (userProfile?.role !== 'admin') return
+
+    const fetchStats = async () => {
+      setStatsLoading(true)
+      try {
+        const [users, articles, petitions, products, orders, volunteers] = await Promise.all([
+          getAllUsers(),
+          getNews(false),
+          getPetitions(false, false),
+          getProducts(),
+          getAllPurchases(),
+          getAllVolunteerApplications(),
+        ])
+
+        const totalRevenue = orders
+          .filter(o => o.status === 'succeeded')
+          .reduce((sum, o) => sum + o.amount, 0)
+
+        setSiteStats({
+          totalUsers: users.length,
+          totalArticles: articles.length,
+          totalPetitions: petitions.length,
+          totalProducts: products.length,
+          totalOrders: orders.length,
+          totalVolunteers: volunteers.length,
+          totalRevenue,
+        })
+        setRawData({
+          users,
+          articles,
+          petitions,
+          purchases: orders,
+          volunteers,
+        })
+      } catch (err) {
+        console.error('Error fetching site stats:', err)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [userProfile?.role])
 
   useEffect(() => {
     // Fetch membership to get the actual tier
@@ -244,6 +310,62 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Admin Site Stats */}
+      {userProfile?.role === 'admin' && (
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <h2 className="mb-4 text-xl font-bold">Site Stats</h2>
+          {statsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
+            </div>
+          ) : siteStats ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-slate-900">{siteStats.totalUsers}</p>
+                <p className="text-xs text-slate-500 mt-1">Users</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-slate-900">{siteStats.totalArticles}</p>
+                <p className="text-xs text-slate-500 mt-1">Articles</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-slate-900">{siteStats.totalPetitions}</p>
+                <p className="text-xs text-slate-500 mt-1">Petitions</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-slate-900">{siteStats.totalProducts}</p>
+                <p className="text-xs text-slate-500 mt-1">Products</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-slate-900">{siteStats.totalOrders}</p>
+                <p className="text-xs text-slate-500 mt-1">Orders</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-slate-900">{siteStats.totalVolunteers}</p>
+                <p className="text-xs text-slate-500 mt-1">Volunteers</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4 text-center">
+                <p className="text-2xl font-bold text-green-700">${siteStats.totalRevenue.toFixed(2)}</p>
+                <p className="text-xs text-slate-500 mt-1">Revenue</p>
+              </div>
+            </div>
+          ) : null}
+
+          {/* Charts */}
+          {rawData && (
+            <div className="mt-6">
+              <AdminCharts
+                users={rawData.users}
+                articles={rawData.articles}
+                petitions={rawData.petitions}
+                purchases={rawData.purchases}
+                volunteers={rawData.volunteers}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Recent Orders Section */}
       <div className="rounded-lg border border-slate-200 bg-white p-6">

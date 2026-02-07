@@ -13,7 +13,7 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
   const [showContent, setShowContent] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   
-  const backgroundImages = ['/images/banner.png', '/images/banner-2.png'];
+  const backgroundImages = ['/images/banner.png', '/images/banner-2.png', '/images/banner-3.png'];
 
   // Text slides for the hero section - each slide contains title, subtitle, and description
   const textSlides = [

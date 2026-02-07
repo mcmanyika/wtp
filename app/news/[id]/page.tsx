@@ -22,7 +22,7 @@ export default function NewsDetailPage() {
         const newsItem = await getNewsById(id)
         
         if (!newsItem) {
-          setError('News article not found')
+          setError('Article not found')
           return
         }
         
@@ -35,7 +35,7 @@ export default function NewsDetailPage() {
         setNews(newsItem)
       } catch (err: any) {
         console.error('Error loading news:', err)
-        setError(err.message || 'Failed to load news article')
+        setError(err.message || 'Failed to load article')
       } finally {
         setLoading(false)
       }
@@ -70,7 +70,7 @@ export default function NewsDetailPage() {
             <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to News
+            Back to Articles
           </Link>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default function NewsDetailPage() {
               href="/news"
               className="inline-flex items-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
             >
-              View All News
+              View All Articles
             </Link>
           </div>
         ) : news ? (
