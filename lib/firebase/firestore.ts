@@ -13,7 +13,7 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -1332,5 +1332,104 @@ export async function createNewsletterSubscription(
     })
     throw error
   }
+}
+
+// Banner operations
+export async function createBanner(
+  banner: Omit<Banner, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const db = requireDb()
+  const bannerRef = doc(collection(db, 'banners'))
+
+  try {
+    const bannerData = {
+      imageUrl: banner.imageUrl,
+      title: banner.title || null,
+      isActive: banner.isActive,
+      order: banner.order,
+      id: bannerRef.id,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+
+    await setDoc(bannerRef, bannerData)
+    console.log('Banner created successfully:', bannerRef.id)
+    return bannerRef.id
+  } catch (error: any) {
+    console.error('Error in createBanner:', error)
+    throw error
+  }
+}
+
+export async function getBanners(activeOnly: boolean = false): Promise<Banner[]> {
+  if (!db) {
+    console.warn('Firestore not initialized')
+    return []
+  }
+
+  try {
+    let q
+    if (activeOnly) {
+      q = query(
+        collection(db, 'banners'),
+        where('isActive', '==', true),
+        orderBy('order', 'asc')
+      )
+    } else {
+      q = query(
+        collection(db, 'banners'),
+        orderBy('order', 'asc')
+      )
+    }
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((docSnap) => {
+      const data = docSnap.data()
+      return {
+        ...data,
+        id: docSnap.id,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+      } as Banner
+    })
+  } catch (error: any) {
+    // Fallback if composite index not ready
+    if (error?.code === 'failed-precondition') {
+      console.warn('Composite index not ready for banners, using fallback')
+      try {
+        const snapshot = await getDocs(collection(db, 'banners'))
+        const banners = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data()
+          return {
+            ...data,
+            id: docSnap.id,
+            createdAt: toDate(data.createdAt),
+            updatedAt: toDate(data.updatedAt),
+          } as Banner
+        })
+        const filtered = activeOnly ? banners.filter(b => b.isActive) : banners
+        return filtered.sort((a, b) => a.order - b.order)
+      } catch (fallbackError: any) {
+        console.error('Error in fallback banner query:', fallbackError)
+        return []
+      }
+    }
+    console.error('Error fetching banners:', error)
+    return []
+  }
+}
+
+export async function updateBanner(bannerId: string, data: Partial<Banner>): Promise<void> {
+  const updateData: any = { updatedAt: Timestamp.now() }
+
+  if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl
+  if (data.title !== undefined) updateData.title = data.title || null
+  if (data.isActive !== undefined) updateData.isActive = data.isActive
+  if (data.order !== undefined) updateData.order = data.order
+
+  await updateDoc(doc(requireDb(), 'banners', bannerId), updateData)
+}
+
+export async function deleteBanner(bannerId: string): Promise<void> {
+  await deleteDoc(doc(requireDb(), 'banners', bannerId))
 }
 

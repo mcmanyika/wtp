@@ -160,6 +160,16 @@ export interface NewsletterSubscription {
   updatedAt: Timestamp | Date
 }
 
+export interface Banner {
+  id: string
+  imageUrl: string
+  title?: string
+  isActive: boolean
+  order: number
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
+}
+
 // Ensure this file is treated as a module
 export { }
 

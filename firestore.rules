@@ -218,6 +218,18 @@ service cloud.firestore {
                      request.resource.data.signatures.size() > resource.data.signatures.size();
     }
 
+    // Banners collection
+    match /banners/{bannerId} {
+      // Everyone can read active banners (for the hero section)
+      allow read: if resource.data.isActive == true;
+      // Admins can read all banners (active and inactive)
+      allow read: if isAdmin();
+      // Only admins can create, update, or delete banners
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // Newsletter subscriptions collection
     match /newsletterSubscriptions/{subscriptionId} {
       // Anyone can create newsletter subscriptions (authenticated or not)

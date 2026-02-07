@@ -1,19 +1,37 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { getBanners } from '@/lib/firebase/firestore';
 
 interface HeroSectionProps {
   onSupportClick?: () => void
 }
+
+const FALLBACK_IMAGES = ['/images/banner.png', '/images/banner-2.png', '/images/banner-3.png'];
 
 export default function HeroSection({ onSupportClick }: HeroSectionProps) {
   const [scrollY, setScrollY] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentBgImage, setCurrentBgImage] = useState(0);
   const [showContent, setShowContent] = useState(false);
+  const [backgroundImages, setBackgroundImages] = useState<string[]>(FALLBACK_IMAGES);
   const heroRef = useRef<HTMLElement>(null);
-  
-  const backgroundImages = ['/images/banner.png', '/images/banner-2.png', '/images/banner-3.png'];
+
+  // Fetch banners from Firestore
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const banners = await getBanners(true); // active only
+        if (banners.length > 0) {
+          setBackgroundImages(banners.map(b => b.imageUrl));
+        }
+      } catch (err) {
+        console.error('Error fetching banners:', err);
+        // Keep fallback images
+      }
+    };
+    fetchBanners();
+  }, []);
 
   // Text slides for the hero section - each slide contains title, subtitle, and description
   const textSlides = [
