@@ -24,7 +24,6 @@ export default function App() {
   // Hide native splash as soon as our custom overlay is showing
   useEffect(() => {
     const hideSplash = async () => {
-      // Small delay to ensure smooth transition from native to custom splash
       await new Promise((resolve) => setTimeout(resolve, 300))
       await SplashScreen.hideAsync()
     }
@@ -40,7 +39,7 @@ export default function App() {
       () => {
         if (webViewRef.current) {
           webViewRef.current.goBack()
-          return true // Prevent default back behavior
+          return true
         }
         return false
       }
@@ -49,33 +48,20 @@ export default function App() {
     return () => backHandler.remove()
   }, [])
 
-  const handleLoadEnd = useCallback(() => {
-    // Site has loaded — start hiding the overlay
+  // User taps Enter button — dismiss splash
+  const handleEnter = useCallback(() => {
     setIsReady(true)
-    // Remove overlay from DOM after fade animation completes
-    setTimeout(() => {
-      setShowOverlay(false)
-    }, 700)
-  }, [])
-
-  const handleError = useCallback(() => {
-    // On error, still hide the overlay so user can see the error / retry
-    setIsReady(true)
-    setTimeout(() => {
-      setShowOverlay(false)
-    }, 700)
+    setTimeout(() => setShowOverlay(false), 700)
   }, [])
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <View style={styles.container}>
         {/* WebView - always mounted so it loads in background */}
         <WebView
           ref={webViewRef}
           source={{ uri: SITE_URL }}
-          onLoadEnd={handleLoadEnd}
-          onError={handleError}
           style={styles.webview}
           javaScriptEnabled
           domStorageEnabled
@@ -86,17 +72,14 @@ export default function App() {
           scalesPageToFit
           sharedCookiesEnabled
           thirdPartyCookiesEnabled
-          // Improve performance
           cacheEnabled
           cacheMode="LOAD_DEFAULT"
-          // User agent to identify the app
           applicationNameForUserAgent="DCPMobileApp/1.0"
-          // Pull to refresh
           pullToRefreshEnabled
         />
 
-        {/* Custom splash overlay - shows above WebView */}
-        {showOverlay && <SplashOverlay visible={!isReady} />}
+        {/* Custom splash overlay - shows until user taps Enter */}
+        {showOverlay && <SplashOverlay visible={!isReady} onEnter={handleEnter} />}
       </View>
     </SafeAreaView>
   )

@@ -4,7 +4,7 @@ import {
   Text,
   Image,
   Animated,
-  ActivityIndicator,
+  TouchableOpacity,
   StyleSheet,
   Dimensions,
 } from 'react-native'
@@ -13,9 +13,10 @@ const { width } = Dimensions.get('window')
 
 interface SplashOverlayProps {
   visible: boolean
+  onEnter: () => void
 }
 
-export default function SplashOverlay({ visible }: SplashOverlayProps) {
+export default function SplashOverlay({ visible, onEnter }: SplashOverlayProps) {
   const fadeAnim = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
@@ -59,11 +60,10 @@ export default function SplashOverlay({ visible }: SplashOverlayProps) {
         Non partisan inclusive political organization
       </Text>
 
-      {/* Loading Spinner */}
-      <View style={styles.spinnerContainer}>
-        <ActivityIndicator size="large" color="#ffffff" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      {/* Enter Button */}
+      <TouchableOpacity style={styles.enterButton} onPress={onEnter} activeOpacity={0.8}>
+        <Text style={styles.enterButtonText}>Enter</Text>
+      </TouchableOpacity>
     </Animated.View>
   )
 }
@@ -124,15 +124,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
   },
-  spinnerContainer: {
-    position: 'absolute',
-    bottom: 80,
-    alignItems: 'center',
+  enterButton: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 48,
+    paddingVertical: 14,
+    borderRadius: 30,
+    marginTop: 10,
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 13,
-    color: '#64748b',
+  enterButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
 })
-
