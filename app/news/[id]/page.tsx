@@ -61,7 +61,7 @@ export default function NewsDetailPage() {
       <Header />
 
       {/* Back Link */}
-      <div className="bg-slate-50 border-b">
+      <div className="bg-slate-50 border-b pt-20">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <Link
             href="/news"

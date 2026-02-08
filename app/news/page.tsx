@@ -67,7 +67,7 @@ export default function NewsPage() {
       <Header />
 
       {/* Page Header */}
-      <section className="bg-slate-900 text-white py-12 sm:py-16">
+      <section className="bg-slate-900 text-white pt-24 pb-12 sm:pb-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Latest Articles</p>
           <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">Updates & Announcements</h1>

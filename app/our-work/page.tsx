@@ -17,7 +17,7 @@ export default function OurWorkPage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
+      <section className="bg-gradient-to-r from-slate-900 to-slate-800 pt-24 pb-8 text-white sm:pb-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Our Work</p>

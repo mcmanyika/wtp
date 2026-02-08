@@ -164,7 +164,7 @@ export default function Home() {
       <HeroSection onSupportClick={() => setDonationModalOpen(true)} />
 
       {/* All content below hero - sits above hero with z-index */}
-      <div className="relative z-10">
+      <div className="relative z-10 pt-20 md:pt-0">
 
         {/* Stats Section - Hidden for now */}
         {/* <section className="border-y bg-white py-8 sm:py-12">

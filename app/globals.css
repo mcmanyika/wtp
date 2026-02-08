@@ -5,6 +5,13 @@
 html {
   scroll-behavior: smooth;
   background-color: black;
+  scroll-padding-top: 5rem;
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  html {
+    scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 5rem);
+  }
 }
 
 /* Fade-in animations */
