@@ -98,14 +98,14 @@ export default function Home() {
 
   const handlePurchase = async (product: Product) => {
     setError('')
-    
+
     // Check if user is authenticated
     if (!user) {
       // Redirect to login page with return URL to shop
       router.push(`/login?returnUrl=${encodeURIComponent('/shop')}`)
       return
     }
-    
+
     // Check stock availability
     if (product.stock <= 0) {
       setError('This product is out of stock')
@@ -166,8 +166,8 @@ export default function Home() {
       {/* All content below hero - sits above hero with z-index */}
       <div className="relative z-10">
 
-      {/* Stats Section - Hidden for now */}
-      {/* <section className="border-y bg-white py-8 sm:py-12">
+        {/* Stats Section - Hidden for now */}
+        {/* <section className="border-y bg-white py-8 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
             <StatCard value="40+" label="Communities Reached" />
@@ -177,36 +177,36 @@ export default function Home() {
         </div>
       </section> */}
 
-      {/* Updates Section */}
-      <section id="updates" className="bg-slate-50 py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-6 text-center sm:mb-8">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Latest Articles</p>
-            <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Updates & Announcements</h2>
-          </div>
+        {/* Updates Section */}
+        <section id="updates" className="bg-slate-50 py-8 sm:py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-6 text-center sm:mb-8">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Latest Articles</p>
+              <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Updates & Announcements</h2>
+            </div>
 
-          {newsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
-                <p className="text-sm text-slate-500">Loading...</p>
+            {newsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
+                  <p className="text-sm text-slate-500">Loading...</p>
+                </div>
               </div>
-            </div>
-          ) : news.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-slate-500">No articles at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {news.map((newsItem) => (
-                <UpdateCard
-                  key={newsItem.id}
-                  id={newsItem.id}
-                  title={newsItem.title}
-                  description={newsItem.description}
-                  date={
-                    newsItem.publishedAt
-                      ? new Date(
+            ) : news.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-slate-500">No articles at the moment.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {news.map((newsItem) => (
+                  <UpdateCard
+                    key={newsItem.id}
+                    id={newsItem.id}
+                    title={newsItem.title}
+                    description={newsItem.description}
+                    date={
+                      newsItem.publishedAt
+                        ? new Date(
                           newsItem.publishedAt instanceof Date
                             ? newsItem.publishedAt.getTime()
                             : (newsItem.publishedAt as any)?.toMillis?.() || 0
@@ -215,7 +215,7 @@ export default function Home() {
                           month: 'long',
                           day: 'numeric',
                         })
-                      : new Date(
+                        : new Date(
                           newsItem.createdAt instanceof Date
                             ? newsItem.createdAt.getTime()
                             : (newsItem.createdAt as any)?.toMillis?.() || 0
@@ -224,357 +224,357 @@ export default function Home() {
                           month: 'long',
                           day: 'numeric',
                         })
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Ready to Make a Difference?</h2>
-          <p className="mb-6 text-sm text-slate-300 sm:text-base">
-            Join thousands of citizens working together to oppose the 2030 agenda, defend the Constitution, and protect our democratic values.
-          </p>
-          <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-            >
-              Join the Platform
-            </Link>
-            <button
-              onClick={() => setDonationModalOpen(true)}
-              className="inline-flex w-full items-center justify-center rounded-md border-2 border-white px-5 py-2.5 text-xs font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-            >
-              Support Our Work
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Shop Products Section */}
-      <section className="bg-slate-50 py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          {productsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
-                <p className="text-sm text-slate-500">Loading products...</p>
-              </div>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-slate-500">No products available at the moment.</p>
-            </div>
-          ) : (
-            <div className="relative overflow-hidden">
-              {canGoLeft && (
-                <button
-                  onClick={handlePrevious}
-                  className="absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
-                  aria-label="Previous products"
-                >
-                  <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              )}
-              {canGoRight && (
-                <button
-                  onClick={handleNext}
-                  className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
-                  aria-label="Next products"
-                >
-                  <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )}
-              <div className="overflow-hidden">
-                <div 
-                  className="flex gap-3 transition-transform duration-700 ease-in-out"
-                  style={{
-                    transform: `translateX(calc(-${productStartIndex} * ((100% + ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})))`,
-                  }}
-                >
-                  {products.map((product) => {
-                  const isOutOfStock = product.stock === 0
-                  const isLowStock = product.stock > 0 && product.stock <= product.lowStockThreshold
-
-                  return (
-                    <div
-                      key={product.id}
-                      onClick={() => setSelectedProduct(product)}
-                      className="group rounded-lg border border-slate-200 bg-white overflow-hidden transition-all hover:border-slate-900 hover:shadow-md flex-shrink-0 cursor-pointer"
-                      style={{ width: `calc((100% - ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})` }}
-                    >
-                      <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden relative">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        {isOutOfStock && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-semibold">
-                              Out of Stock
-                            </span>
-                          </div>
-                        )}
-                        {isLowStock && !isOutOfStock && (
-                          <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-semibold px-2 py-0.5 rounded">
-                            {product.stock} left
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <h3 className="text-sm font-bold line-clamp-1 text-center">{product.name}</h3>
-                      </div>
-                    </div>
-                  )
-                })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {products.length > 0 && (
-            <div className="mt-8 text-center">
-              <Link
-                href="/shop"
-                className="inline-flex items-center rounded-md border-2 border-slate-900 bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition-colors"
-              >
-                View All Products
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Product Detail Modal */}
-        {selectedProduct && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-            onClick={() => setSelectedProduct(null)}
-          >
-            <div
-              className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 z-10 rounded-full bg-white/90 p-2 hover:bg-white transition-colors shadow-lg"
-                aria-label="Close"
-              >
-                <svg className="h-6 w-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-
-              <div className="grid md:grid-cols-2 gap-0">
-                {/* Product Image */}
-                <div className="relative bg-slate-100 aspect-square md:aspect-auto md:min-h-[500px]">
-                  <img
-                    src={selectedProduct.image}
-                    alt={selectedProduct.name}
-                    className="h-full w-full object-cover"
+                    }
                   />
-                  {selectedProduct.stock === 0 && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-lg">
-                        Out of Stock
-                      </span>
-                    </div>
-                  )}
-                </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
-                {/* Product Details */}
-                <div className="p-6 sm:p-8 flex flex-col">
-                  <div className="flex-1">
-                    <h2 className="text-3xl font-bold mb-4">{selectedProduct.name}</h2>
-                    
-                    <div className="mb-6">
-                      {selectedProduct.stock > 0 && selectedProduct.stock <= selectedProduct.lowStockThreshold && (
-                        <p className="text-sm font-medium text-yellow-600 mb-2">
-                          Only {selectedProduct.stock} left!
+        {/* CTA Section */}
+        <section className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
+            <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Ready to Make a Difference?</h2>
+            <p className="mb-6 text-sm text-slate-300 sm:text-base">
+              Join thousands of citizens working together to oppose the 2030 agenda, defend the Constitution, and protect our democratic values.
+            </p>
+            <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
+              <Link
+                href="/signup"
+                className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
+              >
+                Join the Platform
+              </Link>
+              <button
+                onClick={() => setDonationModalOpen(true)}
+                className="inline-flex w-full items-center justify-center rounded-md border-2 border-white px-5 py-2.5 text-xs font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
+              >
+                Support Our Work
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Shop Products Section */}
+        <section className="bg-slate-50 py-8 sm:py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            {productsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
+                  <p className="text-sm text-slate-500">Loading products...</p>
+                </div>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-slate-500">No products available at the moment.</p>
+              </div>
+            ) : (
+              <div className="relative overflow-hidden">
+                {canGoLeft && (
+                  <button
+                    onClick={handlePrevious}
+                    className="absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
+                    aria-label="Previous products"
+                  >
+                    <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
+                {canGoRight && (
+                  <button
+                    onClick={handleNext}
+                    className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
+                    aria-label="Next products"
+                  >
+                    <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
+                <div className="overflow-hidden">
+                  <div
+                    className="flex gap-3 transition-transform duration-700 ease-in-out"
+                    style={{
+                      transform: `translateX(calc(-${productStartIndex} * ((100% + ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})))`,
+                    }}
+                  >
+                    {products.map((product) => {
+                      const isOutOfStock = product.stock === 0
+                      const isLowStock = product.stock > 0 && product.stock <= product.lowStockThreshold
+
+                      return (
+                        <div
+                          key={product.id}
+                          onClick={() => setSelectedProduct(product)}
+                          className="group rounded-lg border border-slate-200 bg-white overflow-hidden transition-all hover:border-slate-900 hover:shadow-md flex-shrink-0 cursor-pointer"
+                          style={{ width: `calc((100% - ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})` }}
+                        >
+                          <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {isOutOfStock && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                                  Out of Stock
+                                </span>
+                              </div>
+                            )}
+                            {isLowStock && !isOutOfStock && (
+                              <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-semibold px-2 py-0.5 rounded">
+                                {product.stock} left
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <h3 className="text-sm font-bold line-clamp-1 text-center">{product.name}</h3>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {products.length > 0 && (
+              <div className="mt-8 text-center">
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center rounded-md border-2 border-slate-900 bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition-colors"
+                >
+                  View All Products
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Product Detail Modal */}
+          {selectedProduct && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setSelectedProduct(null)}
+            >
+              <div
+                className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setSelectedProduct(null)}
+                  className="absolute top-4 right-4 z-10 rounded-full bg-white/90 p-2 hover:bg-white transition-colors shadow-lg"
+                  aria-label="Close"
+                >
+                  <svg className="h-6 w-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <div className="grid md:grid-cols-2 gap-0">
+                  {/* Product Image */}
+                  <div className="relative bg-slate-100 aspect-square md:aspect-auto md:min-h-[500px]">
+                    <img
+                      src={selectedProduct.image}
+                      alt={selectedProduct.name}
+                      className="h-full w-full object-cover"
+                    />
+                    {selectedProduct.stock === 0 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-lg">
+                          Out of Stock
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Product Details */}
+                  <div className="p-6 sm:p-8 flex flex-col">
+                    <div className="flex-1">
+                      <h2 className="text-3xl font-bold mb-4">{selectedProduct.name}</h2>
+
+                      <div className="mb-6">
+                        {selectedProduct.stock > 0 && selectedProduct.stock <= selectedProduct.lowStockThreshold && (
+                          <p className="text-sm font-medium text-yellow-600 mb-2">
+                            Only {selectedProduct.stock} left!
+                          </p>
+                        )}
+                        <p className="text-4xl font-bold text-slate-900 mb-4">
+                          ${selectedProduct.price.toFixed(2)}
                         </p>
-                      )}
-                      <p className="text-4xl font-bold text-slate-900 mb-4">
-                        ${selectedProduct.price.toFixed(2)}
-                      </p>
+                      </div>
+
+                      <div className="mb-6">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                          Description
+                        </h3>
+                        <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
+                          {selectedProduct.description}
+                        </p>
+                      </div>
+
+                      <div className="mb-6">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                          Stock Status
+                        </h3>
+                        <p className="text-base text-slate-700">
+                          {selectedProduct.stock === 0
+                            ? 'Out of Stock'
+                            : selectedProduct.stock <= selectedProduct.lowStockThreshold
+                              ? `Low Stock - ${selectedProduct.stock} available`
+                              : `In Stock - ${selectedProduct.stock} available`}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="mb-6">
-                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                        Description
-                      </h3>
-                      <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
-                        {selectedProduct.description}
-                      </p>
+                    {/* Action Buttons */}
+                    <div className="mt-auto pt-6 border-t border-slate-200 space-y-3">
+                      <button
+                        onClick={() => {
+                          addToCart(selectedProduct)
+                          setSelectedProduct(null)
+                        }}
+                        disabled={selectedProduct.stock === 0}
+                        className="w-full rounded-lg border-2 border-slate-900 bg-white px-6 py-4 text-base font-semibold text-slate-900 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {selectedProduct.stock === 0 ? (
+                          'Out of Stock'
+                        ) : (
+                          <>
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Add to Cart
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(null)
+                          handlePurchase(selectedProduct)
+                        }}
+                        disabled={loading === selectedProduct.id || selectedProduct.stock === 0}
+                        className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading === selectedProduct.id
+                          ? 'Processing...'
+                          : selectedProduct.stock === 0
+                            ? 'Out of Stock'
+                            : 'Buy Now'}
+                      </button>
                     </div>
-
-                    <div className="mb-6">
-                      <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                        Stock Status
-                      </h3>
-                      <p className="text-base text-slate-700">
-                        {selectedProduct.stock === 0
-                          ? 'Out of Stock'
-                          : selectedProduct.stock <= selectedProduct.lowStockThreshold
-                          ? `Low Stock - ${selectedProduct.stock} available`
-                          : `In Stock - ${selectedProduct.stock} available`}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="mt-auto pt-6 border-t border-slate-200 space-y-3">
-                    <button
-                      onClick={() => {
-                        addToCart(selectedProduct)
-                        setSelectedProduct(null)
-                      }}
-                      disabled={selectedProduct.stock === 0}
-                      className="w-full rounded-lg border-2 border-slate-900 bg-white px-6 py-4 text-base font-semibold text-slate-900 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {selectedProduct.stock === 0 ? (
-                        'Out of Stock'
-                      ) : (
-                        <>
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          Add to Cart
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedProduct(null)
-                        handlePurchase(selectedProduct)
-                      }}
-                      disabled={loading === selectedProduct.id || selectedProduct.stock === 0}
-                      className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading === selectedProduct.id
-                        ? 'Processing...'
-                        : selectedProduct.stock === 0
-                        ? 'Out of Stock'
-                        : 'Buy Now'}
-                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
 
-      {/* Contact Section */}
-      <section id="contact" className="bg-white py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-6 text-center sm:mb-8">
-            <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Contact Us</h2>
-          </div>
+        {/* Contact Section */}
+        <section id="contact" className="bg-white py-8 sm:py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-6 text-center sm:mb-8">
+              <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Contact Us</h2>
+            </div>
 
-          <div className="mx-auto max-w-2xl">
-            <div className="rounded-lg border bg-slate-50 p-4 sm:p-6">
-              <p className="mb-4 text-center text-sm text-slate-600">
-                Have questions or want to get involved? Reach out to us through the contact form below.
-              </p>
-              <ContactForm />
+            <div className="mx-auto max-w-2xl">
+              <div className="rounded-lg border bg-slate-50 p-4 sm:p-6">
+                <p className="mb-4 text-center text-sm text-slate-600">
+                  Have questions or want to get involved? Reach out to us through the contact form below.
+                </p>
+                <ContactForm />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-slate-900 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-          <div className="grid gap-6 md:grid-cols-4">
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <img 
-                  src="/images/logo.png" 
-                  alt="DCP Logo" 
-                  className="h-10 w-10 rounded-md object-contain"
-                />
-                <div>
-                  <p className="text-xs font-bold">Defend the Constitution</p>
-                  <p className="text-[10px] text-slate-400">Platform</p>
+        {/* Footer */}
+        <footer className="border-t bg-slate-900 text-white">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+            <div className="grid gap-6 md:grid-cols-4">
+              <div>
+                <h3 className="mb-3 text-xs font-semibold">Get the App</h3>
+                <p className="mb-3 text-xs text-slate-400">
+                  Download our Android app for quick access on the go.
+                </p>
+                <a
+                  href="https://expo.dev/artifacts/eas/hopnYPS9wRJX8ugWGP9Uhz.apk"
+                  download
+                  className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.523 2.237a.625.625 0 0 0-.853.221l-1.09 1.837A7.628 7.628 0 0 0 12 3.5a7.628 7.628 0 0 0-3.58.795L7.33 2.458a.625.625 0 0 0-1.074.632l1.046 1.764A7.953 7.953 0 0 0 4 11h16a7.953 7.953 0 0 0-3.302-6.146l1.046-1.764a.625.625 0 0 0-.221-.853zM9 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM4 12v7a2 2 0 0 0 2 2h1v3a1.5 1.5 0 0 0 3 0v-3h4v3a1.5 1.5 0 0 0 3 0v-3h1a2 2 0 0 0 2-2v-7H4zm-2.5 0A1.5 1.5 0 0 0 0 13.5v5A1.5 1.5 0 0 0 3 18.5v-5A1.5 1.5 0 0 0 1.5 12zm21 0a1.5 1.5 0 0 0-1.5 1.5v5a1.5 1.5 0 0 0 3 0v-5a1.5 1.5 0 0 0-1.5-1.5z" />
+                  </svg>
+                  Download for Android
+                </a>
+              </div>
+
+              <div>
+                <h3 className="mb-3 text-xs font-semibold">Quick Links</h3>
+                <ul className="space-y-1.5 text-xs text-slate-400">
+                  <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
+                  <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
+                </ul>
+              </div>
+
+              <div>
+                <div className="mb-3 h-4"></div>
+                <ul className="space-y-1.5 text-xs text-slate-400">
+                  <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
+                  <li><Link href="/news" className="hover:text-white transition-colors">Articles</Link></li>
+                  <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="mb-3 text-xs font-semibold">Follow Us</h3>
+                <p className="mb-3 text-xs text-slate-400">
+                  Connect with us on social media.
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <a href="https://x.com/DCPlatform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="X (Twitter)">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </a>
+                  <a href="https://www.facebook.com/share/1C4G3L4eka/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#1877F2] transition-colors" aria-label="Facebook">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </a>
+                  <a href="https://youtube.com/@defendtheconstitutionplatform" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#FF0000] transition-colors" aria-label="YouTube">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                  </a>
+                  <a href="https://www.tiktok.com/@defend.the.consti" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="TikTok">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                    </svg>
+                  </a>
+                  <a href="https://www.instagram.com/dcplaform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#E4405F] transition-colors" aria-label="Instagram">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                    </svg>
+                  </a>
+                  <a href="https://whatsapp.com/channel/0029VbCeX3FATRSwXmceVg3z" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#25D366] transition-colors" aria-label="WhatsApp Channel">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                  </a>
                 </div>
               </div>
-              <p className="text-xs text-slate-400">
-                A citizen-led movement opposing the 2030 agenda, promoting lawful governance, public accountability, and peaceful civic participation.
-              </p>
             </div>
 
-            <div>
-              <h3 className="mb-3 text-xs font-semibold">Quick Links</h3>
-              <ul className="space-y-1.5 text-xs text-slate-400">
-                <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <div className="mb-3 h-4"></div>
-              <ul className="space-y-1.5 text-xs text-slate-400">
-                <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
-                <li><Link href="/news" className="hover:text-white transition-colors">Articles</Link></li>
-                <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-3 text-xs font-semibold">Follow Us</h3>
-              <p className="mb-3 text-xs text-slate-400">
-                Connect with us on social media.
-              </p>
-              <div className="flex items-center gap-3 flex-wrap">
-                <a href="https://x.com/DCPlatform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="X (Twitter)">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </a>
-                <a href="https://www.facebook.com/share/1C4G3L4eka/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#1877F2] transition-colors" aria-label="Facebook">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-                <a href="https://youtube.com/@defendtheconstitutionplatform" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#FF0000] transition-colors" aria-label="YouTube">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                  </svg>
-                </a>
-                <a href="https://www.tiktok.com/@defend.the.consti" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="TikTok">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                  </svg>
-                </a>
-                <a href="https://www.instagram.com/dcplaform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#E4405F] transition-colors" aria-label="Instagram">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                  </svg>
-                </a>
-                <a href="https://whatsapp.com/channel/0029VbCeX3FATRSwXmceVg3z" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#25D366] transition-colors" aria-label="WhatsApp Channel">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                </a>
-              </div>
+            <div className="mt-6 border-t border-slate-800 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
+              <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
             </div>
           </div>
-
-          <div className="mt-6 border-t border-slate-800 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
-            <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+        </footer>
       </div>{/* End content wrapper */}
 
       {/* Donation Modal */}
@@ -609,7 +609,7 @@ function FocusCard({ title, description }: { title: string; description: string 
 
 function UpdateCard({ id, title, description, date }: { id: string; title: string; description: string; date: string }) {
   return (
-    <Link 
+    <Link
       href={`/news/${id}`}
       className="group block rounded-lg border border-slate-200 bg-white p-4 transition-all duration-300 hover:border-slate-900 hover:shadow-md sm:p-5"
     >
