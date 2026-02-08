@@ -116,6 +116,11 @@ html {
   animation: slideDown 0.3s ease-out forwards;
 }
 
+/* Safe area inset for mobile status bar (time, battery, notch, Dynamic Island) */
+.safe-top {
+  top: env(safe-area-inset-top, 0px);
+}
+
 /* Hide scrollbar but keep scroll functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;

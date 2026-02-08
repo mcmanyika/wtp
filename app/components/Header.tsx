@@ -65,7 +65,7 @@ export default function Header({ onDonateClick, startAtBottom = false }: HeaderP
   return (
     <header 
       className={`fixed left-0 right-0 z-50 border-b border-slate-800 bg-black backdrop-blur-sm transition-all duration-500 ${
-        isScrolled ? 'top-10 md:top-0 bottom-auto animate-slide-down' : 'bottom-0 top-auto'
+        isScrolled ? 'safe-top md:top-0 bottom-auto animate-slide-down' : 'bottom-0 top-auto'
       }`}
     >
       <div className={`mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 transition-all duration-500 ${
