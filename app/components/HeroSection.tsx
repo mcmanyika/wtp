@@ -150,8 +150,8 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
           </svg>
         </a>
       </div>
-      {/* Content layer - hidden initially, appears when header moves to top */}
-      <div className={`relative z-10 mx-auto w-full max-w-7xl px-4 pb-12 text-center sm:px-6 sm:pb-20 transition-all duration-700 ${
+      {/* Content layer - hidden */}
+      {/* <div className={`relative z-10 mx-auto w-full max-w-7xl px-4 pb-12 text-center sm:px-6 sm:pb-20 transition-all duration-700 ${
         showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}>
         <div className="relative">
@@ -164,13 +164,10 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
                   : 'opacity-0 pointer-events-none absolute inset-0'
               }`}
             >
-              {/* Spacer to maintain exact positioning after removing titles */}
               <div className="mb-4 sm:mb-6" />
-
               <p className="mx-auto mb-6 max-w-2xl text-lg font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] sm:mb-8 sm:text-xl md:text-2xl lg:text-3xl">
                 {slide.subtitle}
               </p>
-              
               <p className="mx-auto mb-8 max-w-3xl text-sm font-normal text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] sm:mb-10 sm:text-base md:text-lg">
                 {slide.description}
               </p>
@@ -179,33 +176,23 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
         </div>
 
         <div className="flex animate-fade-in-up animate-delay-300 flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-          <a
-            href="/signup"
-            className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base"
-          >
+          <a href="/signup" className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base">
             Join The Movement
           </a>
-          <a
-            href="/petitions"
-            className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base"
-          >
+          <a href="/petitions" className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base">
             Sign the People's Resolution
           </a>
-          <button
-            onClick={onSupportClick}
-            className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base"
-          >
+          <button onClick={onSupportClick} className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base">
             Support the Work
           </button>
         </div>
 
-        {/* Scroll indicator */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce sm:bottom-10">
           <svg className="h-5 w-5 text-white sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </div>
-      </div>
+      </div> */}
     </section>
   );
 }
