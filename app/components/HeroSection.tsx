@@ -7,7 +7,7 @@ interface HeroSectionProps {
   onSupportClick?: () => void
 }
 
-const FALLBACK_IMAGES = ['/images/banner.png', '/images/banner-2.png', '/images/banner-3.png'];
+const FALLBACK_IMAGES = ['/images/banner.png', '/images/banner-3.png'];
 
 export default function HeroSection({ onSupportClick }: HeroSectionProps) {
   const [scrollY, setScrollY] = useState(0);
@@ -40,12 +40,6 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
       titleSecondary: "OUR FUTURE.",
       subtitle: "Non partisan inclusive political organization",
       description: "Zimbabwe's Constitution was adopted by the people to limit power, protect rights and guarantee democratic governance. Today, that constitutional promise is under threat from both mutilation and non-implementation.",
-    },
-    {
-      title: "DEFENDING DEMOCRACY.",
-      titleSecondary: "PROTECTING RIGHTS.",
-      subtitle: "Defending Constitutional Supremacy",
-      description: "We work tirelessly to ensure Zimbabwe's Constitution is respected, implemented, and protected from mutilation or disregard. Join us in defending the foundation of our democracy.",
     },
     {
       title: "CITIZEN EMPOWERMENT.",
