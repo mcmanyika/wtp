@@ -13,6 +13,7 @@ export default function NewsDetailPage() {
   const [news, setNews] = useState<News | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showImageModal, setShowImageModal] = useState(false)
 
   useEffect(() => {
     const loadNews = async () => {
@@ -76,7 +77,7 @@ export default function NewsDetailPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
@@ -100,100 +101,229 @@ export default function NewsDetailPage() {
           <article>
             {/* Category Badge */}
             {news.category && (
-              <span className="inline-block mb-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100 rounded-full">
+              <span className="inline-block mb-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">
                 {news.category}
               </span>
             )}
 
             {/* Title */}
-            <h1 className="text-3xl font-bold text-slate-900 mb-4 sm:text-4xl md:text-5xl">
+            <h1 className="text-3xl font-bold text-slate-900 mb-3 sm:text-4xl md:text-5xl leading-tight">
               {news.title}
             </h1>
 
-            {/* Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 mb-8 pb-8 border-b">
-              <span>{formatDate(news.publishedAt || news.createdAt)}</span>
-              {news.author && (
-                <>
-                  <span>•</span>
-                  <span>By {news.author}</span>
-                </>
-              )}
-            </div>
-
-            {/* Featured Image */}
-            {news.image && (
-              <div className="mb-8 rounded-lg overflow-hidden">
-                <img
-                  src={news.image}
-                  alt={news.title}
-                  className="w-full h-auto object-cover"
-                />
+            {/* Meta & Share Row */}
+            <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-slate-500 mb-8 pb-6 border-b">
+              <div className="flex flex-wrap items-center gap-3">
+                {news.author && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
+                      {news.author.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div>
+                      <span className="font-medium text-slate-700">{news.author}</span>
+                      <span className="block text-xs text-slate-400">{formatDate(news.publishedAt || news.createdAt)}</span>
+                    </div>
+                  </div>
+                )}
+                {!news.author && <span>{formatDate(news.publishedAt || news.createdAt)}</span>}
               </div>
-            )}
-
-            {/* Description */}
-            <div className="mb-8">
-              <p className="text-lg text-slate-700 leading-relaxed font-medium">
-                {news.description}
-              </p>
-            </div>
-
-            {/* Full Content */}
-            {news.content && (
-              <div 
-                className="prose prose-slate max-w-none prose-headings:font-bold prose-p:text-slate-700 prose-a:text-slate-900 prose-img:rounded-lg"
-                dangerouslySetInnerHTML={{ __html: news.content }}
-              />
-            )}
-
-            {/* Share Section */}
-            <div className="mt-12 pt-8 border-t">
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Share this article</h3>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    const url = window.location.href
-                    const text = `${news.title} - ${url}`
-                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-semibold text-white hover:bg-[#20bd5a] transition-colors"
-                >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  WhatsApp
-                </button>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     const url = window.location.href
                     const text = `${news.title}`
                     window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+                  className="rounded-full p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  title="Share on X"
                 >
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
-                  X (Twitter)
+                </button>
+                <button
+                  onClick={() => {
+                    const url = window.location.href
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+                  }}
+                  className="rounded-full p-2 text-slate-400 hover:text-[#1877F2] hover:bg-blue-50 transition-colors"
+                  title="Share on Facebook"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    const url = window.location.href
+                    const text = `${news.title} - ${url}`
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                  }}
+                  className="rounded-full p-2 text-slate-400 hover:text-[#25D366] hover:bg-green-50 transition-colors"
+                  title="Share on WhatsApp"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
                 </button>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href)
                     alert('Link copied to clipboard!')
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="rounded-full p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  title="Copy link"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" />
                   </svg>
-                  Copy Link
                 </button>
+              </div>
+            </div>
+
+            {/* Image + Description Side-by-Side */}
+            <div className={`mb-10 ${news.image ? 'grid grid-cols-1 md:grid-cols-5 gap-6' : ''}`}>
+              {/* Featured Image */}
+              {news.image && (
+                <div
+                  className="md:col-span-2 rounded-xl overflow-hidden shadow-lg h-fit cursor-zoom-in group"
+                  onClick={() => setShowImageModal(true)}
+                >
+                  <img
+                    src={news.image}
+                    alt={news.title}
+                    className="w-full h-56 md:h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              )}
+
+              {/* Description / Lead Text */}
+              <div className={`flex flex-col justify-between ${news.image ? 'md:col-span-3' : 'max-w-3xl'}`}>
+                <p className="text-base md:text-lg text-slate-700 leading-relaxed font-medium">
+                  {news.description}
+                </p>
+                {/* Quick info sidebar */}
+                <div className="border-l-4 border-emerald-500 pl-4 py-2 mt-4">
+                  <p className="text-sm text-slate-500 italic leading-relaxed">
+                    Published by <span className="font-semibold text-slate-700">{news.author || 'DCP'}</span> on {formatDate(news.publishedAt || news.createdAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <hr className="border-slate-200 mb-10" />
+
+            {/* Full Content */}
+            {news.content && (
+              <div>
+                <div 
+                  className="prose prose-lg prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-700 prose-p:leading-relaxed prose-a:text-emerald-700 prose-a:underline prose-img:rounded-xl prose-img:shadow-md prose-blockquote:border-l-emerald-500 prose-blockquote:text-slate-600"
+                  dangerouslySetInnerHTML={{ __html: news.content }}
+                />
+              </div>
+            )}
+
+            {/* Bottom Share CTA */}
+            <div className="mt-14 pt-8 border-t">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Enjoyed this article?</h3>
+                  <p className="text-sm text-slate-500">Share it with your network</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const url = window.location.href
+                      const text = `${news.title} - ${url}`
+                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#20bd5a] transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = window.location.href
+                      const text = `${news.title}`
+                      window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    X
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = window.location.href
+                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank')
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#1877F2] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#166fe5] transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href)
+                      alert('Link copied to clipboard!')
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" />
+                    </svg>
+                    Copy Link
+                  </button>
+                </div>
               </div>
             </div>
           </article>
         ) : null}
       </div>
+
+      {/* Image Lightbox Modal */}
+      {showImageModal && news?.image && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setShowImageModal(false)}
+            className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10"
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Image */}
+          <div
+            className="relative max-w-4xl w-full max-h-[85vh] animate-[fadeInScale_0.2s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={news.image}
+              alt={news.title}
+              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+            />
+            {/* Caption bar */}
+            {news.title && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent rounded-b-lg px-4 py-3">
+                <p className="text-white text-sm font-medium">{news.title}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t bg-slate-900 text-white">
