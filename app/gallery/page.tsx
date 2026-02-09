@@ -7,6 +7,73 @@ import type { GalleryCategory, GalleryImage } from '@/types'
 
 const ITEMS_PER_PAGE = 12
 
+function ShareButtons({ imageUrl, title, size = 'sm' }: { imageUrl: string; title: string; size?: 'sm' | 'md' }) {
+  const [copied, setCopied] = useState(false)
+  const shareText = encodeURIComponent(title || 'Check out this image from Defend the Constitution')
+  const shareUrl = encodeURIComponent(imageUrl)
+
+  const btnClass = size === 'sm'
+    ? 'rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors'
+    : 'rounded-full bg-white/20 p-2 text-white hover:bg-white/30 transition-colors backdrop-blur-sm'
+  const iconClass = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
+
+  return (
+    <div className={`flex items-center ${size === 'sm' ? 'gap-1.5' : 'gap-2'}`} onClick={(e) => e.stopPropagation()}>
+      {/* X (Twitter) */}
+      <button
+        onClick={(e) => { e.stopPropagation(); window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank') }}
+        className={btnClass}
+        title="Share on X"
+      >
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      </button>
+      {/* Facebook */}
+      <button
+        onClick={(e) => { e.stopPropagation(); window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`, '_blank') }}
+        className={btnClass}
+        title="Share on Facebook"
+      >
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      </button>
+      {/* WhatsApp */}
+      <button
+        onClick={(e) => { e.stopPropagation(); window.open(`https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`, '_blank') }}
+        className={btnClass}
+        title="Share on WhatsApp"
+      >
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12.04 2c-5.45 0-9.91 4.46-9.91 9.91 0 1.75.46 3.45 1.35 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.45 0 9.91-4.46 9.91-9.91S17.49 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.68 8.23-8.22 8.23z"/>
+        </svg>
+      </button>
+      {/* Copy Link */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          navigator.clipboard.writeText(imageUrl)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        }}
+        className={btnClass}
+        title={copied ? 'Copied!' : 'Copy image link'}
+      >
+        {copied ? (
+          <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" />
+          </svg>
+        )}
+      </button>
+    </div>
+  )
+}
+
 export default function GalleryPage() {
   const [categories, setCategories] = useState<GalleryCategory[]>([])
   const [images, setImages] = useState<GalleryImage[]>([])
@@ -155,7 +222,12 @@ export default function GalleryPage() {
                       }}
                     />
                     {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end justify-start p-3">
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex flex-col justify-between p-3">
+                      {/* Share buttons (top-right) */}
+                      <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ShareButtons imageUrl={image.imageUrl} title={image.title || image.categoryName || 'Gallery image'} size="sm" />
+                      </div>
+                      {/* Caption (bottom) */}
                       {(image.title || image.categoryName) && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           {image.title && (
@@ -260,18 +332,21 @@ export default function GalleryPage() {
               alt={lightboxImage.title || 'Gallery image'}
               className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
             />
-            {/* Caption */}
-            {(lightboxImage.title || lightboxImage.description) && (
-              <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-gradient-to-t from-black/80 to-transparent p-4 pt-8">
-                {lightboxImage.title && (
-                  <h3 className="text-lg font-semibold text-white">{lightboxImage.title}</h3>
-                )}
-                {lightboxImage.description && (
-                  <p className="mt-1 text-sm text-white/80">{lightboxImage.description}</p>
-                )}
-                <p className="mt-1 text-xs text-white/60">{lightboxImage.categoryName}</p>
+            {/* Caption & Share */}
+            <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-gradient-to-t from-black/80 to-transparent p-4 pt-10">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  {lightboxImage.title && (
+                    <h3 className="text-lg font-semibold text-white">{lightboxImage.title}</h3>
+                  )}
+                  {lightboxImage.description && (
+                    <p className="mt-1 text-sm text-white/80">{lightboxImage.description}</p>
+                  )}
+                  <p className="mt-1 text-xs text-white/60">{lightboxImage.categoryName}</p>
+                </div>
+                <ShareButtons imageUrl={lightboxImage.imageUrl} title={lightboxImage.title || 'Gallery image'} size="md" />
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
