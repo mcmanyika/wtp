@@ -133,23 +133,7 @@ export default function SignupForm() {
         {loading ? 'Creating Account...' : 'Sign Up'}
       </button>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-300"></div>
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-slate-500">Or continue with</span>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleGoogleSignup}
-        disabled={loading}
-        className="w-full rounded-lg border-2 border-slate-300 px-6 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed sm:text-base"
-      >
-        {loading ? 'Signing in...' : 'Sign up with Google'}
-      </button>
+      {/* Google sign-up hidden */}
     </form>
   )
 }
