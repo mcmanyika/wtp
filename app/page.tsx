@@ -599,7 +599,7 @@ export default function Home() {
               <div className="mb-6 text-center sm:mb-8">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Our Gallery</p>
                 <h2 className="text-2xl font-bold text-white sm:text-3xl md:text-4xl">Gallery</h2>
-                <p className="mt-2 text-sm text-slate-400">Moments captured from our events, campaigns, and community activities.</p>
+                <p className="mt-2 text-sm text-slate-400">Feel free to download and share</p>
               </div>
             </div>
 
@@ -616,9 +616,34 @@ export default function Home() {
                     alt={image.title || 'Gallery image'}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex flex-col justify-between p-2">
+                    {/* Share icons - top right */}
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent((image.title || 'Gallery image') + ' – Defend the Constitution Platform')}&url=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
+                        className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                        title="Share on X"
+                      >
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
+                        className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                        title="Share on Facebook"
+                      >
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent((image.title || 'Gallery image') + ' – Defend the Constitution Platform')}%20${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
+                        className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+                        title="Share on WhatsApp"
+                      >
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.45 0-9.91 4.46-9.91 9.91 0 1.75.46 3.45 1.35 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.45 0 9.91-4.46 9.91-9.91S17.49 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.68 8.23-8.22 8.23z"/></svg>
+                      </button>
+                    </div>
+                    {/* Title - bottom */}
                     {image.title && (
-                      <p className="text-white text-xs font-medium px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate w-full">
+                      <p className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate">
                         {image.title}
                       </p>
                     )}

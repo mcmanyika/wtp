@@ -88,7 +88,6 @@ export default function Header({ onDonateClick, onContactClick, startAtBottom = 
 
         {/* Desktop Navigation */}
         <nav className="hidden items-center gap-4 md:flex lg:gap-6">
-          <Link href="/" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Home</Link>
           <Link href="/about" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">About</Link>
           <Link href="/petitions" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Petitions</Link>
           <Link href="/news" className="text-xs font-medium text-slate-300 hover:text-white transition-colors sm:text-sm">Articles</Link>
@@ -228,13 +227,6 @@ export default function Header({ onDonateClick, onContactClick, startAtBottom = 
       {mobileMenuOpen && (
         <div className="border-t border-slate-800 bg-black md:hidden">
           <nav className="flex flex-col space-y-1 px-4 py-4">
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-            >
-              Home
-            </Link>
             <Link
               href="/about"
               onClick={() => setMobileMenuOpen(false)}
