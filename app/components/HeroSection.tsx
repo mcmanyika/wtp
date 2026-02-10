@@ -114,7 +114,7 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
       {backgroundImages.map((image, index) => (
         <div
           key={image}
-          className="absolute inset-0 z-0 transition-opacity duration-[3000ms] ease-in-out bg-cover bg-no-repeat bg-[position:70%_center] sm:bg-center"
+          className="absolute inset-0 z-0 transition-opacity duration-[3000ms] ease-in-out bg-cover bg-no-repeat bg-center"
           style={{
             backgroundImage: `url(${image})`,
             transform: `translateY(${parallaxOffset}px)`,
