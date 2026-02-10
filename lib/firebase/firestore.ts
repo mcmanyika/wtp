@@ -1632,10 +1632,15 @@ export async function getGalleryImages(publishedOnly: boolean = false, categoryI
       } as GalleryImage
     })
   } catch (error: any) {
-    if (error?.code === 'failed-precondition') {
-      console.warn('Composite index not ready for galleryImages, using fallback')
+    if (error?.code === 'failed-precondition' || error?.code === 'permission-denied') {
+      console.warn('Composite index not ready or permission issue for galleryImages, using fallback')
       try {
-        const snapshot = await getDocs(collection(db, 'galleryImages'))
+        // For unauthenticated users, must filter by isPublished to satisfy security rules
+        let fallbackQuery = publishedOnly
+          ? query(collection(db, 'galleryImages'), where('isPublished', '==', true))
+          : query(collection(db, 'galleryImages'))
+
+        const snapshot = await getDocs(fallbackQuery)
         let images = snapshot.docs.map((docSnap) => {
           const data = docSnap.data()
           return {
@@ -1645,7 +1650,6 @@ export async function getGalleryImages(publishedOnly: boolean = false, categoryI
             updatedAt: toDate(data.updatedAt),
           } as GalleryImage
         })
-        if (publishedOnly) images = images.filter(i => i.isPublished)
         if (categoryId) images = images.filter(i => i.categoryId === categoryId)
         return images.sort((a, b) => a.order - b.order)
       } catch (fallbackError: any) {
