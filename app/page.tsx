@@ -618,10 +618,10 @@ export default function Home() {
 
         {/* Gallery Section */}
         {!galleryLoading && galleryImages.length > 0 && (
-          <section className="bg-slate-900 py-10 sm:py-14">
+          <section className="bg-slate-900 pt-10 sm:pt-14">
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
               <div className="mb-6 text-center sm:mb-8">
-                <h2 className="text-2xl font-bold text-white sm:text-3xl md:text-4xl">Gallery</h2>
+                <Link href="/gallery" className="text-2xl font-bold text-white sm:text-3xl md:text-4xl hover:text-slate-300 transition-colors">Gallery</Link>
                 <p className="mt-2 text-sm text-slate-400">Feel free to download and share</p>
               </div>
             </div>
@@ -675,14 +675,6 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-6 text-center">
-              <Link
-                href="/gallery"
-                className="inline-flex items-center rounded-md border-2 border-white px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-                View Full Gallery
-              </Link>
-            </div>
 
             {/* Gallery Lightbox */}
             {galleryLightbox !== null && (
