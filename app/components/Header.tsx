@@ -177,7 +177,7 @@ export default function Header({ onDonateClick, onContactClick, startAtBottom = 
               </div>
               <button
                 onClick={handleDonateClick}
-                className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
+                className="inline-flex rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors sm:px-4 sm:py-2 sm:text-sm"
               >
                 Donate
               </button>
@@ -192,7 +192,7 @@ export default function Header({ onDonateClick, onContactClick, startAtBottom = 
               </Link>
               <button
                 onClick={handleDonateClick}
-                className="inline-flex rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black hover:bg-slate-100 transition-colors sm:px-4 sm:py-2 sm:text-sm"
+                className="inline-flex rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors sm:px-4 sm:py-2 sm:text-sm"
               >
                 Donate
               </button>
