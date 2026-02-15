@@ -17,7 +17,16 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
   const [heroInView, setHeroInView] = useState(true);
   const [backgroundImages, setBackgroundImages] = useState<string[]>(FALLBACK_IMAGES);
   const [imagesReady, setImagesReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
+
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch banners from Firestore, then preload images before showing
   useEffect(() => {
@@ -145,20 +154,26 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
       id="intro"
       className="relative flex h-[100svh] items-end justify-center pb-20 overflow-hidden bg-black"
     >
-      {/* Background with parallax - smooth crossfade */}
+      {/* Background with parallax (desktop) / fitted image (mobile) */}
       {backgroundImages.map((image, index) => (
         <div
           key={image}
-          className="absolute inset-0 z-0 bg-cover bg-no-repeat bg-center"
+          className="absolute inset-0 z-0"
           style={{
-            backgroundImage: `url(${image})`,
-            transform: `translateY(${parallaxOffset}px)`,
-            willChange: 'transform, opacity',
+            transform: isMobile ? undefined : `translateY(${parallaxOffset}px)`,
+            willChange: isMobile ? 'opacity' : 'transform, opacity',
             opacity: imagesReady && index === currentBgImage ? 1 : 0,
             pointerEvents: index === currentBgImage ? 'auto' : 'none',
             transition: 'opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
-        />
+        >
+          <img
+            src={image}
+            alt=""
+            className="h-full w-full object-cover object-center"
+            draggable={false}
+          />
+        </div>
       ))}
       
       {/* Social Media Icons - Left Side (Fixed, hides when scrolled past hero) */}
