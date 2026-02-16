@@ -351,6 +351,7 @@ export interface Leader {
   title: string
   bio: string
   imageUrl?: string
+  xHandle?: string
   order: number
   isActive: boolean
   createdAt: Timestamp | Date

@@ -54,6 +54,7 @@ function LeadershipManagement() {
     name: '',
     title: '',
     bio: '',
+    xHandle: '',
     isActive: true,
     order: 0,
   })
@@ -84,7 +85,7 @@ function LeadershipManagement() {
   }
 
   const resetForm = () => {
-    setFormData({ name: '', title: '', bio: '', isActive: true, order: leaders.length })
+    setFormData({ name: '', title: '', bio: '', xHandle: '', isActive: true, order: leaders.length })
     setImageFile(null)
     setImagePreview(null)
     setImageUrl('')
@@ -103,6 +104,7 @@ function LeadershipManagement() {
       name: leader.name,
       title: leader.title,
       bio: leader.bio,
+      xHandle: leader.xHandle || '',
       isActive: leader.isActive,
       order: leader.order,
     })
@@ -143,11 +145,14 @@ function LeadershipManagement() {
         finalImageUrl = await uploadFile(imageFile, path)
       }
 
+      const xHandleValue = formData.xHandle.trim() || ''
+
       if (editingLeader) {
         await updateLeader(editingLeader.id, {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
+          xHandle: xHandleValue,
           imageUrl: finalImageUrl || undefined,
           isActive: formData.isActive,
           order: formData.order,
@@ -157,6 +162,7 @@ function LeadershipManagement() {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
+          xHandle: xHandleValue,
           imageUrl: finalImageUrl || undefined,
           isActive: formData.isActive,
           order: formData.order,
@@ -447,6 +453,26 @@ function LeadershipManagement() {
                     rows={4}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 resize-none"
                   />
+                </div>
+
+                {/* X Handle */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    X (Twitter) Handle
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">@</span>
+                    <input
+                      type="text"
+                      value={formData.xHandle}
+                      onChange={(e) => setFormData({ ...formData, xHandle: e.target.value.replace(/^@/, '') })}
+                      placeholder="username"
+                      className="w-full rounded-lg border border-slate-300 pl-8 pr-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Optional. Enter without the @ symbol.
+                  </p>
                 </div>
 
                 {/* Image Upload */}

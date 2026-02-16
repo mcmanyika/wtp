@@ -2493,6 +2493,7 @@ export async function createLeader(
       title: leader.title,
       bio: leader.bio,
       imageUrl: leader.imageUrl || null,
+      xHandle: leader.xHandle || '',
       order: leader.order,
       isActive: leader.isActive,
       id: leaderRef.id,
@@ -2573,6 +2574,7 @@ export async function updateLeader(leaderId: string, data: Partial<Leader>): Pro
   if (data.title !== undefined) updateData.title = data.title
   if (data.bio !== undefined) updateData.bio = data.bio
   if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl || null
+  if (data.xHandle !== undefined) updateData.xHandle = data.xHandle || ''
   if (data.order !== undefined) updateData.order = data.order
   if (data.isActive !== undefined) updateData.isActive = data.isActive
 

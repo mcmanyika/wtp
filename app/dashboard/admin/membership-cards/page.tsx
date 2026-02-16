@@ -468,22 +468,14 @@ export default function AdminMembershipCardsPage() {
                     <tr key={card.userId} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          {card.photoURL ? (
-                            <img
-                              src={card.photoURL}
-                              alt=""
-                              className="h-9 w-9 rounded-full object-cover border border-slate-200"
-                            />
-                          ) : (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
-                              {card.memberName
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .slice(0, 2)
-                                .toUpperCase()}
-                            </div>
-                          )}
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
+                            {card.memberName
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
                           <div>
                             <p className="font-medium text-slate-900">{card.memberName}</p>
                             <p className="text-[11px] text-slate-400">{card.email || '—'}</p>
