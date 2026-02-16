@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { createMembershipApplication, createNotification } from '@/lib/firebase/firestore'
+import { createMembershipApplication, createNotification, getReferralByReferred, updateReferralStatus } from '@/lib/firebase/firestore'
 import type { MembershipApplicationType, ParticipationArea, OrganisationType } from '@/types'
 
 const provinces = [
@@ -247,6 +247,16 @@ export default function MembershipApplicationForm() {
           link: '/dashboard/admin/membership-applications',
         })
       } catch (e) { /* non-critical */ }
+
+      // Update referral status to 'applied' if this user was referred
+      if (user?.uid) {
+        try {
+          const referral = await getReferralByReferred(user.uid)
+          if (referral && referral.status === 'signed_up') {
+            await updateReferralStatus(referral.id, 'applied')
+          }
+        } catch (e) { /* non-critical */ }
+      }
 
       setSuccess(true)
       window.scrollTo(0, 0)

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { stripePromise } from '@/lib/stripe/config'
-import { createMembership } from '@/lib/firebase/firestore'
+import { createMembership, getReferralByReferred, updateReferralStatus, createNotification } from '@/lib/firebase/firestore'
 
 const MEMBERSHIP = {
   id: 'member',
@@ -130,6 +130,27 @@ function MembershipCheckoutContent({ onSuccess }: MembershipCheckoutContentProps
             paymentIntentId: paymentIntent.id,
           })
           alert('Payment succeeded, but there was an error saving the membership. It will be saved automatically via webhook.')
+        }
+
+        // Update referral status to 'paid' if this user was referred, and notify the referrer
+        if (user?.uid) {
+          try {
+            const referral = await getReferralByReferred(user.uid)
+            if (referral && referral.status !== 'paid') {
+              await updateReferralStatus(referral.id, 'paid')
+              // Notify the referrer
+              try {
+                await createNotification({
+                  type: 'new_membership_application',
+                  title: 'Referral Converted! 🎉',
+                  message: `${referral.referredName} (referred by you) just paid for their membership!`,
+                  link: '/dashboard/referrals',
+                  audience: 'user',
+                  userId: referral.referrerUserId,
+                })
+              } catch (e) { /* non-critical */ }
+            }
+          } catch (e) { /* non-critical */ }
         }
 
         // Refresh user profile to update membership tier

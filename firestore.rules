@@ -342,6 +342,24 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Referrals collection
+    match /referrals/{referralId} {
+      // Users can read referrals where they are the referrer
+      allow read: if isAuthenticated() && resource.data.referrerUserId == request.auth.uid;
+      // Users can read referrals where they are the referred user
+      allow read: if isAuthenticated() && resource.data.referredUserId == request.auth.uid;
+      // Admins can read all referrals
+      allow read: if isAdmin();
+      // Authenticated users can create referrals (created during signup flow)
+      allow create: if isAuthenticated();
+      // Authenticated users can update referrals they are involved in (status progression)
+      allow update: if isAuthenticated() &&
+                     (resource.data.referrerUserId == request.auth.uid || resource.data.referredUserId == request.auth.uid) &&
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+      // Admins can update any referral
+      allow update: if isAdmin();
+    }
+
     // Newsletter subscriptions collection
     match /newsletterSubscriptions/{subscriptionId} {
       // Anyone can create newsletter subscriptions (authenticated or not)

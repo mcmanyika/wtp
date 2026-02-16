@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation'
 function SignupContent() {
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('returnUrl')
+  const refCode = searchParams.get('ref') || undefined
   const loginHref = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
 
   return (
@@ -17,10 +18,13 @@ function SignupContent() {
           <Link href="/"><img src="/images/logo.png" alt="DCP Logo" className="mx-auto mb-4 h-16 w-16 rounded-md object-contain hover:opacity-80 transition-opacity cursor-pointer" /></Link>
           <h1 className="mb-2 text-3xl font-bold">Create Account</h1>
           <p className="text-slate-600">Join the movement to defend the Constitution</p>
+          {refCode && (
+            <p className="mt-2 text-sm text-emerald-600 font-medium">You&apos;ve been invited! Sign up to get started.</p>
+          )}
         </div>
 
         <div className="rounded-2xl border bg-white p-8 shadow-sm">
-          <SignupForm />
+          <SignupForm referralCode={refCode} />
         </div>
 
         <p className="mt-6 text-center text-sm text-slate-600">

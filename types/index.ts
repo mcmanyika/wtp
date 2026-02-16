@@ -16,6 +16,8 @@ export interface UserProfile {
   emailVerified: boolean
   stripeCustomerId?: string
   photoURL?: string
+  referralCode?: string       // unique short code, e.g. "DCP-A7K3X"
+  referredBy?: string         // referral code of the user who referred this user
 }
 
 export interface Donation {
@@ -351,6 +353,20 @@ export interface Leader {
   imageUrl?: string
   order: number
   isActive: boolean
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
+}
+
+// Referral types
+export type ReferralStatus = 'signed_up' | 'applied' | 'paid'
+
+export interface Referral {
+  id: string
+  referrerUserId: string     // who shared the link
+  referredUserId: string     // who signed up
+  referredEmail: string
+  referredName: string
+  status: ReferralStatus     // tracks progress through the funnel
   createdAt: Timestamp | Date
   updatedAt: Timestamp | Date
 }

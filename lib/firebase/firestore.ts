@@ -16,7 +16,7 @@ import {
   arrayUnion,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner, GalleryCategory, GalleryImage, Survey, SurveyResponse, MembershipApplication, MembershipApplicationStatus, AdminNotification, NotificationType, NotificationAudience, EmailLog, EmailType, EmailStatus, Leader } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner, GalleryCategory, GalleryImage, Survey, SurveyResponse, MembershipApplication, MembershipApplicationStatus, AdminNotification, NotificationType, NotificationAudience, EmailLog, EmailType, EmailStatus, Leader, Referral, ReferralStatus } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -2581,4 +2581,220 @@ export async function updateLeader(leaderId: string, data: Partial<Leader>): Pro
 
 export async function deleteLeader(leaderId: string): Promise<void> {
   await deleteDoc(doc(requireDb(), 'leaders', leaderId))
+}
+
+// ─── Referral Operations ──────────────────────────────────────────────────────
+
+/**
+ * Generate a unique referral code (format: DCP-XXXXX where X is alphanumeric).
+ * Checks Firestore to ensure uniqueness.
+ */
+export async function generateReferralCode(): Promise<string> {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // avoid ambiguous chars 0/O, 1/I
+  const generate = () => {
+    let code = 'DCP-'
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return code
+  }
+
+  const db = requireDb()
+  // Try up to 5 times to find a unique code
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generate()
+    const q = query(collection(db, 'users'), where('referralCode', '==', code), limit(1))
+    try {
+      const snapshot = await getDocs(q)
+      if (snapshot.empty) return code
+    } catch {
+      // If query fails (e.g. no index), just return the code – collision is extremely unlikely
+      return code
+    }
+  }
+  return generate() // fallback
+}
+
+/**
+ * Look up a user by their referralCode.
+ */
+export async function getUserByReferralCode(referralCode: string): Promise<UserProfile | null> {
+  if (!db) return null
+
+  try {
+    const q = query(collection(db, 'users'), where('referralCode', '==', referralCode), limit(1))
+    const snapshot = await getDocs(q)
+    if (snapshot.empty) return null
+
+    const data = snapshot.docs[0].data()
+    return { ...data, uid: snapshot.docs[0].id, createdAt: toDate(data.createdAt) } as UserProfile
+  } catch (error: any) {
+    console.error('Error looking up user by referral code:', error)
+    return null
+  }
+}
+
+/**
+ * Create a referral record when a referred user signs up.
+ */
+export async function createReferral(
+  referral: Omit<Referral, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const db = requireDb()
+  const refDoc = doc(collection(db, 'referrals'))
+
+  try {
+    const refData = {
+      ...referral,
+      id: refDoc.id,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    }
+    await setDoc(refDoc, refData)
+    console.log('Referral created successfully:', refDoc.id)
+    return refDoc.id
+  } catch (error: any) {
+    console.error('Error creating referral:', error)
+    throw error
+  }
+}
+
+/**
+ * Get all referrals where the given user is the referrer.
+ */
+export async function getReferralsByUser(referrerUserId: string): Promise<Referral[]> {
+  if (!db) return []
+
+  try {
+    const q = query(
+      collection(db, 'referrals'),
+      where('referrerUserId', '==', referrerUserId),
+      orderBy('createdAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((d) => {
+      const data = d.data()
+      return {
+        ...data,
+        id: d.id,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+      } as Referral
+    })
+  } catch (error: any) {
+    // Fallback without orderBy if index not ready
+    if (error?.code === 'failed-precondition') {
+      try {
+        const q = query(collection(db, 'referrals'), where('referrerUserId', '==', referrerUserId))
+        const snapshot = await getDocs(q)
+        const referrals = snapshot.docs.map((d) => {
+          const data = d.data()
+          return {
+            ...data,
+            id: d.id,
+            createdAt: toDate(data.createdAt),
+            updatedAt: toDate(data.updatedAt),
+          } as Referral
+        })
+        return referrals.sort((a, b) => {
+          const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+          const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+          return bDate - aDate
+        })
+      } catch (fallbackError: any) {
+        console.error('Error in fallback referrals query:', fallbackError)
+        return []
+      }
+    }
+    console.error('Error fetching referrals by user:', error)
+    return []
+  }
+}
+
+/**
+ * Get the referral record for a referred user (the person who was invited).
+ */
+export async function getReferralByReferred(referredUserId: string): Promise<Referral | null> {
+  if (!db) return null
+
+  try {
+    const q = query(
+      collection(db, 'referrals'),
+      where('referredUserId', '==', referredUserId),
+      limit(1)
+    )
+    const snapshot = await getDocs(q)
+    if (snapshot.empty) return null
+
+    const data = snapshot.docs[0].data()
+    return {
+      ...data,
+      id: snapshot.docs[0].id,
+      createdAt: toDate(data.createdAt),
+      updatedAt: toDate(data.updatedAt),
+    } as Referral
+  } catch (error: any) {
+    console.error('Error fetching referral by referred user:', error)
+    return null
+  }
+}
+
+/**
+ * Update the status of a referral (signed_up -> applied -> paid).
+ */
+export async function updateReferralStatus(
+  referralId: string,
+  status: ReferralStatus
+): Promise<void> {
+  const db = requireDb()
+  await updateDoc(doc(db, 'referrals', referralId), {
+    status,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+/**
+ * Get all referrals (admin use).
+ */
+export async function getAllReferrals(): Promise<Referral[]> {
+  if (!db) return []
+
+  try {
+    const q = query(collection(db, 'referrals'), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map((d) => {
+      const data = d.data()
+      return {
+        ...data,
+        id: d.id,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+      } as Referral
+    })
+  } catch (error: any) {
+    if (error?.code === 'failed-precondition') {
+      try {
+        const snapshot = await getDocs(collection(db, 'referrals'))
+        const referrals = snapshot.docs.map((d) => {
+          const data = d.data()
+          return {
+            ...data,
+            id: d.id,
+            createdAt: toDate(data.createdAt),
+            updatedAt: toDate(data.updatedAt),
+          } as Referral
+        })
+        return referrals.sort((a, b) => {
+          const aDate = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+          const bDate = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+          return bDate - aDate
+        })
+      } catch (fallbackError: any) {
+        console.error('Error in fallback all referrals query:', fallbackError)
+        return []
+      }
+    }
+    console.error('Error fetching all referrals:', error)
+    return []
+  }
 }

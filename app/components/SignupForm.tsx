@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function SignupForm() {
+interface SignupFormProps {
+  referralCode?: string
+}
+
+export default function SignupForm({ referralCode }: SignupFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -36,7 +40,7 @@ export default function SignupForm() {
     }
 
     try {
-      await signUp(formData.email, formData.password, formData.name)
+      await signUp(formData.email, formData.password, formData.name, referralCode)
       // Always show welcome page first for new signups, pass original returnUrl so they can continue after
       const welcomeUrl = returnUrl ? `/welcome?next=${encodeURIComponent(returnUrl)}` : '/welcome'
       router.push(welcomeUrl)
@@ -66,7 +70,7 @@ export default function SignupForm() {
     setError('')
     setLoading(true)
     try {
-      await signInWithGoogle()
+      await signInWithGoogle(referralCode)
       const welcomeUrl = returnUrl ? `/welcome?next=${encodeURIComponent(returnUrl)}` : '/welcome'
       router.push(welcomeUrl)
     } catch (err: any) {

@@ -14,16 +14,16 @@ import {
 } from 'firebase/auth'
 import { auth, db } from '@/lib/firebase/config'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { createNotification } from '@/lib/firebase/firestore'
+import { createNotification, getUserByReferralCode, createReferral, generateReferralCode } from '@/lib/firebase/firestore'
 import type { UserProfile } from '@/types'
 
 interface AuthContextType {
   user: User | null
   userProfile: UserProfile | null
   loading: boolean
-  signUp: (email: string, password: string, name: string) => Promise<void>
+  signUp: (email: string, password: string, name: string, referralCode?: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signInWithGoogle: (referralCode?: string) => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updateProfile: (data: Partial<UserProfile>) => Promise<void>
@@ -55,10 +55,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userDoc = await getDoc(doc(db, 'users', user.uid))
           if (userDoc.exists()) {
             const data = userDoc.data()
-            setUserProfile({
+            const profile = {
               ...data,
               createdAt: data.createdAt?.toDate() || new Date(),
-            } as UserProfile)
+            } as UserProfile
+
+            // Auto-generate referral code for existing users who don't have one
+            if (!profile.referralCode) {
+              try {
+                const newCode = await generateReferralCode()
+                await setDoc(doc(db, 'users', user.uid), { referralCode: newCode }, { merge: true })
+                profile.referralCode = newCode
+              } catch (e) {
+                console.warn('Could not auto-generate referral code:', e)
+              }
+            }
+
+            setUserProfile(profile)
           } else {
             // Create profile if it doesn't exist
             const newProfile: UserProfile = {
@@ -106,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [])
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, referralCode?: string) => {
     if (!auth || !db) {
       throw new Error('Firebase is not initialized. Please configure your environment variables.')
     }
@@ -116,7 +129,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Send verification email
     await sendEmailVerification(user)
 
+    // Look up referrer if a referral code was provided
+    let referrerUser: UserProfile | null = null
+    if (referralCode) {
+      try {
+        referrerUser = await getUserByReferralCode(referralCode)
+      } catch { /* non-critical */ }
+    }
+
     // Create user profile in Firestore
+    const newReferralCode = await generateReferralCode()
     const userProfile: UserProfile = {
       uid: user.uid,
       email: user.email!,
@@ -125,6 +147,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: 'supporter',
       createdAt: new Date(),
       emailVerified: false,
+      referralCode: newReferralCode,
+      ...(referrerUser ? { referredBy: referralCode } : {}),
     }
 
     await setDoc(doc(db, 'users', user.uid), {
@@ -133,12 +157,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
     setUserProfile(userProfile)
 
+    // Create referral record if referred by someone
+    if (referrerUser) {
+      try {
+        await createReferral({
+          referrerUserId: referrerUser.uid,
+          referredUserId: user.uid,
+          referredEmail: email,
+          referredName: name,
+          status: 'signed_up',
+        })
+      } catch (e) { /* non-critical */ }
+    }
+
     // Create admin notification for new user signup
     try {
       await createNotification({
         type: 'new_user',
         title: 'New User Registration',
-        message: `${name} (${email}) just signed up.`,
+        message: `${name} (${email}) just signed up.${referrerUser ? ` Referred by ${referrerUser.name || referrerUser.email}.` : ''}`,
         link: '/dashboard/admin/users',
       })
     } catch (e) { /* non-critical */ }
@@ -160,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password)
   }
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (referralCode?: string) => {
     if (!auth || !db) {
       throw new Error('Firebase is not initialized. Please configure your environment variables.')
     }
@@ -171,7 +208,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check if user profile exists
     const userDoc = await getDoc(doc(db, 'users', user.uid))
     if (!userDoc.exists()) {
-      // Create new user profile
+      // Look up referrer if a referral code was provided
+      let referrerUser: UserProfile | null = null
+      if (referralCode) {
+        try {
+          referrerUser = await getUserByReferralCode(referralCode)
+        } catch { /* non-critical */ }
+      }
+
+      // Create new user profile with referral code
+      const newReferralCode = await generateReferralCode()
       const userProfile: UserProfile = {
         uid: user.uid,
         email: user.email!,
@@ -181,18 +227,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date(),
         emailVerified: user.emailVerified,
         photoURL: user.photoURL || undefined,
+        referralCode: newReferralCode,
+        ...(referrerUser ? { referredBy: referralCode } : {}),
       }
       await setDoc(doc(db, 'users', user.uid), {
         ...userProfile,
         createdAt: new Date(),
       })
 
+      // Create referral record if referred by someone
+      if (referrerUser) {
+        try {
+          await createReferral({
+            referrerUserId: referrerUser.uid,
+            referredUserId: user.uid,
+            referredEmail: user.email!,
+            referredName: user.displayName || user.email!,
+            status: 'signed_up',
+          })
+        } catch (e) { /* non-critical */ }
+      }
+
       // Create admin notification for new Google user signup
       try {
         await createNotification({
           type: 'new_user',
           title: 'New User Registration',
-          message: `${user.displayName || user.email} signed up via Google.`,
+          message: `${user.displayName || user.email} signed up via Google.${referrerUser ? ` Referred by ${referrerUser.name || referrerUser.email}.` : ''}`,
           link: '/dashboard/admin/users',
         })
       } catch (e) { /* non-critical */ }
