@@ -16,6 +16,7 @@ import {
 import { uploadFile } from '@/lib/firebase/storage'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Petition } from '@/types'
+import RichTextEditor from '@/app/components/RichTextEditor'
 
 export default function AdminPetitionsPage() {
   return (
@@ -448,12 +449,10 @@ function PetitionManagement() {
                   <label className="block text-sm font-semibold text-slate-900 mb-1">
                     Description <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    rows={3}
+                  <RichTextEditor
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                    required
+                    onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
+                    placeholder="Petition description..."
                   />
                 </div>
 
@@ -461,11 +460,9 @@ function PetitionManagement() {
                   <label className="block text-sm font-semibold text-slate-900 mb-1">
                     Content
                   </label>
-                  <textarea
-                    rows={6}
+                  <RichTextEditor
                     value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
                     placeholder="Full petition content..."
                   />
                 </div>

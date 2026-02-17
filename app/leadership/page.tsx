@@ -2,19 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Header from '../components/Header'
+import Footer from '../components/Footer'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
-import { getLeaders, createNewsletterSubscription } from '@/lib/firebase/firestore'
+import { getLeaders } from '@/lib/firebase/firestore'
 import type { Leader } from '@/types'
 
 export default function LeadershipPage() {
-  const { user } = useAuth()
   const [leaders, setLeaders] = useState<Leader[]>([])
   const [loading, setLoading] = useState(true)
-  const [email, setEmail] = useState('')
-  const [nlLoading, setNlLoading] = useState(false)
-  const [nlSuccess, setNlSuccess] = useState(false)
-  const [nlError, setNlError] = useState('')
 
   useEffect(() => {
     const fetchLeaders = async () => {
@@ -139,119 +134,7 @@ export default function LeadershipPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-slate-900 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sm font-bold text-black">
-                  DCP
-                </div>
-                <div>
-                  <p className="font-bold">Defend the Constitution</p>
-                  <p className="text-xs text-slate-400">Platform</p>
-                </div>
-              </div>
-              <p className="text-sm text-slate-400">
-                A citizen-led movement opposing the 2030 agenda, promoting lawful governance, public accountability, and peaceful civic participation.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold">Quick Links</h3>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/leadership" className="hover:text-white transition-colors">Leadership</Link></li>
-                <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <div className="mb-4 h-6"></div>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
-                <li><Link href="/#contact" className="hover:text-white transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold">Subscribe to Newsletter</h3>
-              <p className="mb-4 text-sm text-slate-400">
-                Stay updated with our latest news and announcements.
-              </p>
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault()
-                  setNlLoading(true)
-                  setNlError('')
-                  setNlSuccess(false)
-
-                  if (!email.trim()) {
-                    setNlError('Please enter your email address')
-                    setNlLoading(false)
-                    return
-                  }
-                  if (!email.includes('@')) {
-                    setNlError('Please enter a valid email address')
-                    setNlLoading(false)
-                    return
-                  }
-
-                  try {
-                    await createNewsletterSubscription({
-                      email: email.trim(),
-                      userId: user?.uid,
-                    })
-                    setNlSuccess(true)
-                    setEmail('')
-                    setTimeout(() => setNlSuccess(false), 5000)
-                  } catch (err: any) {
-                    console.error('Error subscribing to newsletter:', err)
-                    setNlError(err.message || 'Failed to subscribe. Please try again.')
-                  } finally {
-                    setNlLoading(false)
-                  }
-                }}
-                className="space-y-2"
-              >
-                {nlError && (
-                  <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-xs text-red-800">
-                    {nlError}
-                  </div>
-                )}
-                {nlSuccess && (
-                  <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-2 text-xs text-green-800">
-                    Thank you! You have been subscribed to our newsletter.
-                  </div>
-                )}
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={nlLoading}
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder:text-slate-400 focus:border-slate-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    disabled={nlLoading}
-                    className="rounded-lg bg-white px-6 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {nlLoading ? 'Subscribing...' : 'Subscribe'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div className="mt-8 border-t border-slate-800 pt-6 text-center text-xs text-slate-400 sm:mt-12 sm:pt-8 sm:text-sm">
-            <p>&copy; 2026 Defend the Constitution Platform. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

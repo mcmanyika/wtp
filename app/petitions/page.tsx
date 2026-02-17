@@ -208,7 +208,7 @@ function PetitionCard({ petition, onSign }: { petition: Petition; onSign: () => 
               Link copied!
             </div>
           )}
-          <p className="text-slate-600 text-sm mb-4 line-clamp-3">{petition.description}</p>
+          <div className="text-slate-600 text-sm mb-4 line-clamp-3 [&>*]:m-0" dangerouslySetInnerHTML={{ __html: petition.description }} />
 
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1">

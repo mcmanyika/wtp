@@ -218,12 +218,10 @@ export default function PetitionDetailPage() {
                   Link copied to clipboard!
                 </div>
               )}
-              <p className="text-lg text-slate-600 mb-6">{petition.description}</p>
+              <div className="text-lg text-slate-600 mb-6 prose max-w-none" dangerouslySetInnerHTML={{ __html: petition.description }} />
 
               {petition.content && (
-                <div className="prose max-w-none mb-8">
-                  <div className="text-slate-700 whitespace-pre-wrap">{petition.content}</div>
-                </div>
+                <div className="prose max-w-none mb-8 text-slate-700" dangerouslySetInnerHTML={{ __html: petition.content }} />
               )}
 
               <div className="mb-6">
