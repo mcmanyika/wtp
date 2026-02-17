@@ -261,7 +261,8 @@ export default function AdminMembershipCardsPage() {
             justify-content: center;
             border: 2px solid rgba(255,255,255,0.2);
             flex-shrink: 0;
-            color: #94a3b8;
+            color: #ffffff;
+            font-weight: 700;
             font-size: 28px;
           }
           .card-info { flex: 1; }
@@ -314,10 +315,7 @@ export default function AdminMembershipCardsPage() {
                 </div>
               </div>
               <div class="card-body">
-                ${card.photoURL
-                  ? `<img src="${card.photoURL}" class="card-photo" alt="Member Photo" />`
-                  : `<div class="card-photo-placeholder">👤</div>`
-                }
+                <div class="card-photo-placeholder">${card.memberName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
                 <div class="card-info">
                   <div class="card-name">${card.memberName}</div>
                   <div class="card-number">${card.membershipNumber}</div>
@@ -573,19 +571,14 @@ export default function AdminMembershipCardsPage() {
               </div>
 
               <div className="relative z-10 flex gap-4">
-                {previewCard.photoURL ? (
-                  <img
-                    src={previewCard.photoURL}
-                    alt=""
-                    className="h-[88px] w-[72px] shrink-0 rounded-lg border-2 border-white/20 object-cover"
-                  />
-                ) : (
-                  <div className="flex h-[88px] w-[72px] shrink-0 items-center justify-center rounded-lg border-2 border-white/20 bg-slate-600">
-                    <svg className="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                  </div>
-                )}
+                <div className="flex h-[88px] w-[72px] shrink-0 items-center justify-center rounded-lg border-2 border-white/20 bg-slate-600 text-2xl font-bold text-white">
+                  {previewCard.memberName
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold leading-tight">{previewCard.memberName}</h3>
                   <p className="mb-3 font-mono text-[11px] tracking-widest text-slate-400">{previewCard.membershipNumber}</p>

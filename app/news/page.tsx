@@ -167,15 +167,23 @@ export default function NewsPage() {
                     className="group block rounded-lg border border-slate-200 bg-white p-4 transition-all duration-300 hover:border-slate-900 hover:shadow-md sm:p-5"
                   >
                     {/* Image */}
-                    {newsItem.image && (
-                      <div className="mb-3 overflow-hidden rounded-md">
+                    <div className="mb-3 overflow-hidden rounded-md">
+                      {newsItem.image ? (
                         <img
                           src={newsItem.image}
                           alt={newsItem.title}
                           className="h-40 w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex h-40 w-full items-center justify-center bg-slate-100">
+                          <img
+                            src="/images/logo.png"
+                            alt="DCP"
+                            className="h-16 w-16 object-contain opacity-40"
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     {/* Category & Date */}
                     <div className="mb-2 flex items-center gap-2 flex-wrap">
