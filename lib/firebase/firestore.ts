@@ -1324,9 +1324,12 @@ export async function signPetition(
   }
 
   const newSignature: PetitionSignature = {
-    ...signature,
+    name: signature.name,
+    email: signature.email,
+    anonymous: signature.anonymous,
+    userId: signature.userId || null,
     signedAt: Timestamp.now(),
-  }
+  } as PetitionSignature
 
   await updateDoc(petitionRef, {
     signatures: [...signatures, newSignature],

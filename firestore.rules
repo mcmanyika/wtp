@@ -206,9 +206,8 @@ service cloud.firestore {
                      request.resource.data.currentSignatures == 0;
       allow update: if isAdmin();
       allow delete: if isAdmin();
-      // Authenticated users can sign petitions (update signatures array and currentSignatures)
-      allow update: if isAuthenticated() && 
-                     resource.data.isPublished == true &&
+      // Anyone can sign petitions (update signatures array and currentSignatures)
+      allow update: if resource.data.isPublished == true &&
                      resource.data.isActive == true &&
                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['signatures', 'currentSignatures', 'updatedAt']) &&
                      request.resource.data.currentSignatures > resource.data.currentSignatures &&
