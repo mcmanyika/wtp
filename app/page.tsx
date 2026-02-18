@@ -221,6 +221,9 @@ export default function Home() {
       {/* All content below hero - sits above hero with z-index */}
       <div className="relative z-10 pt-20 md:pt-0">
 
+      {/* Countdown Section */}
+      <CountdownBanner />
+
       {/* Stats Section - Hidden for now */}
       {/* <section className="border-y bg-white py-8 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -913,6 +916,77 @@ export default function Home() {
       <Chatbot hideWhatsApp />
     </main>
   );
+}
+
+function CountdownBanner() {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Fixed target date: May 15, 2026 (87 days from Feb 17, 2026)
+    const targetDate = new Date('2026-05-15T00:00:00')
+
+    const calculate = () => {
+      const now = new Date().getTime()
+      const diff = targetDate.getTime() - now
+
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+        return
+      }
+
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      })
+    }
+
+    calculate()
+    const interval = setInterval(calculate, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (!mounted) return null
+
+  const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
+
+  return (
+    <section className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 py-6 sm:py-8">
+      <div className="mx-auto max-w-5xl px-4 text-center">
+        <h2 className="mb-1 text-sm font-bold uppercase tracking-widest text-white/80 sm:text-base">
+          {isExpired ? 'The Wait Is Over!' : 'Countdown'}
+        </h2>
+        <p className="mb-4 text-lg font-semibold text-white sm:mb-6 sm:text-xl">
+          {isExpired ? 'Our milestone has arrived.' : '90-Day Public Consultation'}
+        </p>
+
+        {!isExpired && (
+          <div className="flex items-center justify-center gap-3 sm:gap-5">
+            {[
+              { value: timeLeft.days, label: 'Days' },
+              { value: timeLeft.hours, label: 'Hours' },
+              { value: timeLeft.minutes, label: 'Minutes' },
+              { value: timeLeft.seconds, label: 'Seconds' },
+            ].map((unit) => (
+              <div key={unit.label} className="flex flex-col items-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm sm:h-20 sm:w-20">
+                  <span className="text-2xl font-extrabold tabular-nums text-white sm:text-4xl">
+                    {String(unit.value).padStart(2, '0')}
+                  </span>
+                </div>
+                <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/70 sm:text-xs">
+                  {unit.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
 }
 
 function StatCard({ value, label }: { value: string; label: string }) {
