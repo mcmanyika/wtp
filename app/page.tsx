@@ -336,7 +336,7 @@ export default function Home() {
                 <div className="flex flex-col justify-center p-6 sm:p-10">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-600">Support the Cause</p>
                   <h2 className="mb-3 text-2xl font-bold text-slate-900 sm:text-3xl">
-                    Your donation helps effort to pushback on Agenda 2030
+                    Donations help efforts to pushback on Agenda 2030
                   </h2>
                   <p className="mb-4 text-sm leading-relaxed text-slate-600 sm:text-base">
                     No amount is too small — together we can protect Zimbabwe&apos;s democratic future.
