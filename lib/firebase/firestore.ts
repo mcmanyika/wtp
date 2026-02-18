@@ -2902,6 +2902,49 @@ export interface DownloadStat {
   lastDownloadedAt: Date
 }
 
+export async function trackArticleView(articleId: string, articleTitle?: string): Promise<void> {
+  const db = requireDb()
+  const ref = doc(db, 'analytics', `article-${articleId}`)
+
+  try {
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const updateData: Record<string, any> = {
+        count: increment(1),
+        lastViewedAt: Timestamp.now(),
+      }
+      if (articleTitle) updateData.label = articleTitle
+      await updateDoc(ref, updateData)
+    } else {
+      await setDoc(ref, {
+        id: `article-${articleId}`,
+        label: articleTitle || articleId,
+        type: 'article_view',
+        count: 1,
+        createdAt: Timestamp.now(),
+        lastViewedAt: Timestamp.now(),
+      })
+    }
+  } catch (error) {
+    console.error('Error tracking article view:', error)
+  }
+}
+
+export async function getArticleViewCount(articleId: string): Promise<number> {
+  if (!db) return 0
+
+  try {
+    const snap = await getDoc(doc(db, 'analytics', `article-${articleId}`))
+    if (snap.exists()) {
+      return snap.data().count || 0
+    }
+    return 0
+  } catch (error) {
+    console.error('Error fetching article view count:', error)
+    return 0
+  }
+}
+
 export async function getAllDownloadStats(): Promise<DownloadStat[]> {
   if (!db) return []
 

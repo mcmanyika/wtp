@@ -252,7 +252,6 @@ export default function AdminMembershipApplicationsPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Province</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Date</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -278,16 +277,6 @@ export default function AdminMembershipApplicationsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-500">{formatDate(app.createdAt)}</td>
-                        <td className="px-4 py-3 text-right">
-                          {userProfile?.accessLevel === 5 && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDelete(app.id) }}
-                              className="text-xs text-red-600 hover:text-red-800 font-medium"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </td>
                       </tr>
                     )
                   })}
