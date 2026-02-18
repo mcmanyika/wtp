@@ -5,8 +5,8 @@ import ProtectedRoute from '@/app/components/ProtectedRoute'
 import DashboardNav from '@/app/components/DashboardNav'
 import MembershipCard from '@/app/components/MembershipCard'
 import { useAuth } from '@/contexts/AuthContext'
-import { getPurchasesByUser, getProductById, getAllUsers, getNews, getPetitions, getProducts, getAllPurchases, getAllVolunteerApplications, getAllDonations } from '@/lib/firebase/firestore'
-import type { Purchase, Product, UserProfile as UserProfileType, News, Petition, Donation, VolunteerApplication } from '@/types'
+import { getPurchasesByUser, getProductById, getAllUsers, getNews, getPetitions, getProducts, getAllPurchases, getAllVolunteerApplications, getAllDonations, getMembershipApplications } from '@/lib/firebase/firestore'
+import type { Purchase, Product, UserProfile as UserProfileType, News, Petition, Donation, VolunteerApplication, MembershipApplication } from '@/types'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -90,6 +90,7 @@ function DashboardContent() {
     purchases: Purchase[]
     donations: Donation[]
     volunteers: VolunteerApplication[]
+    membershipApplications: MembershipApplication[]
   } | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
 
@@ -100,7 +101,7 @@ function DashboardContent() {
     const fetchStats = async () => {
       setStatsLoading(true)
       try {
-        const [users, articles, petitions, products, orders, donations, volunteers] = await Promise.all([
+        const [users, articles, petitions, products, orders, donations, volunteers, membershipApps] = await Promise.all([
           getAllUsers(),
           getNews(false),
           getPetitions(false, false),
@@ -108,6 +109,7 @@ function DashboardContent() {
           getAllPurchases(),
           getAllDonations(),
           getAllVolunteerApplications(),
+          getMembershipApplications(),
         ])
 
         const orderRevenue = orders
@@ -137,6 +139,7 @@ function DashboardContent() {
           purchases: orders,
           donations,
           volunteers,
+          membershipApplications: membershipApps,
         })
       } catch (err) {
         console.error('Error fetching site stats:', err)
@@ -377,6 +380,7 @@ function DashboardContent() {
                 purchases={rawData.purchases}
                 donations={rawData.donations}
                 volunteers={rawData.volunteers}
+                membershipApplications={rawData.membershipApplications}
               />
             </div>
           )}

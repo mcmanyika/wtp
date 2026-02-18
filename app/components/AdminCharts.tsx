@@ -18,7 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import type { UserProfile, Purchase, Donation, News, Petition, VolunteerApplication } from '@/types'
+import type { UserProfile, Purchase, Donation, News, Petition, VolunteerApplication, MembershipApplication } from '@/types'
 
 interface AdminChartsProps {
   users: UserProfile[]
@@ -27,6 +27,7 @@ interface AdminChartsProps {
   purchases: Purchase[]
   donations?: Donation[]
   volunteers: VolunteerApplication[]
+  membershipApplications?: MembershipApplication[]
 }
 
 function toDateSafe(date: any): Date {
@@ -58,8 +59,14 @@ const VOLUNTEER_STATUS_COLORS: Record<string, string> = {
   rejected: '#ef4444',
   withdrawn: '#94a3b8',
 }
+const APPLICATION_STATUS_COLORS: Record<string, string> = {
+  pending: '#f59e0b',
+  approved: '#10b981',
+  rejected: '#ef4444',
+  withdrawn: '#94a3b8',
+}
 
-export default function AdminCharts({ users, articles, petitions, purchases, donations = [], volunteers }: AdminChartsProps) {
+export default function AdminCharts({ users, articles, petitions, purchases, donations = [], volunteers, membershipApplications = [] }: AdminChartsProps) {
   // 1. User Growth Over Time (last 6 months)
   const userGrowthData = useMemo(() => {
     const now = new Date()
@@ -143,18 +150,18 @@ export default function AdminCharts({ users, articles, petitions, purchases, don
   }, [purchases, donations])
 
   // 3. Order Status Distribution
-  const orderStatusData = useMemo(() => {
+  const applicationStatusData = useMemo(() => {
     const statusCounts: Record<string, number> = {}
-    purchases.forEach(p => {
-      statusCounts[p.status] = (statusCounts[p.status] || 0) + 1
+    membershipApplications.forEach(a => {
+      statusCounts[a.status] = (statusCounts[a.status] || 0) + 1
     })
 
     return Object.entries(statusCounts).map(([name, value]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
       value,
-      color: STATUS_COLORS[name] || '#94a3b8',
+      color: APPLICATION_STATUS_COLORS[name] || '#94a3b8',
     }))
-  }, [purchases])
+  }, [membershipApplications])
 
   // 4. Volunteer Status Distribution
   const volunteerStatusData = useMemo(() => {
@@ -245,8 +252,8 @@ export default function AdminCharts({ users, articles, petitions, purchases, don
   }
 
   // Add totals to pie data for percentage calculation
-  const orderStatusTotal = orderStatusData.reduce((sum, d) => sum + d.value, 0)
-  const orderStatusWithTotal = orderStatusData.map(d => ({ ...d, total: orderStatusTotal }))
+  const applicationStatusTotal = applicationStatusData.reduce((sum, d) => sum + d.value, 0)
+  const applicationStatusWithTotal = applicationStatusData.map(d => ({ ...d, total: applicationStatusTotal }))
   const volunteerStatusTotal = volunteerStatusData.reduce((sum, d) => sum + d.value, 0)
   const volunteerStatusWithTotal = volunteerStatusData.map(d => ({ ...d, total: volunteerStatusTotal }))
   const contentCategoryTotal = contentCategoryData.reduce((sum, d) => sum + d.value, 0)
@@ -307,15 +314,15 @@ export default function AdminCharts({ users, articles, petitions, purchases, don
 
       {/* Row 2: Order Status + Volunteer Status + Content Categories */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Order Status */}
+        {/* Membership Applications */}
         <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <h3 className="mb-4 text-sm font-bold text-slate-900">Order Status</h3>
+          <h3 className="mb-4 text-sm font-bold text-slate-900">Membership Applications</h3>
           <div className="h-52">
-            {orderStatusData.length > 0 ? (
+            {applicationStatusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={orderStatusWithTotal}
+                    data={applicationStatusWithTotal}
                     cx="50%"
                     cy="50%"
                     innerRadius={45}
@@ -323,7 +330,7 @@ export default function AdminCharts({ users, articles, petitions, purchases, don
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {orderStatusWithTotal.map((entry, index) => (
+                    {applicationStatusWithTotal.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -331,12 +338,12 @@ export default function AdminCharts({ users, articles, petitions, purchases, don
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-slate-400">No orders yet</div>
+              <div className="flex h-full items-center justify-center text-sm text-slate-400">No applications yet</div>
             )}
           </div>
-          {orderStatusData.length > 0 && (
+          {applicationStatusData.length > 0 && (
             <div className="mt-2 flex flex-wrap justify-center gap-3">
-              {orderStatusData.map((d, i) => (
+              {applicationStatusData.map((d, i) => (
                 <div key={i} className="flex items-center gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
                   <span className="text-xs text-slate-600">{d.name} ({d.value})</span>
