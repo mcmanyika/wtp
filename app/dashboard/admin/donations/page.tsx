@@ -67,6 +67,7 @@ function DonationsManagement() {
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null)
 
   useEffect(() => {
     loadData()
@@ -261,7 +262,7 @@ function DonationsManagement() {
                   }
 
                   return (
-                    <tr key={donation.id} className="hover:bg-slate-50">
+                    <tr key={donation.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setSelectedDonation(donation)}>
                       <td className="px-4 py-3">
                         <div className="text-xs font-medium text-slate-900">
                           #{donation.id.slice(0, 8)}
@@ -311,6 +312,122 @@ function DonationsManagement() {
           </table>
         </div>
       </div>
+
+      {/* Donation Detail Modal */}
+      {selectedDonation && (() => {
+        const donor = users[selectedDonation.userId]
+        const createdAt = toDate(selectedDonation.createdAt)
+        const statusColors: Record<string, string> = {
+          succeeded: 'bg-green-100 text-green-700',
+          pending: 'bg-yellow-100 text-yellow-700',
+          failed: 'bg-red-100 text-red-700',
+          canceled: 'bg-slate-100 text-slate-700',
+        }
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <h2 className="text-lg font-bold">Donation Details</h2>
+                <button
+                  onClick={() => setSelectedDonation(null)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Amount & Status */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-3xl font-bold text-slate-900">${selectedDonation.amount.toFixed(2)}</p>
+                    <p className="text-xs uppercase text-slate-500">{selectedDonation.currency}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-sm font-semibold capitalize ${statusColors[selectedDonation.status] || 'bg-slate-100 text-slate-700'}`}>
+                    {selectedDonation.status}
+                  </span>
+                </div>
+
+                {/* Donor Info */}
+                <div className="rounded-lg bg-slate-50 p-4 space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Donor Information</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+                      {(donor?.name || donor?.email || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{donor?.name || 'Unknown'}</p>
+                      <p className="text-xs text-slate-500">{donor?.email || selectedDonation.userId}</p>
+                    </div>
+                  </div>
+                  {donor?.phone && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Phone</span>
+                      <span className="text-slate-700">{donor.phone}</span>
+                    </div>
+                  )}
+                  {donor?.address && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Address</span>
+                      <span className="text-slate-700">{donor.address}</span>
+                    </div>
+                  )}
+                  {donor?.membershipTier && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Membership</span>
+                      <span className="capitalize text-slate-700">{donor.membershipTier}</span>
+                    </div>
+                  )}
+                  {donor?.role && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Role</span>
+                      <span className="capitalize text-slate-700">{donor.role}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Transaction Details */}
+                <div className="rounded-lg bg-slate-50 p-4 space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Transaction Details</h3>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Donation ID</span>
+                    <span className="font-mono text-xs text-slate-700">{selectedDonation.id}</span>
+                  </div>
+                  {selectedDonation.stripePaymentIntentId && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Stripe Payment ID</span>
+                      <span className="font-mono text-xs text-slate-700 break-all">{selectedDonation.stripePaymentIntentId}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Date</span>
+                    <span className="text-slate-700">{formatDate(createdAt)}</span>
+                  </div>
+                  {selectedDonation.description && (
+                    <div className="text-sm">
+                      <span className="text-slate-500">Description</span>
+                      <p className="mt-1 text-slate-700 text-xs leading-relaxed">{selectedDonation.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-slate-200 px-6 py-3">
+                <button
+                  onClick={() => setSelectedDonation(null)}
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
