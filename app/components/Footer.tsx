@@ -88,6 +88,11 @@ export default function Footer() {
 
         <div className="mt-6 border-t border-slate-800 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
           <p>&copy; 2026 Defend the Constitution Platform. All rights reserved.</p>
+          <p className="mt-1">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <span className="mx-1.5">·</span>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          </p>
         </div>
       </div>
     </footer>
