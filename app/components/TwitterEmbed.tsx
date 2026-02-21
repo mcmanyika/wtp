@@ -184,7 +184,7 @@ export default function TwitterEmbed({ hideAtSelectors }: TwitterEmbedProps) {
           {/* Tweet embed */}
           <div ref={containerRef} className="px-2 pb-3">
             <blockquote className="twitter-tweet" data-media-max-width="560">
-              <a href={tweetUrl}>Loading tweet…</a>
+              <a href={tweetUrl}></a>
             </blockquote>
           </div>
         </div>
