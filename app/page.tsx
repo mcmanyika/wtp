@@ -219,11 +219,11 @@ export default function Home() {
       {/* All content below hero - sits above hero with z-index */}
       <div className="relative z-10 pt-20 md:pt-0">
 
-      {/* Countdown Section */}
-      <CountdownBanner />
+        {/* Countdown Section */}
+        <CountdownBanner />
 
-      {/* Stats Section - Hidden for now */}
-      {/* <section className="border-y bg-white py-8 sm:py-12">
+        {/* Stats Section - Hidden for now */}
+        {/* <section className="border-y bg-white py-8 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
             <StatCard value="40+" label="Communities Reached" />
@@ -233,36 +233,36 @@ export default function Home() {
         </div>
       </section> */}
 
-      {/* Updates Section */}
-      <section id="updates" className="bg-slate-50 py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="mb-6 text-center sm:mb-8">
+        {/* Updates Section */}
+        <section id="updates" className="bg-slate-50 py-8 sm:py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-6 text-center sm:mb-8">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Latest Articles</p>
-            <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Updates & Announcements</h2>
-          </div>
+              <h2 className="text-2xl font-bold sm:text-3xl md:text-4xl">Updates & Announcements</h2>
+            </div>
 
-          {newsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
-                <p className="text-sm text-slate-500">Loading...</p>
+            {newsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
+                  <p className="text-sm text-slate-500">Loading...</p>
+                </div>
               </div>
-            </div>
-          ) : news.length === 0 ? (
-            <div className="text-center py-8">
+            ) : news.length === 0 ? (
+              <div className="text-center py-8">
                 <p className="text-sm text-slate-500">No articles at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {news.map((newsItem) => (
-                <UpdateCard
-                  key={newsItem.id}
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {news.map((newsItem) => (
+                  <UpdateCard
+                    key={newsItem.id}
                     id={newsItem.id}
-                  title={newsItem.title}
-                  description={newsItem.description}
-                  date={
-                    newsItem.publishedAt
-                      ? new Date(
+                    title={newsItem.title}
+                    description={newsItem.description}
+                    date={
+                      newsItem.publishedAt
+                        ? new Date(
                           newsItem.publishedAt instanceof Date
                             ? newsItem.publishedAt.getTime()
                             : (newsItem.publishedAt as any)?.toMillis?.() || 0
@@ -271,7 +271,7 @@ export default function Home() {
                           month: 'long',
                           day: 'numeric',
                         })
-                      : new Date(
+                        : new Date(
                           newsItem.createdAt instanceof Date
                             ? newsItem.createdAt.getTime()
                             : (newsItem.createdAt as any)?.toMillis?.() || 0
@@ -280,13 +280,13 @@ export default function Home() {
                           month: 'long',
                           day: 'numeric',
                         })
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Civic Engagement Stripe */}
         <section className="bg-gradient-to-r from-emerald-900 to-slate-900 py-8 sm:py-10">
@@ -401,33 +401,33 @@ export default function Home() {
           </div>
         </section>
 
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Ready to Make a Difference?</h2>
-          <p className="mb-6 text-sm text-slate-300 sm:text-base">
+        {/* CTA Section */}
+        <section id="cta-section" className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
+            <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Ready to Make a Difference?</h2>
+            <p className="mb-6 text-sm text-slate-300 sm:text-base">
               Join thousands of citizens working together to oppose the 2030 agenda, defend the Constitution, and protect our democratic values.
-          </p>
-          <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-            >
-              Join the Platform
-            </Link>
-            <button
-              onClick={() => setDonationModalOpen(true)}
-              className="inline-flex w-full items-center justify-center rounded-md border-2 border-white px-5 py-2.5 text-xs font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-            >
-              Support Our Work
-            </button>
+            </p>
+            <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
+              <Link
+                href="/signup"
+                className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
+              >
+                Join the Platform
+              </Link>
+              <button
+                onClick={() => setDonationModalOpen(true)}
+                className="inline-flex w-full items-center justify-center rounded-md border-2 border-white px-5 py-2.5 text-xs font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
+              >
+                Support Our Work
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
         {/* Shop Products Section */}
         <section id="shop-section" className="bg-slate-50 py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
             {productsLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
@@ -661,21 +661,21 @@ export default function Home() {
                         className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
                         title="Share on X"
                       >
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
                         className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
                         title="Share on Facebook"
                       >
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent((image.title || 'Gallery image') + ' – Defend the Constitution Platform')}%20${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
                         className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
                         title="Share on WhatsApp"
                       >
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.45 0-9.91 4.46-9.91 9.91 0 1.75.46 3.45 1.35 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.45 0 9.91-4.46 9.91-9.91S17.49 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.68 8.23-8.22 8.23z"/></svg>
+                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.45 0-9.91 4.46-9.91 9.91 0 1.75.46 3.45 1.35 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.45 0 9.91-4.46 9.91-9.91S17.49 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.68 8.23-8.22 8.23z" /></svg>
                       </button>
                     </div>
                     {/* Title - bottom */}
@@ -792,8 +792,8 @@ export default function Home() {
               <div className="p-6">
                 <p className="mb-5 text-sm text-slate-600">
                   Have questions or want to get involved? Reach out to us through the form below.
-              </p>
-              <ContactForm />
+                </p>
+                <ContactForm />
               </div>
 
               {/* Footer */}
@@ -808,17 +808,17 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <a href="https://x.com/DCPlatform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">
                       <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                       </svg>
                     </a>
                     <a href="https://www.facebook.com/share/1C4G3L4eka/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#1877F2] transition-colors">
                       <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                       </svg>
                     </a>
                     <a href="https://whatsapp.com/channel/0029VbCeX3FATRSwXmceVg3z" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#25D366] transition-colors">
                       <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                       </svg>
                     </a>
                   </div>
@@ -828,11 +828,11 @@ export default function Home() {
           </div>
         )}
 
-      {/* Footer */}
-      <footer className="border-t bg-slate-900 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-          <div className="grid gap-6 md:grid-cols-4">
-            <div>
+        {/* Footer */}
+        <footer className="border-t bg-slate-900 text-white">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+            <div className="grid gap-6 md:grid-cols-4">
+              <div>
                 <h3 className="mb-3 text-xs font-semibold">Get the App</h3>
                 <p className="mb-3 text-xs text-slate-400">
                   Download our Android app for quick access.
@@ -847,33 +847,33 @@ export default function Home() {
                   </svg>
                   Download for Android
                 </a>
-            </div>
+              </div>
 
-            <div>
-              <h3 className="mb-3 text-xs font-semibold">Quick Links</h3>
-              <ul className="space-y-1.5 text-xs text-slate-400">
-                <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
-                <li><Link href="/leadership" className="hover:text-white transition-colors">Leadership</Link></li>
-                <li><Link href="/gallery" className="hover:text-white transition-colors">Gallery</Link></li>
-                <li><Link href="/surveys" className="hover:text-white transition-colors">Surveys</Link></li>
-              </ul>
-            </div>
+              <div>
+                <h3 className="mb-3 text-xs font-semibold">Quick Links</h3>
+                <ul className="space-y-1.5 text-xs text-slate-400">
+                  <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
+                  <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
+                  <li><Link href="/leadership" className="hover:text-white transition-colors">Leadership</Link></li>
+                  <li><Link href="/gallery" className="hover:text-white transition-colors">Gallery</Link></li>
+                  <li><Link href="/surveys" className="hover:text-white transition-colors">Surveys</Link></li>
+                </ul>
+              </div>
 
-            <div>
-              <div className="mb-3 h-4"></div>
-              <ul className="space-y-1.5 text-xs text-slate-400">
-                <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
+              <div>
+                <div className="mb-3 h-4"></div>
+                <ul className="space-y-1.5 text-xs text-slate-400">
+                  <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
                   <li><Link href="/news" className="hover:text-white transition-colors">Articles</Link></li>
-                <li><Link href="/twitter-live" className="hover:text-white transition-colors">Twitter Live</Link></li>
-                <li><button onClick={() => setContactOpen(true)} className="hover:text-white transition-colors">Contact</button></li>
-                <li><Link href="/membership-application" className="hover:text-white transition-colors">Join DCP</Link></li>
-              </ul>
-            </div>
+                  <li><Link href="/twitter-live" className="hover:text-white transition-colors">Twitter Live</Link></li>
+                  <li><button onClick={() => setContactOpen(true)} className="hover:text-white transition-colors">Contact</button></li>
+                  <li><Link href="/membership-application" className="hover:text-white transition-colors">Join DCP</Link></li>
+                </ul>
+              </div>
 
-            <div>
+              <div>
                 <h3 className="mb-3 text-xs font-semibold">Follow Us</h3>
-              <p className="mb-3 text-xs text-slate-400">
+                <p className="mb-3 text-xs text-slate-400">
                   Connect with us on social media.
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -908,14 +908,14 @@ export default function Home() {
                     </svg>
                   </a>
                 </div>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-slate-800 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
+              <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
             </div>
           </div>
-
-          <div className="mt-6 border-t border-slate-800 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
-            <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+        </footer>
       </div>{/* End content wrapper */}
 
       {/* Donation Modal */}
@@ -928,7 +928,7 @@ export default function Home() {
       <Chatbot hideWhatsApp />
 
       {/* Floating Twitter/X Live Feed */}
-      <TwitterEmbed hideAtSelectors={['#gallery-section', '#donate-section']} />
+      <TwitterEmbed hideAtSelectors={['#gallery-section', '#donate-section', '#cta-section']} />
     </main>
   );
 }
