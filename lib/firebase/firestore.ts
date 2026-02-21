@@ -17,7 +17,7 @@ import {
   increment,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner, GalleryCategory, GalleryImage, Survey, SurveyResponse, MembershipApplication, MembershipApplicationStatus, AdminNotification, NotificationType, NotificationAudience, EmailLog, EmailType, EmailStatus, Leader, Referral, ReferralStatus, Resource } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner, GalleryCategory, GalleryImage, Survey, SurveyResponse, MembershipApplication, MembershipApplicationStatus, AdminNotification, NotificationType, NotificationAudience, EmailLog, EmailType, EmailStatus, Leader, Referral, ReferralStatus, Resource, EmailDraft, EmailDraftContext } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -660,6 +660,50 @@ export async function markVolunteerEmailed(applicationId: string): Promise<void>
     emailedAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   })
+}
+
+export async function markMembershipApplicationEmailed(applicationId: string): Promise<void> {
+  const db = requireDb()
+  await updateDoc(doc(db, 'membershipApplications', applicationId), {
+    emailedAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  })
+}
+
+// Email Draft operations
+export async function saveEmailDraft(draft: {
+  context: EmailDraftContext
+  targetId: string
+  recipientEmail: string
+  recipientName: string
+  subject: string
+  body: string
+  createdBy: string
+}): Promise<string> {
+  const database = requireDb()
+  // Use a deterministic ID so we upsert per context+target
+  const draftId = `${draft.context}_${draft.targetId}`
+  const ref = doc(database, 'emailDrafts', draftId)
+  await setDoc(ref, {
+    ...draft,
+    updatedAt: Timestamp.now(),
+    createdAt: Timestamp.now(),
+  }, { merge: true })
+  return draftId
+}
+
+export async function getEmailDraft(context: EmailDraftContext, targetId: string): Promise<EmailDraft | null> {
+  const database = requireDb()
+  const draftId = `${context}_${targetId}`
+  const snap = await getDoc(doc(database, 'emailDrafts', draftId))
+  if (!snap.exists()) return null
+  return { id: snap.id, ...snap.data() } as EmailDraft
+}
+
+export async function deleteEmailDraft(context: EmailDraftContext, targetId: string): Promise<void> {
+  const database = requireDb()
+  const draftId = `${context}_${targetId}`
+  await deleteDoc(doc(database, 'emailDrafts', draftId))
 }
 
 // Purchase operations

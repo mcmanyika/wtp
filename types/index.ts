@@ -300,6 +300,8 @@ export interface MembershipApplication {
   approvedBy?: string
   reviewNotes?: string
 
+  emailedAt?: Timestamp | Date
+
   createdAt: Timestamp | Date
   updatedAt: Timestamp | Date
 }
@@ -387,6 +389,22 @@ export interface Resource {
   uploadedBy: string      // user uid
   uploadedByName?: string
   createdAt: Timestamp | Date
+}
+
+// Email Drafts
+export type EmailDraftContext = 'volunteer' | 'membership' | 'contact'
+
+export interface EmailDraft {
+  id: string
+  context: EmailDraftContext
+  targetId: string           // e.g. application ID
+  recipientEmail: string
+  recipientName: string
+  subject: string
+  body: string
+  createdBy: string          // admin uid
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
 }
 
 // Ensure this file is treated as a module

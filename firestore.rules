@@ -395,5 +395,14 @@ service cloud.firestore {
       allow create: if true;
       allow update: if true;
     }
+
+    // Email Drafts collection
+    match /emailDrafts/{draftId} {
+      // Only admins can read, create, update, and delete drafts
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
   }
 }

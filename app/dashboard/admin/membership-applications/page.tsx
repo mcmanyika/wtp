@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import DashboardNav from '@/app/components/DashboardNav'
 import Link from 'next/link'
-import { getMembershipApplications, updateMembershipApplication, deleteMembershipApplication } from '@/lib/firebase/firestore'
+import { getMembershipApplications, updateMembershipApplication, deleteMembershipApplication, markMembershipApplicationEmailed, saveEmailDraft, getEmailDraft, deleteEmailDraft } from '@/lib/firebase/firestore'
 import type { MembershipApplication, MembershipApplicationStatus } from '@/types'
 
 const statusColors: Record<MembershipApplicationStatus, string> = {
@@ -52,6 +52,15 @@ export default function AdminMembershipApplicationsPage() {
   const [membershipNumber, setMembershipNumber] = useState('')
   const [provinceAllocated, setProvinceAllocated] = useState('')
   const [reviewNotes, setReviewNotes] = useState('')
+
+  // Email modal state
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailTarget, setEmailTarget] = useState<MembershipApplication | null>(null)
+  const [emailSubject, setEmailSubject] = useState('')
+  const [emailBody, setEmailBody] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailSuccess, setEmailSuccess] = useState('')
+  const [emailError, setEmailError] = useState('')
 
   useEffect(() => {
     loadApplications()
@@ -128,6 +137,98 @@ export default function AdminMembershipApplicationsPage() {
     setMembershipNumber(generateMembershipNumber(app))
     setProvinceAllocated(app.provinceAllocated || '')
     setReviewNotes(app.reviewNotes || '')
+  }
+
+  const openEmailModal = async (app: MembershipApplication) => {
+    setEmailTarget(app)
+    setEmailSuccess('')
+    setEmailError('')
+    setShowEmailModal(true)
+
+    // Try to load existing draft
+    try {
+      const draft = await getEmailDraft('membership', app.id)
+      if (draft) {
+        setEmailSubject(draft.subject)
+        setEmailBody(draft.body)
+        return
+      }
+    } catch (e) { /* ignore */ }
+
+    // No draft — use default template
+    setEmailSubject(`Your DCP Membership Application – Next Step`)
+    setEmailBody(
+      `Thank you for submitting your membership application to the Defend the Constitution Platform (DCP). We sincerely appreciate your commitment to defending Zimbabwe's Constitution and strengthening citizen participation.\n\nWe are pleased to inform you that your application has been received. The next step to activate your membership is the membership contribution, which can be made as either:\n\n• $5 per month, or\n• $60 per year\n\nThis contribution supports our civic education, mobilisation, petition outreach, and constitutional defence work across Zimbabwe.\n\nOnce your payment is received, your membership will be formally activated, and you will begin receiving updates, invitations, and opportunities to actively participate in DCP initiatives.\n\nYou can complete your membership payment by visiting:\nwww.dcpzim.com\n\nThank you for standing with us in defence of the Constitution and the future of Zimbabwe.\n\nKind regards,\nDefend the Constitution Platform (DCP)\nwww.dcpzim.com`
+    )
+  }
+
+  const closeEmailModal = async () => {
+    // Save draft if there's content
+    if (emailTarget && (emailSubject.trim() || emailBody.trim())) {
+      const name = emailTarget.type === 'individual' ? emailTarget.fullName : emailTarget.organisationName
+      const email = emailTarget.emailAddress || emailTarget.representativeEmail
+      try {
+        await saveEmailDraft({
+          context: 'membership',
+          targetId: emailTarget.id,
+          recipientEmail: email || '',
+          recipientName: name || 'Applicant',
+          subject: emailSubject,
+          body: emailBody,
+          createdBy: userProfile?.id || '',
+        })
+      } catch (e) { /* non-critical */ }
+    }
+    setShowEmailModal(false)
+    setEmailTarget(null)
+  }
+
+  const handleSendEmail = async () => {
+    if (!emailTarget || !emailSubject.trim() || !emailBody.trim()) {
+      setEmailError('Subject and message are required.')
+      return
+    }
+    const name = emailTarget.type === 'individual' ? emailTarget.fullName : emailTarget.organisationName
+    const email = emailTarget.emailAddress || emailTarget.representativeEmail
+    if (!email) {
+      setEmailError('No email address found for this applicant.')
+      return
+    }
+    setEmailSending(true)
+    setEmailError('')
+    setEmailSuccess('')
+    try {
+      const res = await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          name: name || 'Applicant',
+          subject: emailSubject.trim(),
+          body: emailBody.trim(),
+          userId: emailTarget.userId || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send email')
+      }
+      // Mark as emailed and delete draft
+      try {
+        await markMembershipApplicationEmailed(emailTarget.id)
+        await deleteEmailDraft('membership', emailTarget.id)
+        await loadApplications()
+      } catch (e) { /* non-critical */ }
+      setEmailSuccess(`Email sent to ${email}`)
+      setTimeout(() => {
+        setShowEmailModal(false)
+        setEmailTarget(null)
+      }, 2000)
+    } catch (err: any) {
+      setEmailError(err.message || 'Failed to send email')
+    } finally {
+      setEmailSending(false)
+    }
   }
 
   const filtered = applications.filter((app) => {
@@ -263,6 +364,7 @@ export default function AdminMembershipApplicationsPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Province</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -271,10 +373,16 @@ export default function AdminMembershipApplicationsPage() {
                     const email = app.emailAddress || app.representativeEmail
                     const province = app.type === 'individual' ? app.province : app.provincesOfOperation
                     return (
-                      <tr key={app.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => openDetail(app)}>
+                      <tr key={app.id} className={`hover:bg-slate-50 transition-colors cursor-pointer ${app.emailedAt ? 'bg-blue-50/50 border-l-2 border-l-blue-400' : ''}`} onClick={() => openDetail(app)}>
                         <td className="px-4 py-3">
                           <p className="text-sm font-medium text-slate-900">{name || '—'}</p>
-                          <p className="text-xs text-slate-500">{email || '—'}</p>
+                          <a
+                            href={`mailto:${email}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            {email || '—'}
+                          </a>
                         </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 capitalize">
@@ -283,11 +391,33 @@ export default function AdminMembershipApplicationsPage() {
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">{province || '—'}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusColors[app.status]}`}>
-                            {app.status}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusColors[app.status]}`}>
+                              {app.status}
+                            </span>
+                            {app.emailedAt && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600" title={`Emailed ${formatDate(app.emailedAt)}`}>
+                                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Responded
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-500">{formatDate(app.createdAt)}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openEmailModal(app) }}
+                            className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                            title={`Email ${name || 'applicant'}`}
+                          >
+                            <svg className="inline-block h-3.5 w-3.5 mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Email
+                          </button>
+                        </td>
                       </tr>
                     )
                   })}
@@ -556,6 +686,93 @@ export default function AdminMembershipApplicationsPage() {
                     Close
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email Compose Slide-over */}
+        {showEmailModal && emailTarget && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/40 transition-opacity"
+              onClick={() => closeEmailModal()}
+            />
+            {/* Panel */}
+            <div className="relative w-full max-w-[50%] animate-slide-in-right flex flex-col border-l border-slate-200 bg-white shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <h2 className="text-lg font-bold text-slate-900">Email Applicant</h2>
+                <button
+                  onClick={() => closeEmailModal()}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                <div className="mb-5 rounded-lg bg-slate-50 p-3 text-sm">
+                  <p className="text-slate-500">To:</p>
+                  <p className="font-medium text-slate-900">
+                    {emailTarget.type === 'individual' ? emailTarget.fullName : emailTarget.organisationName} &lt;{emailTarget.emailAddress || emailTarget.representativeEmail}&gt;
+                  </p>
+                </div>
+
+                {emailSuccess && (
+                  <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {emailSuccess}
+                  </div>
+                )}
+                {emailError && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {emailError}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-slate-900">Subject</label>
+                    <input
+                      type="text"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      placeholder="Email subject..."
+                    />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <label className="mb-1 block text-sm font-semibold text-slate-900">Message</label>
+                    <textarea
+                      rows={22}
+                      value={emailBody}
+                      onChange={(e) => setEmailBody(e.target.value)}
+                      className="w-full flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      placeholder="Write your message..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-slate-200 px-6 py-4 flex gap-3">
+                <button
+                  onClick={handleSendEmail}
+                  disabled={emailSending || !emailSubject.trim() || !emailBody.trim()}
+                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {emailSending ? 'Sending...' : 'Send Email'}
+                </button>
+                <button
+                  onClick={() => closeEmailModal()}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>

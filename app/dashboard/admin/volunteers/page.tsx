@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import ProtectedRoute from '@/app/components/ProtectedRoute'
 import AdminRoute from '@/app/components/AdminRoute'
 import DashboardNav from '@/app/components/DashboardNav'
-import { getAllVolunteerApplications, updateVolunteerApplicationStatus, markVolunteerEmailed } from '@/lib/firebase/firestore'
+import { getAllVolunteerApplications, updateVolunteerApplicationStatus, markVolunteerEmailed, saveEmailDraft, getEmailDraft, deleteEmailDraft } from '@/lib/firebase/firestore'
 import { useAuth } from '@/contexts/AuthContext'
 import type { VolunteerApplication, VolunteerApplicationStatus } from '@/types'
 import Link from 'next/link'
@@ -167,15 +167,46 @@ function VolunteerApplicationsManagement() {
     }
   }
 
-  const openEmailModal = (app: VolunteerApplication) => {
+  const openEmailModal = async (app: VolunteerApplication) => {
     setEmailTarget(app)
+    setEmailSuccess('')
+    setEmailError('')
+    setShowEmailModal(true)
+
+    // Try to load existing draft
+    try {
+      const draft = await getEmailDraft('volunteer', app.id)
+      if (draft) {
+        setEmailSubject(draft.subject)
+        setEmailBody(draft.body)
+        return
+      }
+    } catch (e) { /* ignore */ }
+
+    // No draft — use default template
     setEmailSubject(`Your Volunteer Application — Defend the Constitution Platform`)
     setEmailBody(
       `Thank you for submitting your volunteer application to the Defend the Constitution Platform (DCP). We truly appreciate your willingness to contribute your time and skills to this important cause.\n\nWe have reviewed your application and are pleased to inform you that we would like to explore how best to engage you within our programmes. A member of our team will be in touch to discuss next steps.\n\nIn the meantime, please feel free to visit our website at www.dcpzim.com to stay updated on our latest activities and initiatives.\n\nOnce again, thank you for standing with us in defence of Zimbabwe's Constitution.`
     )
-    setEmailSuccess('')
-    setEmailError('')
-    setShowEmailModal(true)
+  }
+
+  const closeEmailModal = async () => {
+    // Save draft if there's content
+    if (emailTarget && (emailSubject.trim() || emailBody.trim())) {
+      try {
+        await saveEmailDraft({
+          context: 'volunteer',
+          targetId: emailTarget.id,
+          recipientEmail: emailTarget.email,
+          recipientName: emailTarget.name,
+          subject: emailSubject,
+          body: emailBody,
+          createdBy: user?.uid || '',
+        })
+      } catch (e) { /* non-critical */ }
+    }
+    setShowEmailModal(false)
+    setEmailTarget(null)
   }
 
   const handleSendEmail = async () => {
@@ -202,9 +233,10 @@ function VolunteerApplicationsManagement() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to send email')
       }
-      // Mark as emailed in Firestore
+      // Mark as emailed and delete draft
       try {
         await markVolunteerEmailed(emailTarget.id)
+        await deleteEmailDraft('volunteer', emailTarget.id)
         await loadApplications()
       } catch (e) { /* non-critical */ }
       setEmailSuccess(`Email sent to ${emailTarget.email}`)
@@ -625,7 +657,7 @@ function VolunteerApplicationsManagement() {
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 transition-opacity"
-            onClick={() => { setShowEmailModal(false); setEmailTarget(null) }}
+            onClick={() => closeEmailModal()}
           />
           {/* Panel */}
           <div className="relative w-full max-w-[50%] animate-slide-in-right flex flex-col border-l border-slate-200 bg-white shadow-2xl">
@@ -633,7 +665,7 @@ function VolunteerApplicationsManagement() {
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <h2 className="text-lg font-bold text-slate-900">Email Volunteer</h2>
               <button
-                onClick={() => { setShowEmailModal(false); setEmailTarget(null) }}
+                onClick={() => closeEmailModal()}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -694,7 +726,7 @@ function VolunteerApplicationsManagement() {
                 {emailSending ? 'Sending...' : 'Send Email'}
               </button>
               <button
-                onClick={() => { setShowEmailModal(false); setEmailTarget(null) }}
+                onClick={() => closeEmailModal()}
                 className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Cancel
