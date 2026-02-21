@@ -161,6 +161,14 @@ const accountItems: NavItem[] = [
   { href: '/dashboard/resources', label: 'Resources', icon: <IconBook />, description: 'Guides & materials' },
 ]
 
+function IconTwitter({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  )
+}
+
 const adminContentItems: NavItem[] = [
   { href: '/dashboard/admin/news', label: 'Articles', icon: <IconNewspaper />, description: 'Manage articles' },
   { href: '/dashboard/admin/petitions', label: 'Petitions', icon: <IconPencilSquare />, description: 'Manage petitions' },
@@ -169,6 +177,7 @@ const adminContentItems: NavItem[] = [
   { href: '/dashboard/admin/banners', label: 'Banners', icon: <IconFlag />, description: 'Hero banners' },
   { href: '/dashboard/admin/gallery', label: 'Gallery', icon: <IconPhoto />, description: 'Image gallery' },
   { href: '/dashboard/admin/leadership', label: 'Leadership', icon: <IconUserGroup />, description: 'Leadership team' },
+  { href: '/dashboard/admin/twitter-embeds', label: 'X Embeds', icon: <IconTwitter />, description: 'Live Twitter/X feed' },
 ]
 
 function IconIdentification({ className = 'h-5 w-5' }: { className?: string }) {

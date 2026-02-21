@@ -17,7 +17,7 @@ import {
   increment,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner, GalleryCategory, GalleryImage, Survey, SurveyResponse, MembershipApplication, MembershipApplicationStatus, AdminNotification, NotificationType, NotificationAudience, EmailLog, EmailType, EmailStatus, Leader, Referral, ReferralStatus, Resource, EmailDraft, EmailDraftContext } from '@/types'
+import type { UserProfile, Donation, Membership, ContactSubmission, Purchase, Product, UserRole, News, CartItem, VolunteerApplication, VolunteerApplicationStatus, Petition, PetitionSignature, ShipmentStatus, NewsletterSubscription, Banner, GalleryCategory, GalleryImage, Survey, SurveyResponse, MembershipApplication, MembershipApplicationStatus, AdminNotification, NotificationType, NotificationAudience, EmailLog, EmailType, EmailStatus, Leader, Referral, ReferralStatus, Resource, EmailDraft, EmailDraftContext, TwitterEmbedPost } from '@/types'
 
 // Helper functions
 function requireDb() {
@@ -1555,6 +1555,8 @@ export async function createBanner(
     const bannerData = {
       imageUrl: banner.imageUrl,
       title: banner.title || null,
+      subtitle: banner.subtitle || null,
+      description: banner.description || null,
       isActive: banner.isActive,
       order: banner.order,
       id: bannerRef.id,
@@ -1633,6 +1635,8 @@ export async function updateBanner(bannerId: string, data: Partial<Banner>): Pro
 
   if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl
   if (data.title !== undefined) updateData.title = data.title || null
+  if (data.subtitle !== undefined) updateData.subtitle = data.subtitle || null
+  if (data.description !== undefined) updateData.description = data.description || null
   if (data.isActive !== undefined) updateData.isActive = data.isActive
   if (data.order !== undefined) updateData.order = data.order
 
@@ -3021,6 +3025,129 @@ export async function getArticleViewCount(articleId: string): Promise<number> {
     console.error('Error fetching article view count:', error)
     return 0
   }
+}
+
+// ===== Twitter Embeds =====
+
+export async function createTwitterEmbed(
+  embed: Omit<TwitterEmbedPost, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const db = requireDb()
+  const embedRef = doc(collection(db, 'twitterEmbeds'))
+
+  // If this embed is active, deactivate all others first
+  if (embed.isActive) {
+    const existing = await getDocs(query(collection(db, 'twitterEmbeds'), where('isActive', '==', true)))
+    const batch = writeBatch(db)
+    existing.docs.forEach(d => {
+      batch.update(d.ref, { isActive: false, updatedAt: Timestamp.now() })
+    })
+    await batch.commit()
+  }
+
+  const embedData = {
+    tweetUrl: embed.tweetUrl,
+    label: embed.label || null,
+    isActive: embed.isActive,
+    createdBy: embed.createdBy,
+    id: embedRef.id,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  }
+  await setDoc(embedRef, embedData)
+  return embedRef.id
+}
+
+export async function getTwitterEmbeds(): Promise<TwitterEmbedPost[]> {
+  const db = requireDb()
+  try {
+    const q = query(collection(db, 'twitterEmbeds'), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(d => {
+      const data = d.data()
+      return {
+        ...data,
+        id: d.id,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+      } as TwitterEmbedPost
+    })
+  } catch (error) {
+    console.error('Error fetching twitter embeds:', error)
+    return []
+  }
+}
+
+export async function getPublicTwitterEmbeds(): Promise<TwitterEmbedPost[]> {
+  if (!db) return []
+  try {
+    const q = query(collection(db, 'twitterEmbeds'), orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(q)
+    return snapshot.docs.map(d => {
+      const data = d.data()
+      return {
+        ...data,
+        id: d.id,
+        createdAt: toDate(data.createdAt),
+        updatedAt: toDate(data.updatedAt),
+      } as TwitterEmbedPost
+    })
+  } catch (error) {
+    console.error('Error fetching public twitter embeds:', error)
+    return []
+  }
+}
+
+export async function getActiveTwitterEmbed(): Promise<TwitterEmbedPost | null> {
+  if (!db) return null
+  try {
+    const q = query(
+      collection(db, 'twitterEmbeds'),
+      where('isActive', '==', true),
+      limit(1)
+    )
+    const snapshot = await getDocs(q)
+    if (snapshot.empty) return null
+    const d = snapshot.docs[0]
+    const data = d.data()
+    return {
+      ...data,
+      id: d.id,
+      createdAt: toDate(data.createdAt),
+      updatedAt: toDate(data.updatedAt),
+    } as TwitterEmbedPost
+  } catch (error) {
+    console.error('Error fetching active twitter embed:', error)
+    return null
+  }
+}
+
+export async function updateTwitterEmbed(embedId: string, data: Partial<TwitterEmbedPost>): Promise<void> {
+  const db = requireDb()
+
+  // If activating, deactivate all others first
+  if (data.isActive === true) {
+    const existing = await getDocs(query(collection(db, 'twitterEmbeds'), where('isActive', '==', true)))
+    const batch = writeBatch(db)
+    existing.docs.forEach(d => {
+      if (d.id !== embedId) {
+        batch.update(d.ref, { isActive: false, updatedAt: Timestamp.now() })
+      }
+    })
+    await batch.commit()
+  }
+
+  const updateData: Record<string, any> = { updatedAt: Timestamp.now() }
+  if (data.tweetUrl !== undefined) updateData.tweetUrl = data.tweetUrl
+  if (data.label !== undefined) updateData.label = data.label || null
+  if (data.isActive !== undefined) updateData.isActive = data.isActive
+
+  await updateDoc(doc(db, 'twitterEmbeds', embedId), updateData)
+}
+
+export async function deleteTwitterEmbed(embedId: string): Promise<void> {
+  const db = requireDb()
+  await deleteDoc(doc(db, 'twitterEmbeds', embedId))
 }
 
 export async function getAllDownloadStats(): Promise<DownloadStat[]> {

@@ -52,6 +52,8 @@ function BannerManagement() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [formData, setFormData] = useState({
     title: '',
+    subtitle: '',
+    description: '',
     isActive: true,
     order: 0,
   })
@@ -82,7 +84,7 @@ function BannerManagement() {
   }
 
   const resetForm = () => {
-    setFormData({ title: '', isActive: true, order: banners.length })
+    setFormData({ title: '', subtitle: '', description: '', isActive: true, order: banners.length })
     setImageFile(null)
     setImagePreview(null)
     setImageUrl('')
@@ -99,6 +101,8 @@ function BannerManagement() {
     setEditingBanner(banner)
     setFormData({
       title: banner.title || '',
+      subtitle: banner.subtitle || '',
+      description: banner.description || '',
       isActive: banner.isActive,
       order: banner.order,
     })
@@ -144,6 +148,8 @@ function BannerManagement() {
         await updateBanner(editingBanner.id, {
           imageUrl: finalImageUrl,
           title: formData.title,
+          subtitle: formData.subtitle,
+          description: formData.description,
           isActive: formData.isActive,
           order: formData.order,
         })
@@ -151,6 +157,8 @@ function BannerManagement() {
         await createBanner({
           imageUrl: finalImageUrl,
           title: formData.title,
+          subtitle: formData.subtitle,
+          description: formData.description,
           isActive: formData.isActive,
           order: formData.order,
         })
@@ -322,7 +330,12 @@ function BannerManagement() {
                   <h3 className="font-semibold text-slate-900 truncate">
                     {banner.title || `Banner ${index + 1}`}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1 truncate">{banner.imageUrl}</p>
+                  {banner.subtitle && (
+                    <p className="text-xs text-slate-600 mt-0.5 truncate">{banner.subtitle}</p>
+                  )}
+                  {banner.description && (
+                    <p className="text-xs text-slate-400 mt-0.5 truncate">{banner.description}</p>
+                  )}
                   <div className="mt-2 flex items-center gap-2">
                     <span
                       className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -406,6 +419,40 @@ function BannerManagement() {
                     placeholder="e.g. Main Banner, Event Banner"
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
+                </div>
+
+                {/* Subtitle */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Subtitle (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.subtitle}
+                    onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                    placeholder="e.g. Non partisan inclusive political organization"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Displayed as the banner headline on the hero section.
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Description (optional)
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="e.g. A brief message displayed on the hero banner..."
+                    rows={3}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Displayed as the supporting text below the subtitle on the hero section.
+                  </p>
                 </div>
 
                 {/* Image Upload */}

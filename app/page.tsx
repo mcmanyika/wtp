@@ -8,6 +8,7 @@ import HeroSection from './components/HeroSection';
 import ContactForm from './components/ContactForm';
 import DonationModal from './components/DonationModal';
 import Chatbot from './components/Chatbot';
+import TwitterEmbed from './components/TwitterEmbed';
 import { getNews, createNewsletterSubscription, getProducts, getProductById, getGalleryImages, trackDownload, getDownloadCount } from '@/lib/firebase/firestore';
 import type { News, Product, GalleryImage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -213,7 +214,7 @@ export default function Home() {
     <main className="min-h-screen bg-white text-slate-900">
       <Header onDonateClick={() => setDonationModalOpen(true)} onContactClick={() => setContactOpen(true)} startAtBottom />
 
-      <HeroSection onSupportClick={() => setDonationModalOpen(true)} />
+      <HeroSection />
 
       {/* All content below hero - sits above hero with z-index */}
       <div className="relative z-10 pt-20 md:pt-0">
@@ -328,7 +329,7 @@ export default function Home() {
         </section>
 
         {/* Donate Appeal */}
-        <section className="bg-slate-50 py-10 sm:py-16">
+        <section id="donate-section" className="bg-slate-50 py-10 sm:py-16">
           <div className="mx-auto max-w-5xl px-4 sm:px-6">
             <div className="overflow-hidden rounded-2xl bg-white shadow-lg border border-slate-200">
               <div className="grid md:grid-cols-2">
@@ -637,7 +638,7 @@ export default function Home() {
 
         {/* Gallery Section */}
         {!galleryLoading && galleryImages.length > 0 && (
-          <section className="bg-slate-900 pt-px">
+          <section id="gallery-section" className="bg-slate-900 pt-px">
 
             {/* Full-width image grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -864,6 +865,7 @@ export default function Home() {
               <ul className="space-y-1.5 text-xs text-slate-400">
                 <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
                   <li><Link href="/news" className="hover:text-white transition-colors">Articles</Link></li>
+                <li><Link href="/twitter-live" className="hover:text-white transition-colors">Twitter Live</Link></li>
                 <li><button onClick={() => setContactOpen(true)} className="hover:text-white transition-colors">Contact</button></li>
                 <li><Link href="/membership-application" className="hover:text-white transition-colors">Join DCP</Link></li>
               </ul>
@@ -924,6 +926,9 @@ export default function Home() {
 
       {/* Chatbot */}
       <Chatbot hideWhatsApp />
+
+      {/* Floating Twitter/X Live Feed */}
+      <TwitterEmbed hideAtSelectors={['#gallery-section', '#donate-section']} />
     </main>
   );
 }

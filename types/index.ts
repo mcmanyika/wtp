@@ -170,6 +170,8 @@ export interface Banner {
   id: string
   imageUrl: string
   title?: string
+  subtitle?: string
+  description?: string
   isActive: boolean
   order: number
   createdAt: Timestamp | Date
@@ -389,6 +391,17 @@ export interface Resource {
   uploadedBy: string      // user uid
   uploadedByName?: string
   createdAt: Timestamp | Date
+}
+
+// Twitter Embeds
+export interface TwitterEmbedPost {
+  id: string
+  tweetUrl: string          // full URL, e.g. https://twitter.com/MacBelts/status/123
+  label?: string            // optional admin-facing note / label
+  isActive: boolean         // only the active one is shown on the site
+  createdBy: string         // admin uid
+  createdAt: Timestamp | Date
+  updatedAt: Timestamp | Date
 }
 
 // Email Drafts

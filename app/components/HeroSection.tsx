@@ -2,18 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getBanners } from '@/lib/firebase/firestore';
-
-interface HeroSectionProps {
-  onSupportClick?: () => void
-}
-
 const FALLBACK_IMAGES = ['/images/banner.png'];
 
-export default function HeroSection({ onSupportClick }: HeroSectionProps) {
+export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [currentBgImage, setCurrentBgImage] = useState(0);
-  const [showContent, setShowContent] = useState(false);
   const [heroInView, setHeroInView] = useState(true);
   const [backgroundImages, setBackgroundImages] = useState<string[]>(FALLBACK_IMAGES);
   const [imagesReady, setImagesReady] = useState(false);
@@ -55,7 +48,9 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
         const banners = await getBanners(true); // active only
         if (banners.length > 0) {
           const urls = banners.map(b => b.imageUrl);
-          if (mounted) setBackgroundImages(urls);
+          if (mounted) {
+            setBackgroundImages(urls);
+          }
           preloadImages(urls);
         } else {
           preloadImages(FALLBACK_IMAGES);
@@ -78,28 +73,6 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
     };
   }, []);
 
-  // Text slides for the hero section - each slide contains title, subtitle, and description
-  const textSlides = [
-    {
-      title: "OUR CONSTITUTION.",
-      titleSecondary: "OUR FUTURE.",
-      subtitle: "Non partisan inclusive political organization",
-      description: "Zimbabwe's Constitution was adopted by the people to limit power, protect rights and guarantee democratic governance. Today, that constitutional promise is under threat from both mutilation and non-implementation.",
-    },
-    {
-      title: "CITIZEN EMPOWERMENT.",
-      titleSecondary: "COMMUNITY ACTION.",
-      subtitle: "Protecting Democratic Values",
-      description: "Through civic education, advocacy, and community engagement, we empower citizens to understand their rights and participate actively in democratic governance.",
-    },
-    {
-      title: "UNITED FOR CHANGE.",
-      titleSecondary: "BUILDING TOMORROW.",
-      subtitle: "A Movement for Lawful Governance",
-      description: "Join thousands of citizens working together to oppose the 2030 agenda, defend the Constitution, and protect our democratic values for future generations.",
-    },
-  ];
-
   useEffect(() => {
     const handleScroll = () => {
       if (heroRef.current) {
@@ -109,8 +82,6 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
         if (rect.bottom > 0 && rect.top < window.innerHeight) {
           setScrollY(scrolled);
         }
-        // Show content when header moves to top (after scrolling 100px)
-        setShowContent(scrolled > 100);
         // Hide socials when shop section is reached
         const shopSection = document.getElementById('shop-section');
         if (shopSection) {
@@ -126,15 +97,6 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
     handleScroll(); // Initial call
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Auto-rotate text slides
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % textSlides.length);
-    }, 8000); // Change slide every 8 seconds
-
-    return () => clearInterval(interval);
-  }, [textSlides.length]);
 
   // Auto-rotate background images
   useEffect(() => {
@@ -209,49 +171,6 @@ export default function HeroSection({ onSupportClick }: HeroSectionProps) {
           </svg>
         </a>
       </div>
-      {/* Content layer - hidden */}
-      {/* <div className={`relative z-10 mx-auto w-full max-w-7xl px-4 pb-12 text-center sm:px-6 sm:pb-20 transition-all duration-700 ${
-        showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}>
-        <div className="relative">
-          {textSlides.map((slide, index) => (
-            <div
-              key={index}
-              className={`transition-opacity duration-3000 ${
-                index === currentSlide
-                  ? 'opacity-100'
-                  : 'opacity-0 pointer-events-none absolute inset-0'
-              }`}
-            >
-              <div className="mb-4 sm:mb-6" />
-              <p className="mx-auto mb-6 max-w-2xl text-lg font-bold text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] sm:mb-8 sm:text-xl md:text-2xl lg:text-3xl">
-                {slide.subtitle}
-              </p>
-              <p className="mx-auto mb-8 max-w-3xl text-sm font-normal text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] sm:mb-10 sm:text-base md:text-lg">
-                {slide.description}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex animate-fade-in-up animate-delay-300 flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-          <a href="/signup" className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base">
-            Join The Movement
-          </a>
-          <a href="/petitions" className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base">
-            Sign the People's Resolution
-          </a>
-          <button onClick={onSupportClick} className="inline-flex w-full items-center justify-center rounded-lg border-2 border-white bg-slate-900/90 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-slate-800/90 transition-colors sm:w-auto sm:px-8 sm:py-4 sm:text-base">
-            Support the Work
-          </button>
-        </div>
-
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce sm:bottom-10">
-          <svg className="h-5 w-5 text-white sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </div> */}
     </section>
   );
 }

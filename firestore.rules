@@ -396,6 +396,18 @@ service cloud.firestore {
       allow update: if true;
     }
 
+    // Twitter Embeds collection
+    match /twitterEmbeds/{embedId} {
+      // Everyone can read all embeds (public listing page + homepage widget)
+      allow read: if true;
+      // Admins can read all embeds
+      allow read: if isAdmin();
+      // Only admins can create, update, or delete embeds
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // Email Drafts collection
     match /emailDrafts/{draftId} {
       // Only admins can read, create, update, and delete drafts
