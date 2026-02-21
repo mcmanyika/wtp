@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import ProtectedRoute from '@/app/components/ProtectedRoute'
 import AdminRoute from '@/app/components/AdminRoute'
 import DashboardNav from '@/app/components/DashboardNav'
-import { getAllVolunteerApplications, updateVolunteerApplicationStatus, markVolunteerEmailed, saveEmailDraft, getEmailDraft, deleteEmailDraft } from '@/lib/firebase/firestore'
+import { getAllVolunteerApplications, updateVolunteerApplicationStatus, markVolunteerEmailed, markVolunteersEmailedBatch, saveEmailDraft, getEmailDraft, deleteEmailDraft } from '@/lib/firebase/firestore'
 import { useAuth } from '@/contexts/AuthContext'
 import type { VolunteerApplication, VolunteerApplicationStatus } from '@/types'
 import Link from 'next/link'
@@ -97,6 +97,15 @@ function VolunteerApplicationsManagement() {
   const [emailSending, setEmailSending] = useState(false)
   const [emailSuccess, setEmailSuccess] = useState('')
   const [emailError, setEmailError] = useState('')
+
+  // Bulk email state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showBulkEmailModal, setShowBulkEmailModal] = useState(false)
+  const [bulkEmailSubject, setBulkEmailSubject] = useState('')
+  const [bulkEmailBody, setBulkEmailBody] = useState('')
+  const [bulkEmailSending, setBulkEmailSending] = useState(false)
+  const [bulkEmailProgress, setBulkEmailProgress] = useState({ sent: 0, failed: 0, total: 0 })
+  const [bulkEmailDone, setBulkEmailDone] = useState(false)
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -251,6 +260,16 @@ function VolunteerApplicationsManagement() {
     }
   }
 
+  // Bulk selection helpers
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const filteredApplications = statusFilter === 'all'
     ? applications
     : applications.filter((app) => app.status === statusFilter)
@@ -280,6 +299,102 @@ function VolunteerApplicationsManagement() {
     })
     return arr
   }, [filteredApplications, sortField, sortDir])
+
+  const allSelected = sortedApplications.length > 0 && sortedApplications.every((a) => selectedIds.has(a.id))
+  const someSelected = sortedApplications.some((a) => selectedIds.has(a.id))
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(sortedApplications.map((a) => a.id)))
+    }
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filteredApplications.map((a) => a.id)))
+  }
+
+  const selectedApps = applications.filter((a) => selectedIds.has(a.id))
+
+  const getDefaultBulkTemplate = () => ({
+    subject: 'Your Volunteer Application — Defend the Constitution Platform',
+    body: `Dear [Name],\n\nThank you for submitting your volunteer application to the Defend the Constitution Platform (DCP). We truly appreciate your willingness to contribute your time and skills to this important cause.\n\nWe have reviewed your application and are pleased to inform you that we would like to explore how best to engage you within our programmes. A member of our team will be in touch to discuss next steps.\n\nIn the meantime, please feel free to visit our website at www.dcpzim.com to stay updated on our latest activities and initiatives.\n\nOnce again, thank you for standing with us in defence of Zimbabwe's Constitution.\n\nKind regards,\nDefend the Constitution Platform (DCP)\nwww.dcpzim.com`,
+  })
+
+  const openBulkEmailModal = () => {
+    if (selectedIds.size === 0) return
+    const tpl = getDefaultBulkTemplate()
+    setBulkEmailSubject(tpl.subject)
+    setBulkEmailBody(tpl.body)
+    setBulkEmailSending(false)
+    setBulkEmailDone(false)
+    setBulkEmailProgress({ sent: 0, failed: 0, total: selectedApps.length })
+    setShowBulkEmailModal(true)
+  }
+
+  const handleBulkSendEmail = async () => {
+    if (!bulkEmailSubject.trim() || !bulkEmailBody.trim() || selectedApps.length === 0) return
+    setBulkEmailSending(true)
+    setBulkEmailDone(false)
+    const total = selectedApps.length
+    let sent = 0
+    let failed = 0
+    setBulkEmailProgress({ sent, failed, total })
+
+    const successIds: string[] = []
+
+    for (const app of selectedApps) {
+      const personalBody = bulkEmailBody.replace(/\[Name\]/gi, app.name || 'Volunteer')
+      const personalSubject = bulkEmailSubject.replace(/\[Name\]/gi, app.name || 'Volunteer')
+
+      try {
+        const res = await fetch('/api/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: app.email,
+            name: app.name,
+            subject: personalSubject.trim(),
+            body: personalBody.trim(),
+            userId: app.userId || undefined,
+          }),
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          sent++
+          successIds.push(app.id)
+        } else {
+          failed++
+        }
+      } catch {
+        failed++
+      }
+      setBulkEmailProgress({ sent, failed, total })
+    }
+
+    if (successIds.length > 0) {
+      try {
+        await markVolunteersEmailedBatch(successIds)
+      } catch (e) { /* non-critical */ }
+    }
+
+    setBulkEmailSending(false)
+    setBulkEmailDone(true)
+    await loadApplications()
+  }
+
+  const closeBulkEmailModal = () => {
+    setShowBulkEmailModal(false)
+    if (bulkEmailDone) {
+      setSelectedIds(new Set())
+    }
+  }
+
+  // Clear selection when filter changes
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [statusFilter])
 
   const statusCounts = {
     all: applications.length,
@@ -514,12 +629,55 @@ function VolunteerApplicationsManagement() {
         </div>
       )}
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-blue-900">
+              {selectedIds.size} volunteer{selectedIds.size !== 1 ? 's' : ''} selected
+            </span>
+            {selectedIds.size < filteredApplications.length && (
+              <button
+                onClick={selectAllFiltered}
+                className="text-xs font-medium text-blue-700 hover:text-blue-900 underline"
+              >
+                Select all {filteredApplications.length} filtered
+              </button>
+            )}
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs font-medium text-slate-500 hover:text-slate-700"
+            >
+              Clear selection
+            </button>
+          </div>
+          <button
+            onClick={openBulkEmailModal}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Send Bulk Email
+          </button>
+        </div>
+      )}
+
       {/* Applications List */}
       <div className="rounded-lg border border-slate-200 bg-white">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected }}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
                 <th
                   className="cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-700 hover:text-slate-900"
                   onClick={() => handleSort('name')}
@@ -570,7 +728,15 @@ function VolunteerApplicationsManagement() {
                   }
 
                   return (
-                    <tr key={application.id} className={`hover:bg-slate-50 ${application.emailedAt ? 'bg-blue-50/50 border-l-2 border-l-blue-400' : ''}`}>
+                    <tr key={application.id} className={`hover:bg-slate-50 ${application.emailedAt ? 'bg-blue-50/50 border-l-2 border-l-blue-400' : ''} ${selectedIds.has(application.id) ? 'bg-blue-50' : ''}`}>
+                      <td className="w-10 px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(application.id)}
+                          onChange={() => toggleSelect(application.id)}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">
                         {application.name}
                       </td>
@@ -650,6 +816,156 @@ function VolunteerApplicationsManagement() {
           </table>
         </div>
       </div>
+
+      {/* Bulk Email Compose Slide-over */}
+      {showBulkEmailModal && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 transition-opacity"
+            onClick={() => !bulkEmailSending && closeBulkEmailModal()}
+          />
+          {/* Panel */}
+          <div className="relative w-full max-w-[50%] animate-slide-in-right flex flex-col border-l border-slate-200 bg-white shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Bulk Email</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Sending to {selectedApps.length} volunteer{selectedApps.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <button
+                onClick={() => !bulkEmailSending && closeBulkEmailModal()}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                disabled={bulkEmailSending}
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {/* Recipients preview */}
+              <div className="mb-5 rounded-lg bg-slate-50 p-3">
+                <p className="text-xs font-semibold text-slate-500 mb-2">Recipients ({selectedApps.length})</p>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  {selectedApps.map((app) => (
+                    <span key={app.id} className="inline-flex items-center rounded-full bg-white border border-slate-200 px-2.5 py-1 text-xs text-slate-700">
+                      {app.name || app.email}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Personalisation hint */}
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+                <strong>Tip:</strong> Use <code className="rounded bg-amber-100 px-1 py-0.5 font-mono">[Name]</code> in subject or message to personalise each email with the volunteer&apos;s name.
+              </div>
+
+              {/* Progress bar */}
+              {(bulkEmailSending || bulkEmailDone) && (
+                <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="font-semibold text-slate-900">
+                      {bulkEmailSending ? 'Sending...' : 'Complete'}
+                    </span>
+                    <span className="text-slate-500">
+                      {bulkEmailProgress.sent + bulkEmailProgress.failed} / {bulkEmailProgress.total}
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-blue-600 transition-all duration-300"
+                      style={{ width: `${bulkEmailProgress.total > 0 ? ((bulkEmailProgress.sent + bulkEmailProgress.failed) / bulkEmailProgress.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-4 text-xs">
+                    <span className="text-green-600 font-medium">✓ {bulkEmailProgress.sent} sent</span>
+                    {bulkEmailProgress.failed > 0 && (
+                      <span className="text-red-600 font-medium">✕ {bulkEmailProgress.failed} failed</span>
+                    )}
+                  </div>
+                  {bulkEmailDone && (
+                    <p className="mt-2 text-sm font-semibold text-green-700">
+                      {bulkEmailProgress.sent > 0 ? `Successfully sent ${bulkEmailProgress.sent} email${bulkEmailProgress.sent !== 1 ? 's' : ''}!` : 'No emails were sent.'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {!bulkEmailDone && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-slate-900">Subject</label>
+                    <input
+                      type="text"
+                      value={bulkEmailSubject}
+                      onChange={(e) => setBulkEmailSubject(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      placeholder="Email subject..."
+                      disabled={bulkEmailSending}
+                    />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <label className="mb-1 block text-sm font-semibold text-slate-900">Message</label>
+                    <textarea
+                      ref={(el) => {
+                        if (el) {
+                          el.style.height = 'auto'
+                          el.style.height = el.scrollHeight + 'px'
+                        }
+                      }}
+                      value={bulkEmailBody}
+                      onChange={(e) => {
+                        setBulkEmailBody(e.target.value)
+                        e.target.style.height = 'auto'
+                        e.target.style.height = e.target.scrollHeight + 'px'
+                      }}
+                      className="w-full min-h-[200px] rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 resize-none overflow-hidden"
+                      placeholder="Write your message..."
+                      disabled={bulkEmailSending}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-slate-200 px-6 py-4 flex gap-3">
+              {!bulkEmailDone ? (
+                <>
+                  <button
+                    onClick={handleBulkSendEmail}
+                    disabled={bulkEmailSending || !bulkEmailSubject.trim() || !bulkEmailBody.trim()}
+                    className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {bulkEmailSending
+                      ? `Sending ${bulkEmailProgress.sent + bulkEmailProgress.failed}/${bulkEmailProgress.total}...`
+                      : `Send to ${selectedApps.length} Volunteer${selectedApps.length !== 1 ? 's' : ''}`}
+                  </button>
+                  <button
+                    onClick={closeBulkEmailModal}
+                    disabled={bulkEmailSending}
+                    className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={closeBulkEmailModal}
+                  className="flex-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+                >
+                  Done
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Email Compose Slide-over */}
       {showEmailModal && emailTarget && (

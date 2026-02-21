@@ -670,6 +670,32 @@ export async function markMembershipApplicationEmailed(applicationId: string): P
   })
 }
 
+export async function markMembershipApplicationsEmailedBatch(applicationIds: string[]): Promise<void> {
+  const database = requireDb()
+  const batch = writeBatch(database)
+  const now = Timestamp.now()
+  applicationIds.forEach((id) => {
+    batch.update(doc(database, 'membershipApplications', id), {
+      emailedAt: now,
+      updatedAt: now,
+    })
+  })
+  await batch.commit()
+}
+
+export async function markVolunteersEmailedBatch(applicationIds: string[]): Promise<void> {
+  const database = requireDb()
+  const batch = writeBatch(database)
+  const now = Timestamp.now()
+  applicationIds.forEach((id) => {
+    batch.update(doc(database, 'volunteers', id), {
+      emailedAt: now,
+      updatedAt: now,
+    })
+  })
+  await batch.commit()
+}
+
 // Email Draft operations
 export async function saveEmailDraft(draft: {
   context: EmailDraftContext
