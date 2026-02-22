@@ -315,7 +315,7 @@ function WhatMakesDifferent({ onDonateClick }: { onDonateClick: () => void }) {
         <div>
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">Why Choose Diaspora Connect</p>
           <h2 className="mb-6 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
-            What makes We The<br />People different?
+            What makes DC different?
           </h2>
 
           <div className="mb-8 space-y-6">
