@@ -175,7 +175,7 @@ export default function PrivacyPolicyPage() {
                 <p className="font-semibold">Defend the Constitution Platform (DCP)</p>
                 <p className="mt-1">
                   Email:{' '}
-                  <a href="mailto:info@dcpzim.com" className="text-blue-600 hover:underline">info@dcpzim.com</a>
+                  <a href="mailto:contact@dcpzim.com" className="text-blue-600 hover:underline">contact@dcpzim.com</a>
                 </p>
                 <p className="mt-1">
                   Website:{' '}
