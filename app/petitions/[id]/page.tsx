@@ -379,7 +379,7 @@ export default function PetitionDetailPage() {
             {/* Body */}
             <div className="px-6 py-6 text-center">
               <p className="mb-2 text-sm text-slate-600">
-                Want to go further? A small donation helps us defend Zimbabwe&apos;s Constitution, fund civic education, and hold leaders accountable.
+                Want to go further? A small donation helps us build trusted infrastructure for Zimbabwe&apos;s diaspora community.
               </p>
               <p className="mb-6 text-xs text-slate-400">
                 No amount is too small — every contribution counts.

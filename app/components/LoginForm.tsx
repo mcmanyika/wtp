@@ -41,6 +41,10 @@ export default function LoginForm() {
         errorMessage = 'Invalid email address. Please check your email.'
       } else if (err.code === 'auth/too-many-requests') {
         errorMessage = 'Too many failed attempts. Please try again later.'
+      } else if (err.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password. Please try again.'
+      } else if (err.code === 'permission-denied' || err.message?.includes('Missing or insufficient permissions')) {
+        errorMessage = 'There was a permissions issue. Please try again or contact support.'
       }
       
       setError(errorMessage)

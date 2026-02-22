@@ -77,18 +77,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const newProfile: UserProfile = {
               uid: user.uid,
               email: user.email!,
-              name: user.displayName || undefined,
+              name: user.displayName || '',
               membershipTier: 'free',
               role: 'supporter',
               createdAt: new Date(),
               emailVerified: user.emailVerified,
-              photoURL: user.photoURL || undefined,
+              photoURL: user.photoURL || '',
             }
             try {
-              await setDoc(doc(db, 'users', user.uid), {
-                ...newProfile,
+              // Filter out empty/falsy optional fields to avoid Firestore undefined issues
+              const profileData: Record<string, any> = {
+                uid: newProfile.uid,
+                email: newProfile.email,
+                membershipTier: newProfile.membershipTier,
+                role: newProfile.role,
                 createdAt: new Date(),
-              })
+                emailVerified: newProfile.emailVerified,
+              }
+              if (newProfile.name) profileData.name = newProfile.name
+              if (newProfile.photoURL) profileData.photoURL = newProfile.photoURL
+              await setDoc(doc(db, 'users', user.uid), profileData)
               setUserProfile(newProfile)
             } catch (createError) {
               console.error('Error creating user profile:', createError)
@@ -102,12 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserProfile({
             uid: user.uid,
             email: user.email!,
-            name: user.displayName || undefined,
+            name: user.displayName || '',
             membershipTier: 'free',
             role: 'supporter',
             createdAt: new Date(),
             emailVerified: user.emailVerified,
-            photoURL: user.photoURL || undefined,
+            photoURL: user.photoURL || '',
           })
         }
       } else {
@@ -221,19 +229,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userProfile: UserProfile = {
         uid: user.uid,
         email: user.email!,
-        name: user.displayName || undefined,
+        name: user.displayName || '',
         membershipTier: 'free',
         role: 'supporter',
         createdAt: new Date(),
         emailVerified: user.emailVerified,
-        photoURL: user.photoURL || undefined,
+        photoURL: user.photoURL || '',
         referralCode: newReferralCode,
         ...(referrerUser ? { referredBy: referralCode } : {}),
       }
-      await setDoc(doc(db, 'users', user.uid), {
-        ...userProfile,
+      // Build clean profile data without undefined values for Firestore
+      const profileData: Record<string, any> = {
+        uid: userProfile.uid,
+        email: userProfile.email,
+        membershipTier: userProfile.membershipTier,
+        role: userProfile.role,
         createdAt: new Date(),
-      })
+        emailVerified: userProfile.emailVerified,
+        referralCode: newReferralCode,
+      }
+      if (userProfile.name) profileData.name = userProfile.name
+      if (userProfile.photoURL) profileData.photoURL = userProfile.photoURL
+      if (referrerUser && referralCode) profileData.referredBy = referralCode
+      await setDoc(doc(db, 'users', user.uid), profileData)
 
       // Create referral record if referred by someone
       if (referrerUser) {

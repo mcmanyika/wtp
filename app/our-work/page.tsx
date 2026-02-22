@@ -16,7 +16,7 @@ export default function OurWorkPage() {
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Our Work</p>
             <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">What We Do</h1>
             <p className="mx-auto max-w-3xl text-sm text-slate-300 sm:text-base">
-              Through education, advocacy, and community engagement, we work to defend constitutional supremacy and promote democratic governance.
+              Through expert knowledge, verified services, and structured participation, we connect Zimbabwe&apos;s diaspora to trusted information and opportunities.
             </p>
           </div>
         </div>
@@ -30,10 +30,10 @@ export default function OurWorkPage() {
             <h2 className="mb-6 text-center text-2xl font-bold sm:text-3xl md:text-4xl">Our Approach</h2>
             <div className="space-y-4 text-sm leading-relaxed text-slate-700 sm:text-base">
               <p>
-                The Defend the Constitution Platform (DCP) employs a multi-faceted approach to protect and promote constitutional governance in Zimbabwe. Our work is grounded in the belief that an informed and engaged citizenry is essential for democratic accountability.
+                We The People (WTP) gathers expert knowledge through structured podcast interviews with bankers, lawyers, policymakers, investors, and industry leaders. This knowledge is transformed into structured guides, directories, dashboards, and services accessible through our platform.
               </p>
               <p>
-                Through our comprehensive programs, we aim to empower citizens with knowledge, provide platforms for collective action, and advocate for policies that uphold the principles enshrined in our Constitution.
+                We focus on key areas of concern to the diaspora — investment, property ownership, banking, remittances, pensions, legal and citizenship matters, business opportunities, return planning, and voting and civic participation. Our goal is to increase transparency, reduce fraud, and enable informed decision-making for Zimbabweans abroad.
               </p>
             </div>
           </div>
@@ -45,5 +45,3 @@ export default function OurWorkPage() {
     </main>
   );
 }
-
-

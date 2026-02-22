@@ -20,8 +20,8 @@ const provinces = [
 ]
 
 const participationOptions: { value: ParticipationArea; label: string }[] = [
-  { value: 'civic_education', label: 'Civic education' },
-  { value: 'legal_constitutional', label: 'Legal & constitutional advocacy' },
+  { value: 'civic_education', label: 'Civic participation' },
+  { value: 'legal_constitutional', label: 'Legal & citizenship services' },
   { value: 'parliamentary', label: 'Parliamentary engagement' },
   { value: 'community_mobilisation', label: 'Community mobilisation' },
   { value: 'research_policy', label: 'Research & policy' },
@@ -278,7 +278,7 @@ export default function MembershipApplicationForm() {
         </div>
         <h3 className="mb-2 text-xl font-bold text-green-900">Application Submitted Successfully!</h3>
         <p className="mb-6 text-green-700">
-          Thank you for your membership application to the Defend the Constitution Platform.
+          Thank you for your membership application to the We The People.
           Your application is now under review. You will be notified once it has been processed.
         </p>
         <button
@@ -709,7 +709,7 @@ export default function MembershipApplicationForm() {
 
             {/* Designated Representative */}
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <h4 className="mb-3 text-sm font-bold text-slate-900">Designated Representative to the DCP</h4>
+              <h4 className="mb-3 text-sm font-bold text-slate-900">Designated Representative to WTP</h4>
               <div className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
@@ -806,7 +806,7 @@ export default function MembershipApplicationForm() {
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
             <p className="mb-4 text-sm leading-relaxed text-slate-700">
-              I / We hereby apply for membership of the <strong>Defend the Constitution Platform (DCP)</strong> and affirm that:
+              I / We hereby apply for membership of the <strong>We The People (WTP)</strong> and affirm that:
             </p>
             <ul className="space-y-3 text-sm text-slate-700">
               <li className="flex items-start gap-2">
@@ -815,11 +815,11 @@ export default function MembershipApplicationForm() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">2</span>
-                <span>I / We subscribe to and uphold the <strong>People&apos;s Resolution</strong> as adopted by the Defend the Constitution Platform;</span>
+                <span>I / We subscribe to and uphold the <strong>People&apos;s Resolution</strong> as adopted by the We The People;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">3</span>
-                <span>I / We understand that the DCP is <strong>non-partisan, non-electoral</strong>, and does not seek state power;</span>
+                <span>I / We understand that WTP is <strong>non-partisan, non-electoral</strong>, and does not seek state power;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">4</span>
@@ -827,11 +827,11 @@ export default function MembershipApplicationForm() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">5</span>
-                <span>I / We agree to abide by the <strong>DCP Constitution, governance framework, and code of conduct</strong>.</span>
+                <span>I / We agree to abide by the <strong>WTP Constitution, governance framework, and code of conduct</strong>.</span>
               </li>
             </ul>
             <p className="mt-4 text-sm italic text-slate-500">
-              I / We further acknowledge that membership of the DCP does not replace affiliation to any political party, civic organisation, or institution.
+              I / We further acknowledge that membership of WTP does not replace affiliation to any political party, civic organisation, or institution.
             </p>
           </div>
 

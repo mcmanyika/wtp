@@ -58,6 +58,8 @@ export default function SignupForm({ referralCode }: SignupFormProps) {
         errorMessage = 'Password is too weak. Please use at least 6 characters.'
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address. Please check your email.'
+      } else if (err.code === 'permission-denied' || err.message?.includes('Missing or insufficient permissions')) {
+        errorMessage = 'Account created but there was a permissions issue. Please try signing in.'
       }
       
       setError(errorMessage)

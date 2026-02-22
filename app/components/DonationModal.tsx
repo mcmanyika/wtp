@@ -44,7 +44,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
           <div>
             <h2 className="text-2xl font-bold">Make a Donation</h2>
             <p className="mt-1 text-sm text-slate-600">
-              Donations will help oppose 2030 Agenda and campaign for implementation of Constitution
+              Your contribution helps build trusted infrastructure for Zimbabwe&apos;s diaspora community
             </p>
           </div>
           <button

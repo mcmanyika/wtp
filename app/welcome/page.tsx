@@ -54,17 +54,13 @@ function WelcomeContent() {
       <div className="bg-slate-900 text-white">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16 text-center">
           <Link href="/">
-            <img
-              src="/images/logo.png"
-              alt="DCP Logo"
-              className="mx-auto mb-6 h-16 w-16 rounded-lg object-contain hover:opacity-80 transition-opacity cursor-pointer"
-            />
+            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-extrabold text-white hover:opacity-80 transition-opacity cursor-pointer">WTP</span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold">
-            Welcome to the Defend the Constitution Platform
+            Welcome to We The People
           </h1>
           <p className="mt-3 text-sm text-slate-400">
-            &ldquo;Defending the Constitution is Defending Our Future&rdquo;
+            Zimbabwe&rsquo;s Diaspora Intelligence Platform
           </p>
         </div>
       </div>
@@ -77,33 +73,32 @@ function WelcomeContent() {
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
-            Thank you for joining the <strong>Defend the Constitution Platform (DCP)</strong>.
+            Thank you for joining <strong>We The People (WTP)</strong>.
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
-            By choosing to become part of this Platform, you have joined a community of citizens
-            committed to a simple but profound principle:{' '}
-            <strong className="text-slate-900">Zimbabwe must be governed according to its Constitution.</strong>
+            By becoming part of this platform, you have joined a growing community of diaspora Zimbabweans
+            committed to a shared vision:{' '}
+            <strong className="text-slate-900">investing safely, accessing trusted services, and participating meaningfully in Zimbabwe&apos;s development.</strong>
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
-            The DCP is a non-partisan, citizen-anchored constitutional movement. We do not exist to
-            compete for political office, but to protect the rules that make democratic politics
-            possible. Our work is guided by the People&rsquo;s Resolution &mdash; the shared commitment
-            that constitutional legitimacy, popular sovereignty, and the rule of law must remain the
-            foundation of our national life.
+            WTP is a centralized, trusted digital platform connecting Zimbabwe and its global diaspora through
+            verified knowledge, expert insights, and structured economic and civic participation. Our content is
+            powered by structured podcast interviews with bankers, lawyers, policymakers, investors, and industry
+            leaders &mdash; transforming expert knowledge into actionable guides, directories, and services.
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-4">
-            Your membership strengthens a collective effort to:
+            As a member, you can:
           </p>
 
           <ul className="mb-6 space-y-3">
             {[
-              'Defend constitutional term limits and democratic safeguards',
-              'Promote full implementation of the Constitution',
-              'Support lawful civic participation and public accountability',
-              'Build a culture of constitutionalism across society',
+              'Access expert-verified guides on investment, banking, and property',
+              'Connect with trusted, vetted service providers',
+              'Navigate legal, citizenship, and pension matters with confidence',
+              'Participate in civic engagement and national development from abroad',
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
@@ -117,31 +112,30 @@ function WelcomeContent() {
           </ul>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
-            We encourage you to stay engaged, participate in programmes and dialogues in your
-            community, and share accurate information from our official platforms. The strength of
-            this movement lies not in personalities, but in citizens acting together in defence of a
-            common national covenant.
+            We encourage you to explore the platform, stay engaged with our expert content, and share
+            WTP with fellow Zimbabweans abroad. Together, we can transform diaspora contribution from
+            informal and fragmented support into structured, scalable national development.
           </p>
 
           {/* Highlight Quote */}
           <div className="mb-6 rounded-lg border-l-4 border-emerald-500 bg-emerald-50 py-4 px-5">
             <p className="text-base sm:text-lg font-semibold italic text-slate-900">
-              Defending the Constitution is defending our future.
+              Connecting Zimbabwe and its global citizens for a stronger future.
             </p>
           </div>
 
           <p className="text-base text-slate-700 leading-relaxed mb-8">
-            Your solidarity contribution of <strong className="text-slate-900">USD5 per month</strong> or{' '}
-            <strong className="text-slate-900">USD60 per annum</strong> will help us reach as many of
-            our compatriots at home.
+            Your support helps us continue building this critical infrastructure. Consider a contribution of{' '}
+            <strong className="text-slate-900">USD5 per month</strong> or{' '}
+            <strong className="text-slate-900">USD60 per annum</strong> to help us grow the platform and
+            reach more of our compatriots worldwide.
           </p>
 
           {/* Signature */}
           <div className="mb-8 border-t border-slate-100 pt-6">
             <p className="text-base text-slate-700 mb-1">Warm regards,</p>
-            <p className="text-base font-bold text-slate-900">Senator Jameson Zvidzai Timba</p>
-            <p className="text-sm text-slate-500">Convenor</p>
-            <p className="text-sm text-slate-500">Defend the Constitution Platform (DCP)</p>
+            <p className="text-base font-bold text-slate-900">The WTP Team</p>
+            <p className="text-sm text-slate-500">We The People (WTP)</p>
           </div>
 
           {/* CTA Buttons */}
@@ -180,7 +174,7 @@ function WelcomeContent() {
       {/* Footer */}
       <div className="border-t bg-slate-100 py-6 text-center">
         <p className="text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} Defend the Constitution Platform. All rights reserved.
+          &copy; {new Date().getFullYear()} We The People. All rights reserved.
         </p>
       </div>
     </div>

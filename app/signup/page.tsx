@@ -15,9 +15,9 @@ function SignupContent() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/"><img src="/images/logo.png" alt="DCP Logo" className="mx-auto mb-4 h-16 w-16 rounded-md object-contain hover:opacity-80 transition-opacity cursor-pointer" /></Link>
+          <Link href="/"><span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-extrabold text-white hover:opacity-80 transition-opacity cursor-pointer">WTP</span></Link>
           <h1 className="mb-2 text-3xl font-bold">Create Account</h1>
-          <p className="text-slate-600">Join the movement to defend the Constitution</p>
+          <p className="text-slate-600">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
           {refCode && (
             <p className="mt-2 text-sm text-emerald-600 font-medium">You&apos;ve been invited! Sign up to get started.</p>
           )}

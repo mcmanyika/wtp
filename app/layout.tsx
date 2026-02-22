@@ -11,8 +11,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Defend the Constitution Platform',
-  description: 'Citizen-led constitutionalism & accountability',
+  title: 'We The People',
+  description: 'Zimbabwe\'s Diaspora Intelligence Platform — trusted information, verified services, and structured participation.',
 }
 
 export default function RootLayout({

@@ -4,9 +4,9 @@ export default function CTASection() {
   return (
     <section className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-        <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Join Our Movement</h2>
+        <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Join the Platform</h2>
         <p className="mb-6 text-sm text-slate-300 sm:text-base">
-          Stand with us in defending the Constitution and protecting democratic values for all Zimbabweans.
+          Connect with trusted information, verified services, and structured participation opportunities for Zimbabwe&apos;s global diaspora.
         </p>
         <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
           <Link

@@ -293,7 +293,7 @@ export default function ResourcesPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Constitutional Rights Guide 2026"
+                  placeholder="e.g. Diaspora Investment Guide 2026"
                   required
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 />

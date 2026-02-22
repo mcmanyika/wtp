@@ -193,9 +193,9 @@ function VolunteerApplicationsManagement() {
     } catch (e) { /* ignore */ }
 
     // No draft — use default template
-    setEmailSubject(`Your Volunteer Application — Defend the Constitution Platform`)
+    setEmailSubject(`Your Volunteer Application — We The People`)
     setEmailBody(
-      `Thank you for submitting your volunteer application to the Defend the Constitution Platform (DCP). We truly appreciate your willingness to contribute your time and skills to this important cause.\n\nWe have reviewed your application and are pleased to inform you that we would like to explore how best to engage you within our programmes. A member of our team will be in touch to discuss next steps.\n\nIn the meantime, please feel free to visit our website at www.dcpzim.com to stay updated on our latest activities and initiatives.\n\nOnce again, thank you for standing with us in defence of Zimbabwe's Constitution.`
+      `Thank you for submitting your volunteer application to the We The People (WTP). We truly appreciate your willingness to contribute your time and skills to this important cause.\n\nWe have reviewed your application and are pleased to inform you that we would like to explore how best to engage you within our programmes. A member of our team will be in touch to discuss next steps.\n\nIn the meantime, please feel free to visit our website at www.dcpzim.com to stay updated on our latest activities and initiatives.\n\nOnce again, thank you for standing with us in defence of Zimbabwe's Constitution.`
     )
   }
 
@@ -318,8 +318,8 @@ function VolunteerApplicationsManagement() {
   const selectedApps = applications.filter((a) => selectedIds.has(a.id))
 
   const getDefaultBulkTemplate = () => ({
-    subject: 'Your Volunteer Application — Defend the Constitution Platform',
-    body: `Dear [Name],\n\nThank you for submitting your volunteer application to the Defend the Constitution Platform (DCP). We truly appreciate your willingness to contribute your time and skills to this important cause.\n\nWe have reviewed your application and are pleased to inform you that we would like to explore how best to engage you within our programmes. A member of our team will be in touch to discuss next steps.\n\nIn the meantime, please feel free to visit our website at www.dcpzim.com to stay updated on our latest activities and initiatives.\n\nOnce again, thank you for standing with us in defence of Zimbabwe's Constitution.\n\nKind regards,\nDefend the Constitution Platform (DCP)\nwww.dcpzim.com`,
+    subject: 'Your Volunteer Application — We The People',
+    body: `Dear [Name],\n\nThank you for submitting your volunteer application to the We The People (WTP). We truly appreciate your willingness to contribute your time and skills to this important cause.\n\nWe have reviewed your application and are pleased to inform you that we would like to explore how best to engage you within our programmes. A member of our team will be in touch to discuss next steps.\n\nIn the meantime, please feel free to visit our website at www.dcpzim.com to stay updated on our latest activities and initiatives.\n\nOnce again, thank you for standing with us in defence of Zimbabwe's Constitution.\n\nKind regards,\nWe The People (WTP)\nwww.dcpzim.com`,
   })
 
   const openBulkEmailModal = () => {

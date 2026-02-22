@@ -36,7 +36,7 @@ export default function LeadershipPage() {
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Our People</p>
             <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Leadership</h1>
             <p className="text-sm text-slate-300 sm:text-base">
-              Meet the team driving the Defend the Constitution Platform forward
+              Meet the team driving the We The People forward
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function LeadershipPage() {
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Join Our Movement</h2>
           <p className="mb-6 text-sm text-slate-300 sm:text-base">
-            Stand with us in defending the Constitution and protecting democratic values for all Zimbabweans.
+            Join the platform connecting Zimbabwe&apos;s diaspora to trusted information, verified services, and structured participation.
           </p>
           <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
             <Link

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import type { ReactNode } from 'react';
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
@@ -9,25 +8,38 @@ import ContactForm from './components/ContactForm';
 import DonationModal from './components/DonationModal';
 import Chatbot from './components/Chatbot';
 import TwitterEmbed from './components/TwitterEmbed';
-import { getNews, createNewsletterSubscription, getProducts, getProductById, getGalleryImages, trackDownload, getDownloadCount } from '@/lib/firebase/firestore';
-import type { News, Product, GalleryImage } from '@/types';
+import { createNewsletterSubscription, getGalleryImages } from '@/lib/firebase/firestore';
+import type { GalleryImage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
-import { useRouter } from 'next/navigation';
 
+/* ─────────────────────────────────────────────
+   Scroll-reveal hook — triggers animation when
+   an element enters the viewport
+   ───────────────────────────────────────────── */
+function useReveal(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+
+  return { ref, visible };
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN HOME PAGE
+   ═══════════════════════════════════════════════ */
 export default function Home() {
   const { user } = useAuth()
-  const { addToCart } = useCart()
-  const router = useRouter()
   const [donationModalOpen, setDonationModalOpen] = useState(false)
-  const [news, setNews] = useState<News[]>([])
-  const [newsLoading, setNewsLoading] = useState(true)
-  const [products, setProducts] = useState<Product[]>([])
-  const [productsLoading, setProductsLoading] = useState(true)
-  const [productStartIndex, setProductStartIndex] = useState(0)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState<string | null>(null)
-  const [error, setError] = useState('')
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [newsletterLoading, setNewsletterLoading] = useState(false)
   const [newsletterSuccess, setNewsletterSuccess] = useState(false)
@@ -35,1018 +47,581 @@ export default function Home() {
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([])
   const [galleryLoading, setGalleryLoading] = useState(true)
   const [galleryLightbox, setGalleryLightbox] = useState<number | null>(null)
-  const [billDownloadCount, setBillDownloadCount] = useState(0)
   const [contactOpen, setContactOpen] = useState(false)
 
+  /* ── hash navigation for #donate ── */
   useEffect(() => {
-    // Handle hash navigation to open modal
     const handleHashChange = () => {
       if (window.location.hash === '#donate') {
         setDonationModalOpen(true)
-        // Remove hash from URL without scrolling
         window.history.replaceState(null, '', window.location.pathname)
       }
     }
-
-    // Check on mount
     if (window.location.hash === '#donate') {
       setDonationModalOpen(true)
       window.history.replaceState(null, '', window.location.pathname)
     }
-
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
-  useEffect(() => {
-    const loadNews = async () => {
-      try {
-        setNewsLoading(true)
-        const publishedNews = await getNews(true) // Get only published news
-        // Limit to 4 most recent
-        setNews(publishedNews.slice(0, 4))
-      } catch (error) {
-        console.error('Error loading news:', error)
-      } finally {
-        setNewsLoading(false)
-      }
-    }
-    loadNews()
-  }, [])
-
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setProductsLoading(true)
-        const activeProducts = await getProducts(true) // Get only active products
-        setProducts(activeProducts)
-      } catch (error) {
-        console.error('Error loading products:', error)
-      } finally {
-        setProductsLoading(false)
-      }
-    }
-    loadProducts()
-  }, [])
-
+  /* ── data loading ── */
   useEffect(() => {
     const loadGallery = async () => {
-      try {
-        setGalleryLoading(true)
-        const images = await getGalleryImages(true) // published only
-        setGalleryImages(images.slice(0, 10)) // Show up to 10 images
-      } catch (error) {
-        console.error('Error loading gallery:', error)
-      } finally {
-        setGalleryLoading(false)
-      }
+      try { setGalleryLoading(true); const images = await getGalleryImages(true); setGalleryImages(images.slice(0, 10)); }
+      catch (error) { console.error('Error loading gallery:', error); }
+      finally { setGalleryLoading(false); }
     }
     loadGallery()
   }, [])
 
-  // Responsive products per view: 1 on mobile, 2 on tablet, 4 on desktop
-  const [productsPerView, setProductsPerView] = useState(4)
-
-  useEffect(() => {
-    const updatePerView = () => {
-      const width = window.innerWidth
-      if (width < 640) setProductsPerView(1)
-      else if (width < 1024) setProductsPerView(2)
-      else setProductsPerView(4)
-    }
-    updatePerView()
-    window.addEventListener('resize', updatePerView)
-    return () => window.removeEventListener('resize', updatePerView)
-  }, [])
-
-  // Reset start index when productsPerView changes to avoid blank slides
-  useEffect(() => {
-    setProductStartIndex(0)
-  }, [productsPerView])
-
-  useEffect(() => {
-    getDownloadCount('amendment-bill-no3').then(setBillDownloadCount)
-  }, [])
-
-  const handleBillDownload = async () => {
+  const handleNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newsletterEmail) return
+    setNewsletterLoading(true); setNewsletterError(''); setNewsletterSuccess(false)
     try {
-      await trackDownload('amendment-bill-no3', 'Constitution of Zimbabwe Amendment (No. 3) Bill, 2026')
-      setBillDownloadCount((prev) => prev + 1)
-    } catch (err) {
-      console.error('Error tracking download:', err)
-    }
+      await createNewsletterSubscription({ email: newsletterEmail, userId: user?.uid })
+      setNewsletterSuccess(true); setNewsletterEmail('')
+    } catch (err: any) { setNewsletterError(err.message || 'Failed to subscribe') }
+    finally { setNewsletterLoading(false) }
   }
 
-  const visibleProducts = products.slice(productStartIndex, productStartIndex + productsPerView)
-  const canGoLeft = productStartIndex > 0
-  const canGoRight = productStartIndex + productsPerView < products.length
-
-  const handlePrevious = () => {
-    setProductStartIndex((prev) => Math.max(0, prev - productsPerView))
-  }
-
-  const handleNext = () => {
-    setProductStartIndex((prev) => Math.min(products.length - productsPerView, prev + productsPerView))
-  }
-
-  const handlePurchase = async (product: Product) => {
-    setError('')
-
-    // Check if user is authenticated
-    if (!user) {
-      // Redirect to login page with return URL to shop
-      router.push(`/login?returnUrl=${encodeURIComponent('/shop')}`)
-      return
-    }
-
-    // Check stock availability
-    if (product.stock <= 0) {
-      setError('This product is out of stock')
-      return
-    }
-
-    // Refresh product to get latest stock
-    try {
-      const latestProduct = await getProductById(product.id)
-      if (!latestProduct || latestProduct.stock <= 0) {
-        setError('This product is out of stock')
-        return
-      }
-    } catch (err) {
-      console.error('Error checking stock:', err)
-    }
-
-    setLoading(product.id)
-
-    try {
-      const response = await fetch('/api/stripe/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: product.price,
-          userId: user?.uid || null,
-          userEmail: user?.email || null,
-          userName: user?.displayName || null,
-          type: 'purchase',
-          description: `Purchase: ${product.name}`,
-          productId: product.id,
-          productName: product.name,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment intent')
-      }
-
-      // Redirect to payment page with client secret and product ID
-      router.push(`/payment?client_secret=${data.clientSecret}&product=${encodeURIComponent(product.name)}&productId=${product.id}`)
-    } catch (err: any) {
-      setError(err.message || 'Failed to process purchase')
-      setLoading(null)
-    }
-  }
-
+  /* ═══════════════════════════════════════
+     RENDER
+     ═══════════════════════════════════════ */
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <Header onDonateClick={() => setDonationModalOpen(true)} onContactClick={() => setContactOpen(true)} startAtBottom />
+      <Header onContactClick={() => setContactOpen(true)} />
 
-      <HeroSection />
+      <HeroSection onDonateClick={() => setDonationModalOpen(true)} />
 
-      {/* All content below hero - sits above hero with z-index */}
-      <div className="relative z-10 pt-20 md:pt-0">
+      {/* All content below hero */}
+      <div className="relative z-10">
 
-        {/* Countdown Section */}
-        <CountdownBanner />
+        {/* ━━━━ 1 · WELCOME / FEATURES (Atomlab-style icon boxes) ━━━━ */}
+        <WelcomeFeatures />
 
-        {/* Mission & Updates — side by side */}
-        <section id="updates" className="bg-gradient-to-b from-white to-slate-50 py-10 sm:py-14 border-b">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="grid gap-8 md:grid-cols-[1fr_1.5fr] md:gap-10 lg:gap-14">
+        {/* ━━━━ 2 · POWERED BY EXPERTISE ━━━━ */}
+        <PodcastSpotlight />
 
-              {/* Left — Our Mission */}
-              <div className="flex flex-col justify-center">
-                <div className="mb-4 flex items-center gap-2">
-                  <div className="h-px w-8 bg-slate-300" />
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 sm:text-xs">Our Mission</p>
-                </div>
-                <h1 className="mb-4 text-2xl font-bold text-slate-900 sm:text-3xl">
-                  Defend The Constitution Platform
-                </h1>
-                <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
-                  A non-partisan, inclusive civic engagement platform dedicated to defending Zimbabwe&apos;s Constitution,
-                  promoting citizen participation, and opposing unconstitutional amendments.
-                </p>
-              </div>
+        {/* ━━━━ 3 · STATS COUNTERS ━━━━ */}
+        <StatsCounters />
 
-              {/* Right — Articles */}
-              <div>
-                <div className="mb-4 flex items-center justify-center gap-2">
-                  <div className="h-px w-8 bg-slate-300 sm:w-12" />
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 sm:text-xs">Latest Articles</p>
-                  <div className="h-px w-8 bg-slate-300 sm:w-12" />
-                </div>
-                {newsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
-                      <p className="text-sm text-slate-500">Loading...</p>
-                    </div>
-                  </div>
-                ) : news.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-slate-500">No articles at the moment.</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {news.slice(0, 4).map((newsItem) => (
-                      <UpdateCard
-                        key={newsItem.id}
-                        id={newsItem.id}
-                        title={newsItem.title}
-                        description={newsItem.description}
-                        date={
-                          newsItem.publishedAt
-                            ? new Date(
-                              newsItem.publishedAt instanceof Date
-                                ? newsItem.publishedAt.getTime()
-                                : (newsItem.publishedAt as any)?.toMillis?.() || 0
-                            ).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })
-                            : new Date(
-                              newsItem.createdAt instanceof Date
-                                ? newsItem.createdAt.getTime()
-                                : (newsItem.createdAt as any)?.toMillis?.() || 0
-                            ).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })
-                        }
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+        {/* ━━━━ 4 · WHAT MAKES WTP DIFFERENT (split section) ━━━━ */}
+        <WhatMakesDifferent onDonateClick={() => setDonationModalOpen(true)} />
 
-            </div>
-          </div>
-        </section>
+        {/* ━━━━ 5 · GALLERY ━━━━ */}
+        <GallerySection images={galleryImages} loading={galleryLoading} lightboxIdx={galleryLightbox} setLightboxIdx={setGalleryLightbox} />
 
-        {/* Civic Engagement Stripe */}
-        <section className="bg-gradient-to-r from-emerald-900 to-slate-900 py-8 sm:py-10">
-          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-            <div className="mb-3 flex justify-center">
-              <svg className="h-10 w-10 text-emerald-300 sm:h-12 sm:w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h2 className="mb-2 text-xl font-bold text-white sm:text-2xl">Download the Proposed Amendment Bill No. 3</h2>
-            <p className="text-sm text-emerald-200/80 sm:text-base">
-              Read the full PDF version of the Constitution of Zimbabwe Amendment (No. 3) Bill, 2026.
-            </p>
-            <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-              <a
-                href="https://firebasestorage.googleapis.com/v0/b/defend-constitution-plat-dba4c.firebasestorage.app/o/resources%2F1771394376305-H.B.%201%2C%202026%20Constitution%20of%20Zimbabwe%20Amendment%20(No.%203)%202026.pdf?alt=media&token=7ba8167f-39ae-4e06-b2d2-b957dca04042"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleBillDownload}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-white px-5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download PDF
-              </a>
-              <Link
-                href="/petitions"
-                className="inline-flex w-full items-center justify-center rounded-md border-2 border-white px-5 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-              >
-                Sign a Petition
-              </Link>
-            </div>
-            {billDownloadCount > 0 && (
-              <p className="mt-4 text-xs text-emerald-300/70">
-                <span className="font-semibold text-emerald-200">{billDownloadCount.toLocaleString()}</span> {billDownloadCount === 1 ? 'download' : 'downloads'}
-              </p>
-            )}
-          </div>
-        </section>
+        {/* ━━━━ 10 · NEWSLETTER + CTA ━━━━ */}
+        <ReadyToStart
+          newsletterEmail={newsletterEmail}
+          setNewsletterEmail={setNewsletterEmail}
+          newsletterLoading={newsletterLoading}
+          newsletterSuccess={newsletterSuccess}
+          newsletterError={newsletterError}
+          onSubmit={handleNewsletter}
+        />
 
-        {/* Donate Appeal */}
-        <section id="donate-section" className="bg-slate-50 py-10 sm:py-16">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6">
-            <div className="overflow-hidden rounded-2xl bg-white shadow-lg border border-slate-200">
-              <div className="grid md:grid-cols-2">
-                {/* Left – Message */}
-                <div className="flex flex-col justify-center p-6 sm:p-10">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-600">Support the Cause</p>
-                  <h2 className="mb-3 text-2xl font-bold text-slate-900 sm:text-3xl">
-                    Donations help efforts to pushback on Agenda 2030
-                  </h2>
-                  <p className="mb-4 text-sm leading-relaxed text-slate-600 sm:text-base">
-                    No amount is too small — together we can protect Zimbabwe&apos;s democratic future.
-                  </p>
-                  <ul className="mb-6 space-y-2">
-                    {[
-                      'Fund civic education & awareness campaigns',
-                      'Support legal challenges to unconstitutional actions',
-                      'Enable grassroots community mobilisation',
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
-                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                    <button
-                      onClick={() => setDonationModalOpen(true)}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 sm:w-auto"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                      Donate Now
-                    </button>
-                    <Link
-                      href="/membership-application"
-                      className="inline-flex w-full items-center justify-center rounded-lg border-2 border-slate-900 px-6 py-3 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-900 hover:text-white sm:w-auto"
-                    >
-                      Become a Member
-                    </Link>
-                  </div>
-                </div>
-                {/* Right – Visual */}
-                <div className="relative hidden md:block">
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300" />
-                  <div className="relative flex h-full flex-col items-center justify-center p-10 text-center text-slate-800">
-                    <svg className="mb-4 h-16 w-16 text-emerald-600 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <p className="text-3xl font-extrabold sm:text-4xl">100%</p>
-                    <p className="mt-1 text-sm font-medium text-slate-500">of donations go directly<br />to defending our Constitution</p>
-                    <div className="mt-6 flex items-center gap-4 text-xs text-slate-400">
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-slate-700">Secure</p>
-                        <p>Stripe payments</p>
-                      </div>
-                      <div className="h-8 w-px bg-slate-300" />
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-slate-700">Transparent</p>
-                        <p>Track your impact</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ━━━━ CONTACT MODAL ━━━━ */}
+        {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
 
-        {/* CTA Section */}
-        <section id="cta-section" className="bg-gradient-to-r from-slate-900 to-slate-800 py-8 text-white sm:py-12">
-          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-            <h2 className="mb-3 text-2xl font-bold sm:text-3xl md:text-4xl">Ready to Make a Difference?</h2>
-            <p className="mb-6 text-sm text-slate-300 sm:text-base">
-              Join thousands of citizens working together to oppose the 2030 agenda, defend the Constitution, and protect our democratic values.
-            </p>
-            <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-              <Link
-                href="/signup"
-                className="inline-flex w-full items-center justify-center rounded-md bg-white px-5 py-2.5 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-              >
-                Join the Platform
-              </Link>
-              <button
-                onClick={() => setDonationModalOpen(true)}
-                className="inline-flex w-full items-center justify-center rounded-md border-2 border-white px-5 py-2.5 text-xs font-semibold hover:bg-white/10 transition-colors sm:w-auto sm:px-6 sm:py-3 sm:text-sm"
-              >
-                Support Our Work
-              </button>
-            </div>
-          </div>
-        </section>
+        {/* ━━━━ 11 · FOOTER ━━━━ */}
+        <SiteFooter onContactClick={() => setContactOpen(true)} />
 
-        {/* Shop Products Section */}
-        <section id="shop-section" className="bg-slate-50 py-8 sm:py-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            {productsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <div className="mb-3 inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-slate-900 border-r-transparent"></div>
-                  <p className="text-sm text-slate-500">Loading products...</p>
-                </div>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-slate-500">No products available at the moment.</p>
-              </div>
-            ) : (
-              <div className="relative overflow-hidden">
-                {canGoLeft && (
-                  <button
-                    onClick={handlePrevious}
-                    className="absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
-                    aria-label="Previous products"
-                  >
-                    <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                )}
-                {canGoRight && (
-                  <button
-                    onClick={handleNext}
-                    className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-4 rounded-full bg-white p-2 shadow-lg hover:bg-slate-50 transition-colors border border-slate-200"
-                    aria-label="Next products"
-                  >
-                    <svg className="h-5 w-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
-                <div className="overflow-hidden">
-                  <div
-                    className="flex gap-3 transition-transform duration-700 ease-in-out"
-                    style={{
-                      transform: `translateX(calc(-${productStartIndex} * ((100% + ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})))`,
-                    }}
-                  >
-                    {products.map((product) => {
-                      const isOutOfStock = product.stock === 0
-                      const isLowStock = product.stock > 0 && product.stock <= product.lowStockThreshold
+      </div>
 
-                      return (
-                        <div
-                          key={product.id}
-                          onClick={() => setSelectedProduct(product)}
-                          className="group rounded-lg border border-slate-200 bg-white overflow-hidden transition-all hover:border-slate-900 hover:shadow-md flex-shrink-0 cursor-pointer"
-                          style={{ width: `calc((100% - ${(productsPerView - 1) * 0.75}rem) / ${productsPerView})` }}
-                        >
-                          <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden relative">
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            {isLowStock && !isOutOfStock && (
-                              <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-semibold px-2 py-0.5 rounded">
-                                {product.stock} left
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <h3 className="text-sm font-bold line-clamp-1 text-center">{product.name}</h3>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {products.length > 0 && (
-              <div className="mt-8 text-center">
-                <Link
-                  href="/shop"
-                  className="inline-flex items-center rounded-md border-2 border-slate-900 bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition-colors"
-                >
-                  View All Products
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Product Detail Modal */}
-          {selectedProduct && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-              onClick={() => setSelectedProduct(null)}
-            >
-              <div
-                className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedProduct(null)}
-                  className="absolute top-4 right-4 z-10 rounded-full bg-white/90 p-2 hover:bg-white transition-colors shadow-lg"
-                  aria-label="Close"
-                >
-                  <svg className="h-6 w-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-
-                <div className="grid md:grid-cols-2 gap-0">
-                  {/* Product Image */}
-                  <div className="relative bg-slate-100 aspect-square md:aspect-auto md:min-h-[500px]">
-                    <img
-                      src={selectedProduct.image}
-                      alt={selectedProduct.name}
-                      className="h-full w-full object-cover"
-                    />
-                    {selectedProduct.stock === 0 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-lg">
-                          Out of Stock
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="p-6 sm:p-8 flex flex-col">
-                    <div className="flex-1">
-                      <h2 className="text-3xl font-bold mb-4">{selectedProduct.name}</h2>
-
-                      <div className="mb-6">
-                        {selectedProduct.stock > 0 && selectedProduct.stock <= selectedProduct.lowStockThreshold && (
-                          <p className="text-sm font-medium text-yellow-600 mb-2">
-                            Only {selectedProduct.stock} left!
-                          </p>
-                        )}
-                        <p className="text-4xl font-bold text-slate-900 mb-4">
-                          ${selectedProduct.price.toFixed(2)}
-                        </p>
-                      </div>
-
-                      <div className="mb-6">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                          Description
-                        </h3>
-                        <p className="text-base text-slate-700 leading-relaxed whitespace-pre-wrap">
-                          {selectedProduct.description}
-                        </p>
-                      </div>
-
-                      <div className="mb-6">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                          Stock Status
-                        </h3>
-                        <p className="text-base text-slate-700">
-                          {selectedProduct.stock === 0
-                            ? 'Out of Stock'
-                            : selectedProduct.stock <= selectedProduct.lowStockThreshold
-                              ? `Low Stock - ${selectedProduct.stock} available`
-                              : `In Stock - ${selectedProduct.stock} available`}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="mt-auto pt-6 border-t border-slate-200 space-y-3">
-                      <button
-                        onClick={() => {
-                          addToCart(selectedProduct)
-                          setSelectedProduct(null)
-                        }}
-                        disabled={selectedProduct.stock === 0}
-                        className="w-full rounded-lg border-2 border-slate-900 bg-white px-6 py-4 text-base font-semibold text-slate-900 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        {selectedProduct.stock === 0 ? (
-                          'Out of Stock'
-                        ) : (
-                          <>
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            Add to Cart
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedProduct(null)
-                          handlePurchase(selectedProduct)
-                        }}
-                        disabled={loading === selectedProduct.id || selectedProduct.stock === 0}
-                        className="w-full rounded-lg bg-slate-900 px-6 py-4 text-base font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {loading === selectedProduct.id
-                          ? 'Processing...'
-                          : selectedProduct.stock === 0
-                            ? 'Out of Stock'
-                            : 'Buy Now'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Gallery Section */}
-        {!galleryLoading && galleryImages.length > 0 && (
-          <section id="gallery-section" className="bg-slate-900 pt-px">
-
-            {/* Full-width image grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {galleryImages.map((image, index) => (
-                <div
-                  key={image.id}
-                  className="relative aspect-square overflow-hidden cursor-pointer group"
-                  onClick={() => setGalleryLightbox(index)}
-                >
-                  <img
-                    src={image.imageUrl}
-                    alt={image.title || 'Gallery image'}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex flex-col justify-between p-2">
-                    {/* Share icons - top right */}
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent((image.title || 'Gallery image') + ' – Defend the Constitution Platform')}&url=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
-                        className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-                        title="Share on X"
-                      >
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
-                        className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-                        title="Share on Facebook"
-                      >
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent((image.title || 'Gallery image') + ' – Defend the Constitution Platform')}%20${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }}
-                        className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-                        title="Share on WhatsApp"
-                      >
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.45 0-9.91 4.46-9.91 9.91 0 1.75.46 3.45 1.35 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.45 0 9.91-4.46 9.91-9.91S17.49 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.68 8.23-8.22 8.23z" /></svg>
-                      </button>
-                    </div>
-                    {/* Title - bottom */}
-                    {image.title && (
-                      <p className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate">
-                        {image.title}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-
-            {/* Gallery Lightbox */}
-            {galleryLightbox !== null && (
-              <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
-                onClick={() => setGalleryLightbox(null)}
-              >
-                {/* Close */}
-                <button
-                  onClick={() => setGalleryLightbox(null)}
-                  className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10"
-                >
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-
-                {/* Previous */}
-                {galleryLightbox > 0 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setGalleryLightbox(galleryLightbox - 1) }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10"
-                  >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Next */}
-                {galleryLightbox < galleryImages.length - 1 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setGalleryLightbox(galleryLightbox + 1) }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10"
-                  >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Image */}
-                <div
-                  className="relative max-w-4xl w-full max-h-[85vh] animate-[fadeInScale_0.2s_ease-out]"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <img
-                    src={galleryImages[galleryLightbox].imageUrl}
-                    alt={galleryImages[galleryLightbox].title || 'Gallery image'}
-                    className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-                  />
-                  {galleryImages[galleryLightbox].title && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent rounded-b-lg px-4 py-3">
-                      <p className="text-white text-sm font-medium">{galleryImages[galleryLightbox].title}</p>
-                      {galleryImages[galleryLightbox].categoryName && (
-                        <p className="text-white/60 text-xs">{galleryImages[galleryLightbox].categoryName}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Counter */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs">
-                  {galleryLightbox + 1} / {galleryImages.length}
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Contact Modal */}
-        {contactOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]"
-            onClick={() => setContactOpen(false)}
-            onKeyDown={(e) => { if (e.key === 'Escape') setContactOpen(false) }}
-            tabIndex={-1}
-            ref={(el) => el?.focus()}
-          >
-            <div
-              className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto animate-[fadeInScale_0.2s_ease-out]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setContactOpen(false)}
-                className="absolute top-4 right-4 z-10 rounded-full bg-white/20 p-2 hover:bg-white/30 transition-colors backdrop-blur-sm"
-              >
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-
-              {/* Header */}
-              <div className="bg-slate-900 px-6 py-5">
-                <h2 className="text-xl font-bold text-white">Contact Us</h2>
-                <p className="text-sm text-slate-400 mt-1">We'd love to hear from you</p>
-              </div>
-
-              {/* Body */}
-              <div className="p-6">
-                <p className="mb-5 text-sm text-slate-600">
-                  Have questions or want to get involved? Reach out to us through the form below.
-                </p>
-                <ContactForm />
-              </div>
-
-              {/* Footer */}
-              <div className="border-t bg-slate-50 px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <a href="mailto:contact@dcpzim.com" className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 transition-colors">
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    contact@dcpzim.com
-                  </a>
-                  <div className="flex items-center gap-3">
-                    <a href="https://x.com/DCPlatform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                      </svg>
-                    </a>
-                    <a href="https://www.facebook.com/share/1C4G3L4eka/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#1877F2] transition-colors">
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                      </svg>
-                    </a>
-                    <a href="https://whatsapp.com/channel/0029VbCeX3FATRSwXmceVg3z" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#25D366] transition-colors">
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Footer */}
-        <footer className="border-t bg-slate-900 text-white">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-            <div className="grid gap-6 md:grid-cols-4">
-              <div>
-                <h3 className="mb-3 text-xs font-semibold">Get the App</h3>
-                <p className="mb-3 text-xs text-slate-400">
-                  Download our Android app for quick access.
-                </p>
-                <a
-                  href="https://expo.dev/artifacts/eas/hopnYPS9wRJX8ugWGP9Uhz.apk"
-                  download
-                  className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100 transition-colors"
-                >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.523 2.237a.625.625 0 0 0-.853.221l-1.09 1.837A7.628 7.628 0 0 0 12 3.5a7.628 7.628 0 0 0-3.58.795L7.33 2.458a.625.625 0 0 0-1.074.632l1.046 1.764A7.953 7.953 0 0 0 4 11h16a7.953 7.953 0 0 0-3.302-6.146l1.046-1.764a.625.625 0 0 0-.221-.853zM9 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM4 12v7a2 2 0 0 0 2 2h1v3a1.5 1.5 0 0 0 3 0v-3h4v3a1.5 1.5 0 0 0 3 0v-3h1a2 2 0 0 0 2-2v-7H4zm-2.5 0A1.5 1.5 0 0 0 0 13.5v5A1.5 1.5 0 0 0 3 18.5v-5A1.5 1.5 0 0 0 1.5 12zm21 0a1.5 1.5 0 0 0-1.5 1.5v5a1.5 1.5 0 0 0 3 0v-5a1.5 1.5 0 0 0-1.5-1.5z" />
-                  </svg>
-                  Download for Android
-                </a>
-              </div>
-
-              <div>
-                <h3 className="mb-3 text-xs font-semibold">Quick Links</h3>
-                <ul className="space-y-1.5 text-xs text-slate-400">
-                  <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                  <li><Link href="/our-work" className="hover:text-white transition-colors">Our Work</Link></li>
-                  <li><Link href="/leadership" className="hover:text-white transition-colors">Leadership</Link></li>
-                  <li><Link href="/gallery" className="hover:text-white transition-colors">Gallery</Link></li>
-                  <li><Link href="/surveys" className="hover:text-white transition-colors">Surveys</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <div className="mb-3 h-4"></div>
-                <ul className="space-y-1.5 text-xs text-slate-400">
-                  <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
-                  <li><Link href="/news" className="hover:text-white transition-colors">Articles</Link></li>
-                  <li><Link href="/twitter-live" className="hover:text-white transition-colors">Twitter Live</Link></li>
-                  <li><button onClick={() => setContactOpen(true)} className="hover:text-white transition-colors">Contact</button></li>
-                  <li><Link href="/membership-application" className="hover:text-white transition-colors">Join DCP</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="mb-3 text-xs font-semibold">Follow Us</h3>
-                <p className="mb-3 text-xs text-slate-400">
-                  Connect with us on social media.
-                </p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <a href="https://x.com/DCPlatform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="X (Twitter)">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                  </a>
-                  <a href="https://www.facebook.com/share/1C4G3L4eka/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#1877F2] transition-colors" aria-label="Facebook">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                  </a>
-                  <a href="https://youtube.com/@defendtheconstitutionplatform" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#FF0000] transition-colors" aria-label="YouTube">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                    </svg>
-                  </a>
-                  <a href="https://www.tiktok.com/@defend.the.consti" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="TikTok">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                    </svg>
-                  </a>
-                  <a href="https://www.instagram.com/dcplaform25" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#E4405F] transition-colors" aria-label="Instagram">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                    </svg>
-                  </a>
-                  <a href="https://whatsapp.com/channel/0029VbCeX3FATRSwXmceVg3z" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#25D366] transition-colors" aria-label="WhatsApp Channel">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 border-t border-slate-800 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
-              <p>© 2026 Defend the Constitution Platform. All rights reserved.</p>
-              <p className="mt-1">
-                <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <span className="mx-1.5">·</span>
-                <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-              </p>
-            </div>
-          </div>
-        </footer>
-      </div>{/* End content wrapper */}
-
-      {/* Donation Modal */}
-      <DonationModal
-        isOpen={donationModalOpen}
-        onClose={() => setDonationModalOpen(false)}
-      />
-
-      {/* Chatbot */}
+      {/* Modals & Overlays */}
+      <DonationModal isOpen={donationModalOpen} onClose={() => setDonationModalOpen(false)} />
       <Chatbot hideWhatsApp />
-
-      {/* Floating Twitter/X Live Feed */}
       <TwitterEmbed hideAtSelectors={['#gallery-section', '#donate-section', '#cta-section']} />
     </main>
   );
 }
 
-function CountdownBanner() {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    // Fixed target date: May 15, 2026 (87 days from Feb 17, 2026)
-    const targetDate = new Date('2026-05-15T00:00:00')
+/* ═══════════════════════════════════════════════════════════════════════
+   SUB-COMPONENTS — following Atomlab Startup 03 patterns
+   ═══════════════════════════════════════════════════════════════════════ */
 
-    const calculate = () => {
-      const now = new Date().getTime()
-      const diff = targetDate.getTime() - now
-
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-        return
-      }
-
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      })
-    }
-
-    calculate()
-    const interval = setInterval(calculate, 1000)
-    return () => clearInterval(interval)
-  }, [])
-
-  if (!mounted) return null
-
-  const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0
+/* ──────────────────────────────────
+   1 · WELCOME FEATURES
+   ────────────────────────────────── */
+function WelcomeFeatures() {
+  const r = useReveal();
+  const features = [
+    {
+      icon: <svg className="h-7 w-7 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg>,
+      title: 'Investment & Property',
+      desc: 'Access verified investment opportunities, property guides, and trusted professionals to grow your wealth safely in Zimbabwe.',
+    },
+    {
+      icon: <svg className="h-7 w-7 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" /></svg>,
+      title: 'Banking & Remittances',
+      desc: 'Navigate banking options, compare remittance channels, and access expert guidance on moving money securely and affordably.',
+    },
+    {
+      icon: <svg className="h-7 w-7 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" /></svg>,
+      title: 'Legal & Citizenship',
+      desc: 'Understand your legal rights, citizenship pathways, pension entitlements, and access verified legal professionals.',
+    },
+    {
+      icon: <svg className="h-7 w-7 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 0 1 3.15 0V15M6.9 7.575a1.575 1.575 0 1 0-3.15 0v8.175a6.75 6.75 0 0 0 6.75 6.75h2.018a5.25 5.25 0 0 0 3.712-1.538l1.732-1.732a5.25 5.25 0 0 0 1.538-3.712l.003-2.024a.668.668 0 0 0-.668-.668 1.667 1.667 0 0 0-1.667 1.667v-.417a1.575 1.575 0 1 0-3.15 0" /></svg>,
+      title: 'Civic Participation',
+      desc: 'Stay informed on voting, policy changes, and civic matters. Participate meaningfully in shaping Zimbabwe\u2019s future from anywhere.',
+    },
+  ];
 
   return (
-    <section className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 py-6 sm:py-8">
-      <div className="mx-auto max-w-5xl px-4 text-center">
-        <h2 className="mb-1 text-sm font-bold uppercase tracking-widest text-white/80 sm:text-base">
-          {isExpired ? 'The Wait Is Over!' : 'Countdown'}
-        </h2>
-        <p className="mb-4 text-lg font-semibold text-white sm:mb-6 sm:text-xl">
-          {isExpired ? 'Our milestone has arrived.' : '90-Day Public Consultation'}
-        </p>
+    <section className="bg-white py-20 sm:py-28 lg:py-32">
+      <div ref={r.ref} className={`mx-auto max-w-6xl px-6 transition-all duration-700 ${r.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        {/* Section heading */}
+        <div className="mx-auto mb-16 max-w-2xl text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">What We Offer</p>
+          <h2 className="mb-4 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            Everything Zimbabwe&rsquo;s<br />Diaspora Needs
+          </h2>
+          <p className="text-base leading-relaxed text-slate-500 sm:text-lg">
+            A centralized, trusted digital platform connecting you to verified knowledge, services, and opportunities for informed decision-making.
+          </p>
+        </div>
 
-        {!isExpired && (
-          <div className="flex items-center justify-center gap-3 sm:gap-5">
-            {[
-              { value: timeLeft.days, label: 'Days' },
-              { value: timeLeft.hours, label: 'Hours' },
-              { value: timeLeft.minutes, label: 'Minutes' },
-              { value: timeLeft.seconds, label: 'Seconds' },
-            ].map((unit) => (
-              <div key={unit.label} className="flex flex-col items-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm sm:h-20 sm:w-20">
-                  <span className="text-2xl font-extrabold tabular-nums text-white sm:text-4xl">
-                    {String(unit.value).padStart(2, '0')}
-                  </span>
-                </div>
-                <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/70 sm:text-xs">
-                  {unit.label}
-                </span>
+        {/* Feature boxes — 2×2 grid */}
+        <div className="grid gap-8 sm:grid-cols-2 lg:gap-12">
+          {features.map((f, i) => (
+            <div
+              key={f.title}
+              className="card-hover group rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all duration-300"
+              style={{ transitionDelay: `${i * 100}ms` }}
+            >
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 group-hover:bg-emerald-100 transition-colors">
+                {f.icon}
               </div>
-            ))}
-          </div>
-        )}
+              <h3 className="mb-2 text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors sm:text-xl">{f.title}</h3>
+              <p className="text-sm leading-relaxed text-slate-500 sm:text-base">{f.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
-  )
-}
-
-function StatCard({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="animate-fade-in-scale text-center transition-all duration-300 hover:scale-105">
-      <p className="mb-2 text-3xl font-bold text-slate-900 transition-colors duration-300 hover:text-slate-700 sm:text-4xl">{value}</p>
-      <p className="text-xs text-slate-600 transition-colors duration-300 hover:text-slate-800 sm:text-sm">{label}</p>
-    </div>
   );
 }
 
-function FocusCard({ title, description }: { title: string; description: string }) {
+/* ──────────────────────────────────
+   2 · POWERED BY EXPERTISE (replaces Countdown)
+   ────────────────────────────────── */
+function PodcastSpotlight() {
   return (
-    <div className="group animate-fade-in-scale rounded-xl border border-slate-200 bg-white p-5 transition-all duration-300 hover:scale-105 hover:border-slate-900 hover:shadow-lg sm:p-6">
-      <h3 className="mb-2 text-base font-bold transition-colors duration-300 group-hover:text-slate-900 sm:text-lg">{title}</h3>
-      <p className="text-xs text-slate-600 transition-colors duration-300 group-hover:text-slate-700 sm:text-sm">{description}</p>
-    </div>
+    <section className="relative overflow-hidden bg-emerald-50/60 py-16 sm:py-24">
+      {/* Decorative gradient blobs */}
+      <div className="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-emerald-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -right-40 -bottom-40 h-80 w-80 rounded-full bg-emerald-200/30 blur-3xl" />
+
+      <div className="relative mx-auto max-w-5xl px-6">
+        <div className="text-center mb-12">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">
+            Powered by Expertise
+          </p>
+          <h2 className="mb-4 text-2xl font-extrabold text-slate-900 sm:text-3xl lg:text-4xl">
+            Knowledge from Industry Leaders
+          </h2>
+          <p className="mx-auto max-w-2xl text-base text-slate-500 sm:text-lg">
+            Our platform is built on expert insights gathered through structured podcast interviews with Zimbabwe&rsquo;s top professionals.
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: <svg className="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" /></svg>, label: 'Bankers', desc: 'Banking & finance experts' },
+            { icon: <svg className="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" /></svg>, label: 'Lawyers', desc: 'Legal & citizenship specialists' },
+            { icon: <svg className="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>, label: 'Investors', desc: 'Investment & property advisors' },
+            { icon: <svg className="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>, label: 'Policymakers', desc: 'Government & policy leaders' },
+          ].map((expert) => (
+            <div key={expert.label} className="flex flex-col items-center rounded-2xl border border-emerald-100 bg-white p-6 text-center shadow-sm">
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                {expert.icon}
+              </div>
+              <h3 className="text-base font-bold text-slate-900">{expert.label}</h3>
+              <p className="mt-1 text-sm text-slate-500">{expert.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
-function UpdateCard({ id, title, description, date }: { id: string; title: string; description: string; date: string }) {
+/* ──────────────────────────────────
+   3 · STATS COUNTERS
+   ────────────────────────────────── */
+function StatsCounters() {
+  const r = useReveal();
+  const stats = [
+    { value: '$1B+', label: 'Annual Diaspora Remittances' },
+    { value: '3M+', label: 'Zimbabweans Abroad' },
+    { value: '50+', label: 'Expert Interviews' },
+    { value: '24/7', label: 'Platform Access' },
+  ];
+
   return (
-    <Link
-      href={`/news/${id}`}
-      className="group block rounded-lg border border-slate-200 bg-white p-4 transition-all duration-300 hover:border-slate-900 hover:shadow-md sm:p-5"
+    <section className="border-y border-slate-100 bg-slate-50/60 py-16 sm:py-20">
+      <div ref={r.ref} className={`mx-auto grid max-w-5xl grid-cols-2 gap-10 px-6 sm:grid-cols-4 transition-all duration-700 ${r.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        {stats.map((s, i) => (
+          <div key={s.label} className="text-center" style={{ transitionDelay: `${i * 120}ms` }}>
+            <p className="text-3xl font-extrabold text-slate-900 sm:text-4xl lg:text-5xl">{s.value}</p>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-slate-400 sm:text-sm">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────
+   4 · WHAT MAKES WTP DIFFERENT
+   ────────────────────────────────── */
+function WhatMakesDifferent({ onDonateClick }: { onDonateClick: () => void }) {
+  const r = useReveal();
+  return (
+    <section className="bg-white py-20 sm:py-28">
+      <div ref={r.ref} className={`mx-auto grid max-w-6xl gap-14 px-6 md:grid-cols-2 md:items-center transition-all duration-700 ${r.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        {/* Left — visual / illustration */}
+        <div className="relative flex items-center justify-center">
+          <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-white to-slate-50 shadow-lg">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                <svg className="h-10 w-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <p className="text-5xl font-extrabold text-slate-900">100%</p>
+              <p className="mt-2 text-sm font-medium text-slate-500">Verified &amp; Trusted</p>
+              <div className="mt-8 flex items-center gap-6 text-xs text-slate-400">
+                <div className="text-center">
+                  <p className="text-xl font-bold text-slate-700">Transparent</p>
+                  <p>Expert-verified</p>
+                </div>
+                <div className="h-8 w-px bg-slate-200" />
+                <div className="text-center">
+                  <p className="text-xl font-bold text-slate-700">Secure</p>
+                  <p>Data protected</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right — text + features */}
+        <div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">Why Choose WTP</p>
+          <h2 className="mb-6 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
+            What makes We The<br />People different?
+          </h2>
+
+          <div className="mb-8 space-y-6">
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 sm:text-lg">Expert-Verified Knowledge</h3>
+                <p className="mt-1 text-sm text-slate-500">Every guide, directory, and resource is built from structured interviews with bankers, lawyers, investors, and policymakers.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 sm:text-lg">Trusted Service Providers</h3>
+                <p className="mt-1 text-sm text-slate-500">Connect with vetted professionals — from property agents to legal advisors — reducing fraud and increasing confidence.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 sm:text-lg">Built for the Diaspora</h3>
+                <p className="mt-1 text-sm text-slate-500">Designed specifically for Zimbabweans abroad — accessible from anywhere, anytime, on any device.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/about"
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 px-8 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:border-slate-900 hover:text-slate-900 sm:text-base"
+            >
+              Learn More
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────
+   5 · GALLERY
+   ────────────────────────────────── */
+function GallerySection({ images, loading, lightboxIdx, setLightboxIdx }: { images: GalleryImage[]; loading: boolean; lightboxIdx: number | null; setLightboxIdx: (i: number | null) => void }) {
+  if (loading || images.length === 0) return null;
+
+  return (
+    <section id="gallery-section" className="bg-slate-50">
+      <div className="mx-auto max-w-7xl px-6 py-20 sm:py-28">
+        <div className="mx-auto mb-14 max-w-2xl text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">Gallery</p>
+          <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">Our Journey in Pictures</h2>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4">
+          {images.map((image, index) => (
+            <div
+              key={image.id}
+              className="relative aspect-square overflow-hidden rounded-xl cursor-pointer group"
+              onClick={() => setLightboxIdx(index)}
+            >
+              <img src={image.imageUrl} alt={image.title || 'Gallery image'} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex flex-col justify-between p-3 rounded-xl">
+                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={(e) => { e.stopPropagation(); window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent((image.title || 'Gallery image') + ' – We The People')}&url=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }} className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors" title="Share on X">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }} className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors" title="Share on Facebook">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent((image.title || 'Gallery image') + ' – We The People')}%20${encodeURIComponent('https://dcpzim.com/gallery')}`, '_blank') }} className="rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors" title="Share on WhatsApp">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.45 0-9.91 4.46-9.91 9.91 0 1.75.46 3.45 1.35 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.45 0 9.91-4.46 9.91-9.91S17.49 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.68 8.23-8.22 8.23z" /></svg>
+                  </button>
+                </div>
+                {image.title && (
+                  <p className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate">{image.title}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Link href="/gallery" className="inline-flex items-center gap-2 rounded-full border-2 border-slate-200 px-8 py-3 text-sm font-semibold text-slate-700 transition-all hover:border-slate-900 hover:text-slate-900">
+            View Full Gallery
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+          </Link>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightboxIdx !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={() => setLightboxIdx(null)}>
+          <button onClick={() => setLightboxIdx(null)} className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+          {lightboxIdx > 0 && (
+            <button onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx - 1) }} className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+          )}
+          {lightboxIdx < images.length - 1 && (
+            <button onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx + 1) }} className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors z-10">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
+          )}
+          <div className="relative max-w-4xl w-full max-h-[85vh] animate-[fadeInScale_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
+            <img src={images[lightboxIdx].imageUrl} alt={images[lightboxIdx].title || 'Gallery image'} className="w-full h-auto max-h-[85vh] object-contain rounded-lg" />
+            {images[lightboxIdx].title && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent rounded-b-lg px-4 py-3">
+                <p className="text-white text-sm font-medium">{images[lightboxIdx].title}</p>
+                {images[lightboxIdx].categoryName && (<p className="text-white/60 text-xs">{images[lightboxIdx].categoryName}</p>)}
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs">{lightboxIdx + 1} / {images.length}</div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ──────────────────────────────────
+   7 · READY TO START (newsletter CTA)
+   ────────────────────────────────── */
+function ReadyToStart({ newsletterEmail, setNewsletterEmail, newsletterLoading, newsletterSuccess, newsletterError, onSubmit }: {
+  newsletterEmail: string; setNewsletterEmail: (s: string) => void;
+  newsletterLoading: boolean; newsletterSuccess: boolean; newsletterError: string;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  return (
+    <section id="cta-section" className="relative overflow-hidden bg-gradient-to-b from-emerald-50/60 to-white py-20 sm:py-28">
+      <div className="pointer-events-none absolute -left-60 top-0 h-96 w-96 rounded-full bg-emerald-200/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-60 bottom-0 h-96 w-96 rounded-full bg-emerald-200/20 blur-3xl" />
+
+      <div className="relative mx-auto max-w-3xl px-6 text-center">
+        <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">Stay Connected</p>
+        <h2 className="mb-4 text-3xl font-extrabold text-slate-900 sm:text-4xl lg:text-5xl">Ready to Get Started?</h2>
+        <p className="mb-10 text-base text-slate-500 sm:text-lg">
+          Join thousands of Zimbabweans abroad who are investing safely, accessing trusted services, and participating in national development.
+        </p>
+
+        {/* Newsletter subscribe */}
+        <form onSubmit={onSubmit} className="mx-auto mb-6 flex max-w-lg flex-col gap-3 sm:flex-row">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={newsletterEmail}
+            onChange={(e) => setNewsletterEmail(e.target.value)}
+            required
+            className="flex-1 rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+          />
+          <button
+            type="submit"
+            disabled={newsletterLoading}
+            className="rounded-full bg-emerald-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-xl disabled:opacity-50"
+          >
+            {newsletterLoading ? 'Subscribing...' : 'Subscribe'}
+          </button>
+        </form>
+        {newsletterSuccess && <p className="text-sm text-emerald-600">Thank you for subscribing!</p>}
+        {newsletterError && <p className="text-sm text-red-500">{newsletterError}</p>}
+
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────
+   CONTACT MODAL
+   ────────────────────────────────── */
+function ContactModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+      tabIndex={-1}
+      ref={(el) => el?.focus()}
     >
-      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 transition-colors duration-300 group-hover:text-slate-600">{date}</p>
-      <h3 className="mb-2 text-sm font-bold transition-colors duration-300 group-hover:text-slate-900 sm:text-base">{title}</h3>
-      <p className="text-xs text-slate-600 transition-colors duration-300 group-hover:text-slate-700 line-clamp-3">{description}</p>
-    </Link>
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto animate-[fadeInScale_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 z-10 rounded-full bg-slate-100 p-2 hover:bg-slate-200 transition-colors">
+          <svg className="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        <div className="border-b border-slate-100 px-6 py-5">
+          <h2 className="text-xl font-bold text-slate-900">Contact Us</h2>
+          <p className="text-sm text-slate-500 mt-1">We&apos;d love to hear from you</p>
+        </div>
+        <div className="p-6">
+          <p className="mb-5 text-sm text-slate-600">Have questions or want to get involved? Reach out through the form below.</p>
+          <ContactForm />
+        </div>
+        <div className="border-t bg-slate-50 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <a href="mailto:contact@wtp.com" className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 transition-colors">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              contact@wtp.com
+            </a>
+            <div className="flex items-center gap-3">
+              <span className="text-slate-400" aria-label="X (Twitter)">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+              </span>
+              <span className="text-slate-400" aria-label="Facebook">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────
+   11 · FOOTER (Atomlab-style multi-column)
+   ────────────────────────────────── */
+function SiteFooter({ onContactClick }: { onContactClick: () => void }) {
+  return (
+    <footer className="border-t border-slate-200 bg-white text-slate-900">
+      <div className="mx-auto max-w-7xl px-6 py-14 sm:py-20">
+        <div className="grid gap-10 md:grid-cols-4">
+
+          {/* Brand */}
+          <div className="md:col-span-1">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-lg font-extrabold text-white">WTP</span>
+              <span className="text-lg font-bold text-slate-900">We The People</span>
+            </div>
+            <p className="mb-6 text-sm leading-relaxed text-slate-500">
+              Zimbabwe&apos;s diaspora intelligence platform — trusted information, verified services, and structured participation for our global community.
+            </p>
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-2.5 text-xs font-semibold text-slate-700">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.523 2.237a.625.625 0 0 0-.853.221l-1.09 1.837A7.628 7.628 0 0 0 12 3.5a7.628 7.628 0 0 0-3.58.795L7.33 2.458a.625.625 0 0 0-1.074.632l1.046 1.764A7.953 7.953 0 0 0 4 11h16a7.953 7.953 0 0 0-3.302-6.146l1.046-1.764a.625.625 0 0 0-.221-.853zM9 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM4 12v7a2 2 0 0 0 2 2h1v3a1.5 1.5 0 0 0 3 0v-3h4v3a1.5 1.5 0 0 0 3 0v-3h1a2 2 0 0 0 2-2v-7H4zm-2.5 0A1.5 1.5 0 0 0 0 13.5v5A1.5 1.5 0 0 0 3 18.5v-5A1.5 1.5 0 0 0 1.5 12zm21 0a1.5 1.5 0 0 0-1.5 1.5v5a1.5 1.5 0 0 0 3 0v-5a1.5 1.5 0 0 0-1.5-1.5z" />
+              </svg>
+              Download for Android
+            </span>
+          </div>
+
+          {/* Quick Links 1 */}
+          <div>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900">Explore</h3>
+            <ul className="space-y-2.5 text-sm text-slate-500">
+              <li><Link href="/about" className="hover:text-slate-900 transition-colors">About Us</Link></li>
+              <li><Link href="/our-work" className="hover:text-slate-900 transition-colors">Our Work</Link></li>
+              <li><Link href="/surveys" className="hover:text-slate-900 transition-colors">Surveys</Link></li>
+            </ul>
+          </div>
+
+          {/* Quick Links 2 */}
+          <div>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900">Engage</h3>
+            <ul className="space-y-2.5 text-sm text-slate-500">
+              <li><Link href="/news" className="hover:text-slate-900 transition-colors">Articles</Link></li>
+              <li><button onClick={onContactClick} className="hover:text-slate-900 transition-colors">Contact</button></li>
+              <li><Link href="/membership-application" className="hover:text-slate-900 transition-colors">Join WTP</Link></li>
+            </ul>
+          </div>
+
+          {/* Social */}
+          <div>
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900">Follow Us</h3>
+            <p className="mb-4 text-sm text-slate-500">Connect with us on social media.</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-label="X (Twitter)">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+              </span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-label="Facebook">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+              </span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-label="YouTube">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+              </span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-label="TikTok">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" /></svg>
+              </span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400" aria-label="Instagram">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 border-t border-slate-200 pt-6 text-center text-xs text-slate-400">
+          <p>&copy; 2026 We The People. All rights reserved.</p>
+          <p className="mt-2">
+            <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+            <span className="mx-2">&middot;</span>
+            <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
+          </p>
+        </div>
+      </div>
+    </footer>
   );
 }

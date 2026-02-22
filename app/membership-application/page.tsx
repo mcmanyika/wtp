@@ -39,7 +39,7 @@ function MembershipApplicationContent() {
         <section className="bg-gradient-to-r from-slate-900 to-slate-800 pt-24 pb-8 text-white sm:pb-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Join DCP</p>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Join WTP</p>
               <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Membership Application</h1>
             </div>
           </div>
@@ -64,9 +64,9 @@ function MembershipApplicationContent() {
       <section className="bg-gradient-to-r from-slate-900 to-slate-800 pt-24 pb-8 text-white sm:pb-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Join DCP</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Join WTP</p>
             <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Membership Application</h1>
-            <p className="text-sm text-slate-300 sm:text-base">&ldquo;Defending the Constitution is Defending Our Future&rdquo;</p>
+            <p className="text-sm text-slate-300 sm:text-base">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
           </div>
         </div>
       </section>
@@ -80,9 +80,9 @@ function MembershipApplicationContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
               <div>
-                <h3 className="text-sm font-bold text-amber-900">Defend the Constitution Platform (DCP)</h3>
+                <h3 className="text-sm font-bold text-amber-900">We The People (WTP)</h3>
                 <p className="mt-1 text-sm text-amber-700">
-                  The DCP is a non-partisan, non-electoral platform dedicated to the defence, protection, and full implementation 
+                  WTP is a non-partisan, non-electoral platform dedicated to the defence, protection, and full implementation 
                   of the 2013 Constitution of Zimbabwe. Membership is open to individuals and organisations who share this commitment.
                 </p>
               </div>

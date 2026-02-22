@@ -2,8 +2,8 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'DCP <onboarding@resend.dev>'
-const APP_NAME = 'Defend the Constitution Platform'
+const FROM_EMAIL = process.env.EMAIL_FROM || 'WTP <onboarding@resend.dev>'
+const APP_NAME = 'We The People'
 const APP_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://dcpzim.com'
 
 // ─── Welcome Email ────────────────────────────────────────────────
@@ -89,7 +89,7 @@ function buildCustomEmailHtml({ name, subject, body }: { name: string; subject: 
           <!-- Header -->
           <tr>
             <td style="background-color:#0f172a;border-radius:12px 12px 0 0;padding:32px 40px;text-align:center;">
-              <img src="${APP_URL}/images/logo.png" alt="DCP Logo" width="60" height="60" style="border-radius:8px;" />
+              <div style="display:inline-block;background:#ffffff;border-radius:12px;width:60px;height:60px;line-height:60px;text-align:center;font-weight:800;font-size:24px;color:#0f172a;">WTP</div>
               <h1 style="color:#ffffff;font-size:22px;margin:16px 0 0;font-weight:700;">
                 ${APP_NAME}
               </h1>
@@ -108,7 +108,7 @@ function buildCustomEmailHtml({ name, subject, body }: { name: string; subject: 
                 Warm regards,
               </p>
               <p style="color:#0f172a;font-size:15px;line-height:1.5;margin:0 0 2px;">
-                <strong>Defend the Constitution Platform</strong>
+                <strong>We The People</strong>
               </p>
               <p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">
                 <a href="${APP_URL}" style="color:#0f172a;text-decoration:underline;">www.dcpzim.com</a>
@@ -146,7 +146,7 @@ function buildWelcomeEmailHtml({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to DCP</title>
+  <title>Welcome to We The People</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:40px 20px;">
@@ -157,12 +157,12 @@ function buildWelcomeEmailHtml({
           <!-- Header -->
           <tr>
             <td style="background-color:#0f172a;border-radius:12px 12px 0 0;padding:32px 40px;text-align:center;">
-              <img src="${APP_URL}/images/logo.png" alt="DCP Logo" width="60" height="60" style="border-radius:8px;" />
+              <div style="display:inline-block;background:#ffffff;border-radius:12px;width:60px;height:60px;line-height:60px;text-align:center;font-weight:800;font-size:24px;color:#0f172a;">WTP</div>
               <h1 style="color:#ffffff;font-size:22px;margin:16px 0 0;font-weight:700;">
-                Defend the Constitution Platform
+                We The People
               </h1>
               <p style="color:#94a3b8;font-size:13px;margin:6px 0 0;">
-                "Defending the Constitution is Defending Our Future"
+                Zimbabwe's Diaspora Intelligence Platform
               </p>
             </td>
           </tr>
@@ -174,13 +174,13 @@ function buildWelcomeEmailHtml({
                 Dear <strong style="color:#0f172a;">${name}</strong>,
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
-                Thank you for joining the <strong>Defend the Constitution Platform (DCP)</strong>.
+                Thank you for joining <strong>We The People (WTP)</strong>.
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
                 By choosing to become part of this Platform, you have joined a community of citizens committed to a simple but profound principle: <strong style="color:#0f172a;">Zimbabwe must be governed according to its Constitution.</strong>
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
-                The DCP is a non-partisan, citizen-anchored constitutional movement. We do not exist to compete for political office, but to protect the rules that make democratic politics possible. Our work is guided by the People&rsquo;s Resolution &mdash; the shared commitment that constitutional legitimacy, popular sovereignty, and the rule of law must remain the foundation of our national life.
+                WTP is a digital platform designed to connect Zimbabwe and its global diaspora through trusted information, verified services, and structured economic and civic participation. Our content is powered by expert podcast interviews with bankers, lawyers, policymakers, investors, and industry leaders &mdash; transformed into actionable guides, directories, and services.
               </p>
 
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 12px;">
@@ -194,7 +194,7 @@ function buildWelcomeEmailHtml({
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding-right:12px;vertical-align:top;color:#10b981;font-size:16px;">&#8226;</td>
-                        <td style="color:#334155;font-size:14px;line-height:1.6;">Defend constitutional term limits and democratic safeguards</td>
+                        <td style="color:#334155;font-size:14px;line-height:1.6;">Access expert-verified guides on investment, banking, and property</td>
                       </tr>
                     </table>
                   </td>
@@ -204,7 +204,7 @@ function buildWelcomeEmailHtml({
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding-right:12px;vertical-align:top;color:#10b981;font-size:16px;">&#8226;</td>
-                        <td style="color:#334155;font-size:14px;line-height:1.6;">Promote full implementation of the Constitution</td>
+                        <td style="color:#334155;font-size:14px;line-height:1.6;">Connect with trusted, vetted service providers</td>
                       </tr>
                     </table>
                   </td>
@@ -214,7 +214,7 @@ function buildWelcomeEmailHtml({
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding-right:12px;vertical-align:top;color:#10b981;font-size:16px;">&#8226;</td>
-                        <td style="color:#334155;font-size:14px;line-height:1.6;">Support lawful civic participation and public accountability</td>
+                        <td style="color:#334155;font-size:14px;line-height:1.6;">Navigate legal, citizenship, and pension matters with confidence</td>
                       </tr>
                     </table>
                   </td>
@@ -224,7 +224,7 @@ function buildWelcomeEmailHtml({
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding-right:12px;vertical-align:top;color:#10b981;font-size:16px;">&#8226;</td>
-                        <td style="color:#334155;font-size:14px;line-height:1.6;">Build a culture of constitutionalism across society</td>
+                        <td style="color:#334155;font-size:14px;line-height:1.6;">Participate in civic engagement and national development from abroad</td>
                       </tr>
                     </table>
                   </td>
@@ -240,7 +240,7 @@ function buildWelcomeEmailHtml({
                 <tr>
                   <td style="border-left:4px solid #10b981;padding:16px 20px;background-color:#f0fdf4;border-radius:0 8px 8px 0;">
                     <p style="color:#0f172a;font-size:16px;font-weight:600;font-style:italic;margin:0;">
-                      Defending the Constitution is defending our future.
+                      Connecting Zimbabwe and its global citizens for a stronger future.
                     </p>
                   </td>
                 </tr>
@@ -272,7 +272,7 @@ function buildWelcomeEmailHtml({
                 Convenor
               </p>
               <p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">
-                Defend the Constitution Platform (DCP)
+                We The People (WTP)
               </p>
             </td>
           </tr>

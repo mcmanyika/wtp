@@ -80,7 +80,7 @@ function ReferralsContent() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Referrals</h1>
-          <p className="mt-1 text-sm text-slate-500">Invite friends to join DCP and track their progress.</p>
+          <p className="mt-1 text-sm text-slate-500">Invite friends to join WTP and track their progress.</p>
         </div>
 
         {/* Referral Link Card */}

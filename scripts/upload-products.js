@@ -20,7 +20,7 @@ const db = admin.firestore();
 
 const sampleProducts = [
   {
-    name: 'DCP T-Shirt',
+    name: 'WTP T-Shirt',
     description: 'Show your support with our official platform t-shirt',
     price: 25,
     image: '/images/store/tshirt.png',
@@ -29,7 +29,7 @@ const sampleProducts = [
     isActive: true,
   },
   {
-    name: 'DCP Sticker Pack',
+    name: 'WTP Sticker Pack',
     description: 'Set of 5 high-quality vinyl stickers',
     price: 5,
     image: '/images/store/cap.png',
@@ -38,7 +38,7 @@ const sampleProducts = [
     isActive: true,
   },
   {
-    name: 'DCP Flag',
+    name: 'WTP Flag',
     description: '3x5 foot flag for rallies and events',
     price: 35,
     image: '/images/store/hoodie.png',
@@ -47,8 +47,8 @@ const sampleProducts = [
     isActive: true,
   },
   {
-    name: 'Constitutional Guide',
-    description: 'Educational guide on constitutional principles',
+    name: 'Diaspora Investment Guide',
+    description: 'Expert guide on investment opportunities in Zimbabwe',
     price: 15,
     image: '/images/store/hoodie-girl.png',
     stock: 75,

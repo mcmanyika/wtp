@@ -16,8 +16,8 @@ const statusColors: Record<MembershipApplicationStatus, string> = {
 }
 
 const participationLabels: Record<string, string> = {
-  civic_education: 'Civic education',
-  legal_constitutional: 'Legal & constitutional advocacy',
+  civic_education: 'Civic participation',
+  legal_constitutional: 'Legal & citizenship services',
   parliamentary: 'Parliamentary engagement',
   community_mobilisation: 'Community mobilisation',
   research_policy: 'Research & policy',
@@ -134,11 +134,11 @@ export default function AdminMembershipApplicationsPage() {
     const existingNumbers = applications
       .filter(a => a.membershipNumber)
       .map(a => {
-        const match = a.membershipNumber!.match(/DCP-\d{4}-(\d+)/)
+        const match = a.membershipNumber!.match(/WTP-\d{4}-(\d+)/)
         return match ? parseInt(match[1], 10) : 0
       })
     const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1
-    return `DCP-${year}-${String(nextNumber).padStart(3, '0')}`
+    return `WTP-${year}-${String(nextNumber).padStart(3, '0')}`
   }
 
   const openDetail = (app: MembershipApplication) => {
@@ -166,9 +166,9 @@ export default function AdminMembershipApplicationsPage() {
 
     // No draft — use default template
     const applicantName = app.type === 'individual' ? app.fullName : app.organisationName
-    setEmailSubject(`Your DCP Membership Application – Next Step`)
+    setEmailSubject(`Your WTP Membership Application – Next Step`)
     setEmailBody(
-      `Dear ${applicantName || 'Applicant'},\n\nThank you for submitting your membership application to the Defend the Constitution Platform (DCP). We sincerely appreciate your commitment to defending Zimbabwe's Constitution and strengthening citizen participation.\n\nWe are pleased to inform you that your application has been received. The next step to activate your membership is the membership contribution, which can be made as either:\n\n$5 per month, or\n\n$60 per year\n\nThis contribution supports our civic education, mobilisation, petition outreach, and constitutional defence work across Zimbabwe.\n\nOnce your payment is received, your membership will be formally activated, and you will begin receiving updates, invitations, and opportunities to actively participate in DCP initiatives.\n\nYou can complete your membership by visiting:\nwww.dcpzim.com\n\nThank you for standing with us in defence of the Constitution and the future of Zimbabwe. For inquiries please do not hesitate to contact us.\n\nKind regards,\nDefend the Constitution Platform (DCP)\nwww.dcpzim.com`
+      `Dear ${applicantName || 'Applicant'},\n\nThank you for submitting your membership application to We The People (WTP). We sincerely appreciate your commitment to connecting with Zimbabwe's diaspora intelligence platform.\n\nWe are pleased to inform you that your application has been received. The next step to activate your membership is the membership contribution, which can be made as either:\n\n$5 per month, or\n\n$60 per year\n\nThis contribution supports our expert content creation, service provider verification, and platform development work.\n\nOnce your payment is received, your membership will be formally activated, and you will begin receiving updates, invitations, and opportunities to actively participate in WTP initiatives.\n\nYou can complete your membership by visiting:\nwww.dcpzim.com\n\nThank you for joining Zimbabwe's diaspora intelligence platform. For inquiries please do not hesitate to contact us.\n\nKind regards,\nWe The People (WTP)\nwww.dcpzim.com`
     )
   }
 
@@ -284,8 +284,8 @@ export default function AdminMembershipApplicationsPage() {
   const selectedApps = applications.filter((a) => selectedIds.has(a.id))
 
   const getDefaultBulkTemplate = () => ({
-    subject: 'Your DCP Membership Application – Next Step',
-    body: `Dear [Name],\n\nThank you for submitting your membership application to the Defend the Constitution Platform (DCP). We sincerely appreciate your commitment to defending Zimbabwe's Constitution and strengthening citizen participation.\n\nWe are pleased to inform you that your application has been received. The next step to activate your membership is the membership contribution, which can be made as either:\n\n$5 per month, or\n\n$60 per year\n\nThis contribution supports our civic education, mobilisation, petition outreach, and constitutional defence work across Zimbabwe.\n\nOnce your payment is received, your membership will be formally activated, and you will begin receiving updates, invitations, and opportunities to actively participate in DCP initiatives.\n\nYou can complete your membership by visiting:\nwww.dcpzim.com\n\nThank you for standing with us in defence of the Constitution and the future of Zimbabwe. For inquiries please do not hesitate to contact us.\n\nKind regards,\nDefend the Constitution Platform (DCP)\nwww.dcpzim.com`,
+    subject: 'Your WTP Membership Application – Next Step',
+    body: `Dear [Name],\n\nThank you for submitting your membership application to We The People (WTP). We sincerely appreciate your commitment to connecting with Zimbabwe's diaspora intelligence platform.\n\nWe are pleased to inform you that your application has been received. The next step to activate your membership is the membership contribution, which can be made as either:\n\n$5 per month, or\n\n$60 per year\n\nThis contribution supports our expert content creation, service provider verification, and platform development work.\n\nOnce your payment is received, your membership will be formally activated, and you will begin receiving updates, invitations, and opportunities to actively participate in WTP initiatives.\n\nYou can complete your membership by visiting:\nwww.dcpzim.com\n\nThank you for joining Zimbabwe's diaspora intelligence platform. For inquiries please do not hesitate to contact us.\n\nKind regards,\nWe The People (WTP)\nwww.dcpzim.com`,
   })
 
   const openBulkEmailModal = () => {
@@ -412,7 +412,7 @@ export default function AdminMembershipApplicationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Membership Applications</h1>
-                <p className="mt-1 text-sm text-slate-500">Review and manage DCP membership applications</p>
+                <p className="mt-1 text-sm text-slate-500">Review and manage WTP membership applications</p>
               </div>
               <Link
                 href="/dashboard"

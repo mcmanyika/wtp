@@ -15,11 +15,7 @@ function LoginContent() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-block mb-4">
-            <img 
-              src="/images/logo.png" 
-              alt="DCP Logo" 
-              className="mx-auto h-24 w-24 rounded-md object-contain"
-            />
+            <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-900 text-3xl font-extrabold text-white">WTP</span>
           </Link>
           <h1 className="mb-2 text-3xl font-bold">Welcome Back</h1>
           <p className="text-slate-600">Sign in to your account</p>
