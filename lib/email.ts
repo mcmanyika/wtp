@@ -2,8 +2,8 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'WTP <onboarding@resend.dev>'
-const APP_NAME = 'We The People'
+const FROM_EMAIL = process.env.EMAIL_FROM || 'DC <onboarding@resend.dev>'
+const APP_NAME = 'Diaspora Connect'
 const APP_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://dcpzim.com'
 
 // ─── Welcome Email ────────────────────────────────────────────────
@@ -89,7 +89,7 @@ function buildCustomEmailHtml({ name, subject, body }: { name: string; subject: 
           <!-- Header -->
           <tr>
             <td style="background-color:#0f172a;border-radius:12px 12px 0 0;padding:32px 40px;text-align:center;">
-              <div style="display:inline-block;background:#ffffff;border-radius:12px;width:60px;height:60px;line-height:60px;text-align:center;font-weight:800;font-size:24px;color:#0f172a;">WTP</div>
+              <div style="display:inline-block;background:#ffffff;border-radius:12px;width:60px;height:60px;line-height:60px;text-align:center;font-weight:800;font-size:24px;color:#0f172a;">DC</div>
               <h1 style="color:#ffffff;font-size:22px;margin:16px 0 0;font-weight:700;">
                 ${APP_NAME}
               </h1>
@@ -108,7 +108,7 @@ function buildCustomEmailHtml({ name, subject, body }: { name: string; subject: 
                 Warm regards,
               </p>
               <p style="color:#0f172a;font-size:15px;line-height:1.5;margin:0 0 2px;">
-                <strong>We The People</strong>
+                <strong>Diaspora Connect</strong>
               </p>
               <p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">
                 <a href="${APP_URL}" style="color:#0f172a;text-decoration:underline;">www.dcpzim.com</a>
@@ -146,7 +146,7 @@ function buildWelcomeEmailHtml({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to We The People</title>
+  <title>Welcome to Diaspora Connect</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:40px 20px;">
@@ -157,9 +157,9 @@ function buildWelcomeEmailHtml({
           <!-- Header -->
           <tr>
             <td style="background-color:#0f172a;border-radius:12px 12px 0 0;padding:32px 40px;text-align:center;">
-              <div style="display:inline-block;background:#ffffff;border-radius:12px;width:60px;height:60px;line-height:60px;text-align:center;font-weight:800;font-size:24px;color:#0f172a;">WTP</div>
+              <div style="display:inline-block;background:#ffffff;border-radius:12px;width:60px;height:60px;line-height:60px;text-align:center;font-weight:800;font-size:24px;color:#0f172a;">DC</div>
               <h1 style="color:#ffffff;font-size:22px;margin:16px 0 0;font-weight:700;">
-                We The People
+                Diaspora Connect
               </h1>
               <p style="color:#94a3b8;font-size:13px;margin:6px 0 0;">
                 Zimbabwe's Diaspora Intelligence Platform
@@ -174,13 +174,13 @@ function buildWelcomeEmailHtml({
                 Dear <strong style="color:#0f172a;">${name}</strong>,
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
-                Thank you for joining <strong>We The People (WTP)</strong>.
+                Thank you for joining <strong>Diaspora Connect (DC)</strong>.
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
                 By choosing to become part of this Platform, you have joined a community committed to a simple but profound mission: <strong style="color:#0f172a;">connecting Zimbabwe and its global diaspora for structured, scalable national development.</strong>
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
-                WTP is a digital platform designed to connect Zimbabwe and its global diaspora through trusted information, verified services, and structured economic and civic participation. Our content is powered by expert podcast interviews with bankers, lawyers, policymakers, investors, and industry leaders &mdash; transformed into actionable guides, directories, and services.
+                DC is a digital platform designed to connect Zimbabwe and its global diaspora through trusted information, verified services, and structured economic and civic participation. Our content is powered by expert podcast interviews with bankers, lawyers, policymakers, investors, and industry leaders &mdash; transformed into actionable guides, directories, and services.
               </p>
 
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 12px;">
@@ -272,7 +272,7 @@ function buildWelcomeEmailHtml({
                 Convenor
               </p>
               <p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">
-                We The People (WTP)
+                Diaspora Connect (DC)
               </p>
             </td>
           </tr>

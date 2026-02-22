@@ -23,7 +23,7 @@ export default function HeroSection({ onDonateClick }: HeroSectionProps) {
           Zimbabwe&rsquo;s Diaspora Intelligence Platform
         </p>
         <h1 className="mb-6 animate-hero-reveal text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl" style={{ animationDelay: '0.4s', opacity: 0 }}>
-          We The People
+          Diaspora Connect
         </h1>
         <p className="mx-auto mb-10 max-w-2xl animate-hero-reveal text-base leading-relaxed text-slate-500 sm:text-lg md:text-xl" style={{ animationDelay: '0.6s', opacity: 0 }}>
           Trusted information, verified services, and structured participation — connecting Zimbabwe&rsquo;s global diaspora to invest safely, access services confidently, and shape our nation&rsquo;s future.

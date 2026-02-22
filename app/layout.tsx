@@ -11,7 +11,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'We The People',
+  title: 'Diaspora Connect',
   description: 'Zimbabwe\'s Diaspora Intelligence Platform — trusted information, verified services, and structured participation.',
 }
 

@@ -16,13 +16,13 @@ export default function AboutPage() {
 
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600 sm:text-sm">
-            About WTP
+            About Us
           </p>
           <h1 className="mb-6 text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
-            Why We The People
+            Why Diaspora Connect
           </h1>
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-500 sm:text-lg">
-            Zimbabwe&rsquo;s diaspora contributes billions annually through remittances, investment, and business. WTP is the trusted digital infrastructure that turns that contribution into structured national development.
+            Zimbabwe&rsquo;s diaspora contributes billions annually through remittances, investment, and business. Diaspora Connect is the trusted digital infrastructure that turns that contribution into structured national development.
           </p>
         </div>
       </section>
@@ -71,7 +71,7 @@ export default function AboutPage() {
           <div className="mx-auto mb-16 max-w-2xl text-center">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600 sm:text-sm">The Solution</p>
             <h2 className="mb-4 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
-              WTP addresses this gap
+              Diaspora Connect addresses this gap
             </h2>
             <p className="text-base leading-relaxed text-slate-500 sm:text-lg">
               A centralized, trusted digital platform connecting Zimbabwe&rsquo;s global diaspora to verified knowledge, services, and opportunities.
@@ -136,7 +136,7 @@ export default function AboutPage() {
               </div>
               <h3 className="mb-3 text-xl font-extrabold text-slate-900 sm:text-2xl">Our Mission</h3>
               <p className="text-sm leading-relaxed text-slate-500 sm:text-base">
-                To transform diaspora contribution from informal and fragmented support into structured, trusted, and scalable national development. By increasing transparency, reducing fraud, improving access to services, and enabling informed decision-making, WTP strengthens the connection between Zimbabwe and its global citizens.
+                To transform diaspora contribution from informal and fragmented support into structured, trusted, and scalable national development. By increasing transparency, reducing fraud, improving access to services, and enabling informed decision-making, Diaspora Connect strengthens the connection between Zimbabwe and its global citizens.
               </p>
             </div>
 
@@ -150,10 +150,10 @@ export default function AboutPage() {
               </div>
               <h3 className="mb-3 text-xl font-extrabold sm:text-2xl">Our Vision</h3>
               <p className="mb-4 text-sm leading-relaxed text-slate-300 sm:text-base">
-                We The People represents a critical digital infrastructure layer that enables diaspora Zimbabweans to invest safely, access services confidently, and participate fully in shaping Zimbabwe&rsquo;s economic and civic future.
+                Diaspora Connect represents a critical digital infrastructure layer that enables diaspora Zimbabweans to invest safely, access services confidently, and participate fully in shaping Zimbabwe&rsquo;s economic and civic future.
               </p>
               <p className="text-sm font-semibold leading-relaxed text-emerald-400 sm:text-base">
-                WTP is not just a platform — it&rsquo;s the diaspora&rsquo;s digital home.
+                Diaspora Connect is not just a platform — it&rsquo;s the diaspora&rsquo;s digital home.
               </p>
             </div>
           </div>

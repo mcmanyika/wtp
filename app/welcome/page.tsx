@@ -54,10 +54,10 @@ function WelcomeContent() {
       <div className="bg-slate-900 text-white">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16 text-center">
           <Link href="/">
-            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-extrabold text-white hover:opacity-80 transition-opacity cursor-pointer">WTP</span>
+            <span className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-extrabold text-white hover:opacity-80 transition-opacity cursor-pointer">DC</span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold">
-            Welcome to We The People
+            Welcome to Diaspora Connect
           </h1>
           <p className="mt-3 text-sm text-slate-400">
             Zimbabwe&rsquo;s Diaspora Intelligence Platform
@@ -73,7 +73,7 @@ function WelcomeContent() {
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
-            Thank you for joining <strong>We The People (WTP)</strong>.
+            Thank you for joining <strong>Diaspora Connect (DC)</strong>.
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
@@ -83,7 +83,7 @@ function WelcomeContent() {
           </p>
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
-            WTP is a centralized, trusted digital platform connecting Zimbabwe and its global diaspora through
+            DC is a centralized, trusted digital platform connecting Zimbabwe and its global diaspora through
             verified knowledge, expert insights, and structured economic and civic participation. Our content is
             powered by structured podcast interviews with bankers, lawyers, policymakers, investors, and industry
             leaders &mdash; transforming expert knowledge into actionable guides, directories, and services.
@@ -113,7 +113,7 @@ function WelcomeContent() {
 
           <p className="text-base text-slate-700 leading-relaxed mb-6">
             We encourage you to explore the platform, stay engaged with our expert content, and share
-            WTP with fellow Zimbabweans abroad. Together, we can transform diaspora contribution from
+            DC with fellow Zimbabweans abroad. Together, we can transform diaspora contribution from
             informal and fragmented support into structured, scalable national development.
           </p>
 
@@ -134,8 +134,8 @@ function WelcomeContent() {
           {/* Signature */}
           <div className="mb-8 border-t border-slate-100 pt-6">
             <p className="text-base text-slate-700 mb-1">Warm regards,</p>
-            <p className="text-base font-bold text-slate-900">The WTP Team</p>
-            <p className="text-sm text-slate-500">We The People (WTP)</p>
+            <p className="text-base font-bold text-slate-900">The DC Team</p>
+            <p className="text-sm text-slate-500">Diaspora Connect (DC)</p>
           </div>
 
           {/* CTA Buttons */}
@@ -174,7 +174,7 @@ function WelcomeContent() {
       {/* Footer */}
       <div className="border-t bg-slate-100 py-6 text-center">
         <p className="text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} We The People. All rights reserved.
+          &copy; {new Date().getFullYear()} Diaspora Connect. All rights reserved.
         </p>
       </div>
     </div>

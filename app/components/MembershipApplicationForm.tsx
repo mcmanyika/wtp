@@ -274,7 +274,7 @@ export default function MembershipApplicationForm() {
         </div>
         <h3 className="mb-2 text-xl font-bold text-green-900">Application Submitted Successfully!</h3>
         <p className="mb-6 text-green-700">
-          Thank you for your membership application to the We The People.
+          Thank you for your membership application to the Diaspora Connect.
           Your application is now under review. You will be notified once it has been processed.
         </p>
         <button
@@ -659,7 +659,7 @@ export default function MembershipApplicationForm() {
 
             {/* Designated Representative */}
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <h4 className="mb-3 text-sm font-bold text-slate-900">Designated Representative to WTP</h4>
+              <h4 className="mb-3 text-sm font-bold text-slate-900">Designated Representative to Diaspora Connect</h4>
               <div className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
@@ -756,12 +756,12 @@ export default function MembershipApplicationForm() {
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
             <p className="mb-4 text-sm leading-relaxed text-slate-700">
-              I / We hereby apply for membership of <strong>We The People (WTP)</strong> and affirm that:
+              I / We hereby apply for membership of <strong>Diaspora Connect (Diaspora Connect)</strong> and affirm that:
             </p>
             <ul className="space-y-3 text-sm text-slate-700">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">1</span>
-                <span>I / We support WTP&apos;s mission to <strong>connect Zimbabwe and its global diaspora</strong> through trusted information, verified services, and structured participation;</span>
+                <span>I / We support Diaspora Connect&apos;s mission to <strong>connect Zimbabwe and its global diaspora</strong> through trusted information, verified services, and structured participation;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">2</span>
@@ -769,7 +769,7 @@ export default function MembershipApplicationForm() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">3</span>
-                <span>I / We understand that WTP is a <strong>non-partisan</strong> platform focused on empowering diaspora economic and civic participation;</span>
+                <span>I / We understand that Diaspora Connect is a <strong>non-partisan</strong> platform focused on empowering diaspora economic and civic participation;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">4</span>
@@ -777,11 +777,11 @@ export default function MembershipApplicationForm() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">5</span>
-                <span>I / We agree to abide by the <strong>WTP governance framework, terms of service, and code of conduct</strong>.</span>
+                <span>I / We agree to abide by the <strong>Diaspora Connect governance framework, terms of service, and code of conduct</strong>.</span>
               </li>
             </ul>
             <p className="mt-4 text-sm italic text-slate-500">
-              I / We further acknowledge that membership of WTP does not replace affiliation to any political party, civic organisation, or institution.
+              I / We further acknowledge that membership of Diaspora Connect does not replace affiliation to any political party, civic organisation, or institution.
             </p>
           </div>
 

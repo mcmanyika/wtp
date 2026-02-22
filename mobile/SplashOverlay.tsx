@@ -47,7 +47,7 @@ export default function SplashOverlay({ visible, onEnter }: SplashOverlayProps) 
       </View>
 
       {/* App Name */}
-      <Text style={styles.title}>We The People</Text>
+      <Text style={styles.title}>Diaspora Connect</Text>
 
       {/* Tagline */}
       <Text style={styles.tagline}>Connecting Zimbabwe&apos;s Global Diaspora</Text>

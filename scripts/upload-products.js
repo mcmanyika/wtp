@@ -20,7 +20,7 @@ const db = admin.firestore();
 
 const sampleProducts = [
   {
-    name: 'WTP T-Shirt',
+    name: 'DC T-Shirt',
     description: 'Show your support with our official platform t-shirt',
     price: 25,
     image: '/images/store/tshirt.png',
@@ -29,7 +29,7 @@ const sampleProducts = [
     isActive: true,
   },
   {
-    name: 'WTP Sticker Pack',
+    name: 'DC Sticker Pack',
     description: 'Set of 5 high-quality vinyl stickers',
     price: 5,
     image: '/images/store/cap.png',
@@ -38,7 +38,7 @@ const sampleProducts = [
     isActive: true,
   },
   {
-    name: 'WTP Flag',
+    name: 'DC Flag',
     description: '3x5 foot flag for rallies and events',
     price: 35,
     image: '/images/store/hoodie.png',

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: 'Donation to We The People',
+                name: 'Donation to Diaspora Connect',
                 description: description || 'Support Zimbabwe\'s diaspora intelligence platform',
               },
               unit_amount: Math.round(amount * 100), // Convert to cents
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
               currency: 'usd',
               product_data: {
                 name: `${tier.charAt(0).toUpperCase() + tier.slice(1)} Membership`,
-                description: `We The People - ${tier} tier membership`,
+                description: `Diaspora Connect - ${tier} tier membership`,
               },
               unit_amount: Math.round(tierPrices[tier] * 100), // Convert to cents
             },

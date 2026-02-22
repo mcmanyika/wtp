@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
             {/* Introduction */}
             <div>
               <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
-                The We The People (&quot;WTP&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to
+                The Diaspora Connect (&quot;Diaspora Connect&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to
                 protecting and respecting your privacy. This Privacy Policy explains how we collect, use, store, and
                 protect your personal information when you use our website at{' '}
                 <a href="https://www.dcpzim.com" className="text-blue-600 hover:underline">www.dcpzim.com</a> and
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
                 <li>To process membership and volunteer applications.</li>
                 <li>To process donations and issue receipts.</li>
                 <li>To manage petition signatures and civic engagement activities.</li>
-                <li>To send you updates, newsletters, and communications related to WTP activities (with your consent).</li>
+                <li>To send you updates, newsletters, and communications related to Diaspora Connect activities (with your consent).</li>
                 <li>To respond to your enquiries and provide support.</li>
                 <li>To improve our website, services, and user experience.</li>
                 <li>To comply with legal obligations.</li>
@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
               <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
                 We retain your personal data only for as long as necessary to fulfil the purposes for which it was
                 collected, or as required by law. Membership and volunteer application data is retained for the
-                duration of your relationship with WTP. You may request deletion of your account and associated data
+                duration of your relationship with Diaspora Connect. You may request deletion of your account and associated data
                 at any time.
               </p>
             </div>
@@ -172,7 +172,7 @@ export default function PrivacyPolicyPage() {
                 personal data, please contact us:
               </p>
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 sm:text-base">
-                <p className="font-semibold">We The People (WTP)</p>
+                <p className="font-semibold">Diaspora Connect (Diaspora Connect)</p>
                 <p className="mt-1">
                   Email:{' '}
                   <a href="mailto:contact@wtp.com" className="text-blue-600 hover:underline">contact@wtp.com</a>

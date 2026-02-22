@@ -75,7 +75,7 @@ export default function NewsPage() {
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Latest Articles</p>
             <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Updates & Announcements</h1>
             <p className="text-sm text-slate-300 sm:text-base">
-              Stay informed about the latest developments, events, and announcements from the We The People.
+              Stay informed about the latest developments, events, and announcements from Diaspora Connect.
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function NewsPage() {
                         />
                       ) : (
                         <div className="flex h-40 w-full items-center justify-center bg-slate-100">
-                          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-200 text-2xl font-extrabold text-slate-400">WTP</span>
+                          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-200 text-2xl font-extrabold text-slate-400">DC</span>
                         </div>
                       )}
                     </div>

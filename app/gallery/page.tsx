@@ -13,7 +13,7 @@ const SITE_URL = 'https://dcpzim.com/gallery'
 
 function ShareButtons({ title, size = 'sm' }: { imageUrl?: string; title: string; size?: 'sm' | 'md' }) {
   const [copied, setCopied] = useState(false)
-  const shareText = encodeURIComponent(`${title} – We The People`)
+  const shareText = encodeURIComponent(`${title} – Diaspora Connect`)
   const shareUrl = encodeURIComponent(SITE_URL)
 
   const btnClass = size === 'sm'

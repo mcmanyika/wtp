@@ -2679,13 +2679,13 @@ export async function deleteLeader(leaderId: string): Promise<void> {
 // ─── Referral Operations ──────────────────────────────────────────────────────
 
 /**
- * Generate a unique referral code (format: WTP-XXXXX where X is alphanumeric).
+ * Generate a unique referral code (format: DC-XXXXX where X is alphanumeric).
  * Checks Firestore to ensure uniqueness.
  */
 export async function generateReferralCode(): Promise<string> {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // avoid ambiguous chars 0/O, 1/I
   const generate = () => {
-    let code = 'WTP-'
+    let code = 'DC-'
     for (let i = 0; i < 5; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length))
     }

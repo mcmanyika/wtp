@@ -40,7 +40,7 @@ function MembershipApplicationContent() {
           <div className="pointer-events-none absolute -right-40 -bottom-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-3xl" />
           <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Join WTP</p>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Join Diaspora Connect</p>
               <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">Membership Application</h1>
             </div>
           </div>
@@ -66,7 +66,7 @@ function MembershipApplicationContent() {
         <div className="pointer-events-none absolute -right-40 -bottom-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-3xl" />
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Join WTP</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Join Diaspora Connect</p>
             <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">Membership Application</h1>
             <p className="text-sm text-slate-500 sm:text-base">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
           </div>

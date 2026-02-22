@@ -20,7 +20,7 @@ export default function VolunteerPage() {
               <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Become a Volunteer</h1>
               <p className="text-sm text-slate-300 sm:text-base">
                 We&apos;re looking for passionate individuals who want to make a difference.
-                Fill out the form below to apply to become a volunteer with the We The People.
+                Fill out the form below to apply to become a volunteer with Diaspora Connect.
               </p>
             </div>
           </div>

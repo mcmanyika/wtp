@@ -34,7 +34,7 @@ export default function Footer() {
             <ul className="space-y-1.5 text-xs text-slate-500">
               <li><Link href="/news" className="hover:text-slate-900 transition-colors">Articles</Link></li>
               <li><Link href="/#contact" className="hover:text-slate-900 transition-colors">Contact</Link></li>
-              <li><Link href="/membership-application" className="hover:text-slate-900 transition-colors">Join WTP</Link></li>
+              <li><Link href="/membership-application" className="hover:text-slate-900 transition-colors">Join DC</Link></li>
             </ul>
           </div>
 
@@ -74,7 +74,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-6 border-t border-slate-200 pt-4 text-center text-[10px] text-slate-400 sm:text-xs">
-          <p>&copy; 2026 We The People. All rights reserved.</p>
+          <p>&copy; 2026 Diaspora Connect. All rights reserved.</p>
           <p className="mt-1">
             <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
             <span className="mx-1.5">·</span>

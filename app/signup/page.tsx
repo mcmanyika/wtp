@@ -15,7 +15,7 @@ function SignupContent() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/"><span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-extrabold text-white hover:opacity-80 transition-opacity cursor-pointer">WTP</span></Link>
+          <Link href="/"><span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-extrabold text-white hover:opacity-80 transition-opacity cursor-pointer">DC</span></Link>
           <h1 className="mb-2 text-3xl font-bold">Create Account</h1>
           <p className="text-slate-600">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
           {refCode && (

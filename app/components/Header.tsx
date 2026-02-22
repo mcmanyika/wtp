@@ -34,9 +34,9 @@ export default function Header({ onContactClick }: HeaderProps) {
     <header className="fixed top-0 left-0 right-0 z-50 safe-top border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-2">
         <Link href="/" className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-lg font-extrabold text-white sm:h-11 sm:w-11 sm:text-xl">WTP</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-lg font-extrabold text-white sm:h-11 sm:w-11 sm:text-xl">DC</span>
           <div className="leading-tight hidden sm:block">
-            <p className="text-xs font-bold text-slate-900">We The People</p>
+            <p className="text-xs font-bold text-slate-900">Diaspora Connect</p>
             <p className="text-[10px] text-slate-400">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
           </div>
         </Link>
@@ -122,7 +122,7 @@ export default function Header({ onContactClick }: HeaderProps) {
               </Link>
             </>
           )}
-          <Link href="/membership-application" className="hidden rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors sm:text-sm md:inline-flex">Join WTP</Link>
+          <Link href="/membership-application" className="hidden rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors sm:text-sm md:inline-flex">Join DC</Link>
 
           {/* Mobile Menu Button */}
           <button
@@ -166,7 +166,7 @@ export default function Header({ onContactClick }: HeaderProps) {
               onClick={() => setMobileMenuOpen(false)}
               className="mx-4 mt-2 rounded-full bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-emerald-700 transition-colors"
             >
-              Join WTP
+              Join DC
             </Link>
             <button
               onClick={() => {

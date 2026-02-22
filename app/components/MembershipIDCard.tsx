@@ -37,7 +37,7 @@ export default function MembershipIDCard({
       <!DOCTYPE html>
       <html>
       <head>
-        <title>WTP Membership Card - ${memberName}</title>
+        <title>DC Membership Card - ${memberName}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -253,9 +253,9 @@ export default function MembershipIDCard({
           <div class="card">
             <div class="card-front">
               <div class="card-header">
-                <div class="card-logo" style="display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;width:44px;height:44px;font-weight:800;font-size:16px;color:#0f172a;">WTP</div>
+                <div class="card-logo" style="display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;width:44px;height:44px;font-weight:800;font-size:16px;color:#0f172a;">DC</div>
                 <div>
-                  <div class="card-org-name">We The People</div>
+                  <div class="card-org-name">Diaspora Connect</div>
                   <div class="card-org-sub">Official Membership Card</div>
                 </div>
               </div>
@@ -292,20 +292,20 @@ export default function MembershipIDCard({
           <div class="card">
             <div class="card-back">
               <div class="card-back-header">
-                <div class="card-back-title">We The People</div>
+                <div class="card-back-title">Diaspora Connect</div>
                 <div class="card-back-subtitle">Membership Terms & Conditions</div>
               </div>
               <ol class="card-terms">
-                <li>This card is the property of the We The People (WTP).</li>
+                <li>This card is the property of the Diaspora Connect (DC).</li>
                 <li>The holder is a registered member of Zimbabwe's diaspora intelligence platform.</li>
-                <li>This card is non-transferable and must be presented upon request at WTP events.</li>
+                <li>This card is non-transferable and must be presented upon request at DC events.</li>
                 <li>Membership is valid for one year from the date of issue and subject to renewal.</li>
-                <li>Lost or damaged cards should be reported to WTP administration immediately.</li>
+                <li>Lost or damaged cards should be reported to DC administration immediately.</li>
               </ol>
               <div class="card-back-footer">
                 <p>&ldquo;Connecting Zimbabwe and its Global Citizens&rdquo;</p>
                 <p style="margin-top:8px"><a href="https://www.dcpzim.com">www.dcpzim.com</a></p>
-                <p style="margin-top:4px">&copy; ${new Date().getFullYear()} WTP. All rights reserved.</p>
+                <p style="margin-top:4px">&copy; ${new Date().getFullYear()} DC. All rights reserved.</p>
               </div>
             </div>
           </div>
@@ -331,9 +331,9 @@ export default function MembershipIDCard({
 
           {/* Header */}
           <div className="relative z-10 mb-5 flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-lg font-extrabold text-slate-900">WTP</span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-lg font-extrabold text-slate-900">DC</span>
             <div>
-              <p className="text-sm font-bold tracking-wide">We The People</p>
+              <p className="text-sm font-bold tracking-wide">Diaspora Connect</p>
               <p className="text-[10px] tracking-wider text-slate-400">Official Membership Card</p>
             </div>
           </div>
@@ -386,22 +386,22 @@ export default function MembershipIDCard({
         {/* Back of Card */}
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-xl">
           <div className="mb-4 text-center">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-900">We The People</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-900">Diaspora Connect</p>
             <p className="text-[10px] text-slate-500">Membership Terms & Conditions</p>
           </div>
 
           <ol className="mb-4 list-decimal space-y-1 pl-4 text-[9px] leading-relaxed text-slate-600">
-            <li>This card is the property of the We The People (WTP).</li>
+            <li>This card is the property of the Diaspora Connect (DC).</li>
             <li>The holder is a registered member of Zimbabwe's diaspora intelligence platform.</li>
-            <li>This card is non-transferable and must be presented upon request at WTP events.</li>
+            <li>This card is non-transferable and must be presented upon request at DC events.</li>
             <li>Membership is valid for one year from the date of issue and subject to renewal.</li>
-            <li>Lost or damaged cards should be reported to WTP administration immediately.</li>
+            <li>Lost or damaged cards should be reported to DC administration immediately.</li>
           </ol>
 
           <div className="border-t border-slate-200 pt-3 text-center">
             <p className="text-[9px] italic text-slate-500">&ldquo;Connecting Zimbabwe and its Global Citizens&rdquo;</p>
             <p className="mt-2 text-[9px] font-semibold text-slate-700">www.dcpzim.com</p>
-            <p className="text-[9px] text-slate-400">&copy; {new Date().getFullYear()} WTP. All rights reserved.</p>
+            <p className="text-[9px] text-slate-400">&copy; {new Date().getFullYear()} DC. All rights reserved.</p>
           </div>
         </div>
       </div>
