@@ -8,7 +8,6 @@ import MembershipApplicationForm from '@/app/components/MembershipApplicationFor
 import ProtectedRoute from '@/app/components/ProtectedRoute'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
-import CTASection from '@/app/components/CTASection'
 
 function MembershipApplicationContent() {
   const { user } = useAuth()
@@ -36,11 +35,13 @@ function MembershipApplicationContent() {
     return (
       <main className="min-h-screen bg-white text-slate-900">
         <Header />
-        <section className="bg-gradient-to-r from-slate-900 to-slate-800 pt-24 pb-8 text-white sm:pb-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-emerald-50/40 pt-24 pb-8 sm:pb-12">
+          <div className="pointer-events-none absolute -left-40 -top-40 h-[400px] w-[400px] rounded-full bg-emerald-200/30 blur-3xl" />
+          <div className="pointer-events-none absolute -right-40 -bottom-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-3xl" />
+          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
             <div className="text-center">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Join WTP</p>
-              <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Membership Application</h1>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Join WTP</p>
+              <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">Membership Application</h1>
             </div>
           </div>
         </section>
@@ -50,7 +51,6 @@ function MembershipApplicationContent() {
             <p className="text-slate-600">Checking application status...</p>
           </div>
         </div>
-        <CTASection />
         <Footer />
       </main>
     )
@@ -61,34 +61,20 @@ function MembershipApplicationContent() {
       <Header />
 
       {/* Hero */}
-      <section className="bg-gradient-to-r from-slate-900 to-slate-800 pt-24 pb-8 text-white sm:pb-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-emerald-50/40 pt-24 pb-8 sm:pb-12">
+        <div className="pointer-events-none absolute -left-40 -top-40 h-[400px] w-[400px] rounded-full bg-emerald-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -right-40 -bottom-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-3xl" />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Join WTP</p>
-            <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Membership Application</h1>
-            <p className="text-sm text-slate-300 sm:text-base">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Join WTP</p>
+            <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">Membership Application</h1>
+            <p className="text-sm text-slate-500 sm:text-base">Zimbabwe&apos;s Diaspora Intelligence Platform</p>
           </div>
         </div>
       </section>
 
       <section className="bg-white py-10 sm:py-16">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          {/* Info Banner */}
-          <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-6">
-            <div className="flex items-start gap-3">
-              <svg className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-              <div>
-                <h3 className="text-sm font-bold text-amber-900">We The People (WTP)</h3>
-                <p className="mt-1 text-sm text-amber-700">
-                  WTP is a non-partisan, non-electoral platform dedicated to the defence, protection, and full implementation 
-                  of the 2013 Constitution of Zimbabwe. Membership is open to individuals and organisations who share this commitment.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Form Card */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
             <MembershipApplicationForm />
@@ -96,7 +82,6 @@ function MembershipApplicationContent() {
         </div>
       </section>
 
-      <CTASection />
       <Footer />
     </main>
   )

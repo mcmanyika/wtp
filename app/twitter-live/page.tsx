@@ -101,7 +101,7 @@ export default function TwitterLivePage() {
           </div>
           <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">Live on X</h1>
           <p className="mt-3 text-sm text-slate-300 max-w-2xl mx-auto sm:text-base">
-            Follow latest X Spaces, discussing developments on the Constitution.
+            Follow latest X Spaces, discussing developments for Zimbabwe&apos;s diaspora.
           </p>
           <a
             href="https://x.com/DCPlatform25"

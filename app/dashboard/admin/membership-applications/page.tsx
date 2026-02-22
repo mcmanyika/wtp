@@ -18,7 +18,7 @@ const statusColors: Record<MembershipApplicationStatus, string> = {
 const participationLabels: Record<string, string> = {
   civic_education: 'Civic participation',
   legal_constitutional: 'Legal & citizenship services',
-  parliamentary: 'Parliamentary engagement',
+  parliamentary: 'Policy & governance engagement',
   community_mobilisation: 'Community mobilisation',
   research_policy: 'Research & policy',
   communications_media: 'Communications & media',

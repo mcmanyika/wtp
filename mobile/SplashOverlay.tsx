@@ -50,7 +50,7 @@ export default function SplashOverlay({ visible, onEnter }: SplashOverlayProps) 
       <Text style={styles.title}>We The People</Text>
 
       {/* Tagline */}
-      <Text style={styles.tagline}>Our Constitution. Our Future</Text>
+      <Text style={styles.tagline}>Connecting Zimbabwe&apos;s Global Diaspora</Text>
 
       {/* Divider */}
       <View style={styles.divider} />

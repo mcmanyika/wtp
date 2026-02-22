@@ -177,7 +177,7 @@ function buildWelcomeEmailHtml({
                 Thank you for joining <strong>We The People (WTP)</strong>.
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
-                By choosing to become part of this Platform, you have joined a community of citizens committed to a simple but profound principle: <strong style="color:#0f172a;">Zimbabwe must be governed according to its Constitution.</strong>
+                By choosing to become part of this Platform, you have joined a community committed to a simple but profound mission: <strong style="color:#0f172a;">connecting Zimbabwe and its global diaspora for structured, scalable national development.</strong>
               </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
                 WTP is a digital platform designed to connect Zimbabwe and its global diaspora through trusted information, verified services, and structured economic and civic participation. Our content is powered by expert podcast interviews with bankers, lawyers, policymakers, investors, and industry leaders &mdash; transformed into actionable guides, directories, and services.

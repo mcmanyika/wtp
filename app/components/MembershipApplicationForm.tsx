@@ -22,7 +22,7 @@ const provinces = [
 const participationOptions: { value: ParticipationArea; label: string }[] = [
   { value: 'civic_education', label: 'Civic participation' },
   { value: 'legal_constitutional', label: 'Legal & citizenship services' },
-  { value: 'parliamentary', label: 'Parliamentary engagement' },
+  { value: 'parliamentary', label: 'Policy & governance engagement' },
   { value: 'community_mobilisation', label: 'Community mobilisation' },
   { value: 'research_policy', label: 'Research & policy' },
   { value: 'communications_media', label: 'Communications & media' },
@@ -806,28 +806,28 @@ export default function MembershipApplicationForm() {
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
             <p className="mb-4 text-sm leading-relaxed text-slate-700">
-              I / We hereby apply for membership of the <strong>We The People (WTP)</strong> and affirm that:
+              I / We hereby apply for membership of <strong>We The People (WTP)</strong> and affirm that:
             </p>
             <ul className="space-y-3 text-sm text-slate-700">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">1</span>
-                <span>I / We support the defence, protection, and full implementation of the <strong>2013 Constitution of Zimbabwe</strong>;</span>
+                <span>I / We support WTP&apos;s mission to <strong>connect Zimbabwe and its global diaspora</strong> through trusted information, verified services, and structured participation;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">2</span>
-                <span>I / We subscribe to and uphold the <strong>People&apos;s Resolution</strong> as adopted by the We The People;</span>
+                <span>I / We commit to engaging with the platform in a manner that is <strong>honest, respectful, and constructive</strong>;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">3</span>
-                <span>I / We understand that WTP is <strong>non-partisan, non-electoral</strong>, and does not seek state power;</span>
+                <span>I / We understand that WTP is a <strong>non-partisan</strong> platform focused on empowering diaspora economic and civic participation;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">4</span>
-                <span>I / We commit to <strong>peaceful, lawful, and constitutional</strong> action;</span>
+                <span>I / We will use the platform&apos;s resources, directories, and services <strong>responsibly and lawfully</strong>;</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">5</span>
-                <span>I / We agree to abide by the <strong>WTP Constitution, governance framework, and code of conduct</strong>.</span>
+                <span>I / We agree to abide by the <strong>WTP governance framework, terms of service, and code of conduct</strong>.</span>
               </li>
             </ul>
             <p className="mt-4 text-sm italic text-slate-500">
