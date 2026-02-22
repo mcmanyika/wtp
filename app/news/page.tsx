@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
-import CTASection from '@/app/components/CTASection'
 import { getNews } from '@/lib/firebase/firestore'
 import type { News } from '@/types'
 
@@ -69,12 +68,14 @@ export default function NewsPage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-slate-900 to-slate-800 pt-24 pb-8 text-white sm:pb-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-emerald-50/40 pt-24 pb-8 sm:pb-12">
+        <div className="pointer-events-none absolute -left-40 -top-40 h-[400px] w-[400px] rounded-full bg-emerald-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -right-40 -bottom-40 h-[400px] w-[400px] rounded-full bg-emerald-100/30 blur-3xl" />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="text-center">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Latest Articles</p>
-            <h1 className="mb-2 text-2xl font-bold sm:text-3xl md:text-4xl">Updates & Announcements</h1>
-            <p className="text-sm text-slate-300 sm:text-base">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Latest Articles</p>
+            <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">Updates & Announcements</h1>
+            <p className="text-sm text-slate-500 sm:text-base">
               Stay informed about the latest developments, events, and announcements from Diaspora Connect.
             </p>
           </div>
@@ -288,9 +289,6 @@ export default function NewsPage() {
           )}
         </div>
       </section>
-
-      {/* CTA Section */}
-      <CTASection />
 
       {/* Footer */}
       <Footer />
