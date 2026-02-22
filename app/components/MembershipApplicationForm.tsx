@@ -20,12 +20,12 @@ const provinces = [
 ]
 
 const participationOptions: { value: ParticipationArea; label: string }[] = [
-  { value: 'civic_education', label: 'Civic participation' },
-  { value: 'legal_constitutional', label: 'Legal & citizenship services' },
-  { value: 'parliamentary', label: 'Policy & governance engagement' },
-  { value: 'community_mobilisation', label: 'Community mobilisation' },
-  { value: 'research_policy', label: 'Research & policy' },
-  { value: 'communications_media', label: 'Communications & media' },
+  { value: 'investment_property', label: 'Investment & Property' },
+  { value: 'banking_remittances', label: 'Banking & Remittances' },
+  { value: 'legal_citizenship', label: 'Legal & Citizenship' },
+  { value: 'business_entrepreneurship', label: 'Business & Entrepreneurship' },
+  { value: 'pensions_insurance', label: 'Pensions & Insurance' },
+  { value: 'technology_innovation', label: 'Technology & Innovation' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -131,10 +131,6 @@ export default function MembershipApplicationForm() {
         }
         if (!individual.emailAddress.trim() || !individual.emailAddress.includes('@')) {
           setError('A valid Email Address is required')
-          return false
-        }
-        if (!individual.province) {
-          setError('Province is required')
           return false
         }
       } else {
@@ -438,93 +434,47 @@ export default function MembershipApplicationForm() {
               />
             </div>
 
-            {/* ID & Gender */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-900">
-                  National ID / Passport Number
-                </label>
-                <input
-                  type="text"
-                  value={individual.nationalIdPassport}
-                  onChange={(e) => setIndividual({ ...individual, nationalIdPassport: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  placeholder="e.g. 63-123456A78"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-900">
-                  Gender <span className="text-slate-400 text-xs">(Optional)</span>
-                </label>
-                <select
-                  value={individual.gender}
-                  onChange={(e) => setIndividual({ ...individual, gender: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                >
-                  <option value="">Select gender</option>
-                  <option value="Female">Female</option>
-                  <option value="Male">Male</option>
-                </select>
-              </div>
+            {/* Gender */}
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-slate-900">
+                Gender <span className="text-slate-400 text-xs">(Optional)</span>
+              </label>
+              <select
+                value={individual.gender}
+                onChange={(e) => setIndividual({ ...individual, gender: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              >
+                <option value="">Select gender</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
             </div>
 
-            {/* DOB & Province */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-900">
-                  Date of Birth <span className="text-slate-400 text-xs">(Optional)</span>
-                </label>
-                <input
-                  type="date"
-                  value={individual.dateOfBirth}
-                  onChange={(e) => setIndividual({ ...individual, dateOfBirth: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-900">
-                  Province <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={individual.province}
-                  onChange={(e) => setIndividual({ ...individual, province: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  required
-                >
-                  <option value="">Select province</option>
-                  {provinces.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
+            {/* DOB */}
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-slate-900">
+                Date of Birth <span className="text-slate-400 text-xs">(Optional)</span>
+              </label>
+              <input
+                type="date"
+                value={individual.dateOfBirth}
+                onChange={(e) => setIndividual({ ...individual, dateOfBirth: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              />
             </div>
 
-            {/* District & Occupation */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-900">
-                  District / Ward <span className="text-slate-400 text-xs">(if applicable)</span>
-                </label>
-                <input
-                  type="text"
-                  value={individual.district}
-                  onChange={(e) => setIndividual({ ...individual, district: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  placeholder="Enter district or ward"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-900">
-                  Occupation / Social Base <span className="text-slate-400 text-xs">(if applicable)</span>
-                </label>
-                <input
-                  type="text"
-                  value={individual.occupation}
-                  onChange={(e) => setIndividual({ ...individual, occupation: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                  placeholder="e.g. worker, student, professional"
-                />
-              </div>
+            {/* Occupation */}
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-slate-900">
+                Occupation <span className="text-slate-400 text-xs">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                value={individual.occupation}
+                onChange={(e) => setIndividual({ ...individual, occupation: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                placeholder="e.g. engineer, teacher, entrepreneur"
+              />
             </div>
 
             {/* Contact */}
@@ -560,7 +510,7 @@ export default function MembershipApplicationForm() {
             {/* Participation Areas */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-900">
-                Preferred Area(s) of Participation <span className="text-slate-400 text-xs">(Optional)</span>
+                Sector(s) of Interest <span className="text-slate-400 text-xs">(Optional)</span>
               </label>
               <div className="grid gap-2 sm:grid-cols-2">
                 {participationOptions.map((opt) => (
@@ -912,11 +862,8 @@ export default function MembershipApplicationForm() {
             {membershipType === 'individual' ? (
               <div className="grid gap-3 sm:grid-cols-2 text-sm">
                 <div><span className="text-slate-500">Full Name:</span> <span className="font-medium text-slate-900">{individual.fullName}</span></div>
-                {individual.nationalIdPassport && <div><span className="text-slate-500">ID/Passport:</span> <span className="font-medium text-slate-900">{individual.nationalIdPassport}</span></div>}
                 {individual.gender && <div><span className="text-slate-500">Gender:</span> <span className="font-medium text-slate-900">{individual.gender}</span></div>}
                 {individual.dateOfBirth && <div><span className="text-slate-500">Date of Birth:</span> <span className="font-medium text-slate-900">{individual.dateOfBirth}</span></div>}
-                <div><span className="text-slate-500">Province:</span> <span className="font-medium text-slate-900">{individual.province}</span></div>
-                {individual.district && <div><span className="text-slate-500">District/Ward:</span> <span className="font-medium text-slate-900">{individual.district}</span></div>}
                 {individual.occupation && <div><span className="text-slate-500">Occupation:</span> <span className="font-medium text-slate-900">{individual.occupation}</span></div>}
                 <div><span className="text-slate-500">Mobile:</span> <span className="font-medium text-slate-900">{individual.mobileNumber}</span></div>
                 <div><span className="text-slate-500">Email:</span> <span className="font-medium text-slate-900">{individual.emailAddress}</span></div>

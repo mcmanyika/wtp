@@ -256,7 +256,7 @@ export interface SurveyResponse {
 export type MembershipApplicationType = 'individual' | 'institutional'
 export type MembershipApplicationStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn'
 export type OrganisationType = 'civic' | 'labour' | 'faith' | 'student_youth' | 'professional' | 'community_residents' | 'liberation_veterans' | 'other'
-export type ParticipationArea = 'civic_education' | 'legal_constitutional' | 'parliamentary' | 'community_mobilisation' | 'research_policy' | 'communications_media' | 'other'
+export type ParticipationArea = 'investment_property' | 'banking_remittances' | 'legal_citizenship' | 'business_entrepreneurship' | 'pensions_insurance' | 'technology_innovation' | 'other'
 
 export interface MembershipApplication {
   id: string

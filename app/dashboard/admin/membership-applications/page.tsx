@@ -16,6 +16,13 @@ const statusColors: Record<MembershipApplicationStatus, string> = {
 }
 
 const participationLabels: Record<string, string> = {
+  investment_property: 'Investment & Property',
+  banking_remittances: 'Banking & Remittances',
+  legal_citizenship: 'Legal & Citizenship',
+  business_entrepreneurship: 'Business & Entrepreneurship',
+  pensions_insurance: 'Pensions & Insurance',
+  technology_innovation: 'Technology & Innovation',
+  // Legacy values
   civic_education: 'Civic participation',
   legal_constitutional: 'Legal & citizenship services',
   parliamentary: 'Policy & governance engagement',
